@@ -45,6 +45,10 @@ def load_csv_feed(
     if not required.issubset({str(column).strip().lower() for column in frame.columns}):
         raise SourceError(f"{indicator_id} CSV must contain date and value columns")
     frame.columns = [str(column).strip().lower() for column in frame.columns]
+    # optional ticker filtering – if the CSV has a ‘ticker’ column keep only rows
+    # that match the indicator’s ticker (the secret name encodes the ticker)
+    if "ticker" in frame.columns:
+        frame = frame[frame["ticker"].str.upper() == indicator_id.upper()]
     frame["period_date"] = pd.to_datetime(frame["date"], errors="coerce")
     frame["value"] = pd.to_numeric(frame["value"], errors="coerce")
     frame = frame.dropna(subset=["period_date", "value"])
