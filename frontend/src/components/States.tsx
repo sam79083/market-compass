@@ -1,6 +1,14 @@
-export function LoadingSkeleton() {
+import { LOCALE_TEXT } from "../i18n";
+import type { LocaleKey } from "../i18n";
+
+interface LocaleProps {
+  locale?: LocaleKey;
+}
+
+export function LoadingSkeleton({ locale = "kr" }: LocaleProps) {
+  const t = LOCALE_TEXT[locale];
   return (
-    <div className="skeleton-layout" aria-label="Loading dashboard">
+    <div className="skeleton-layout" aria-label={t.loading}>
       <div className="skeleton skeleton-hero" />
       <div className="skeleton-row">
         <div className="skeleton skeleton-category" />
@@ -21,20 +29,19 @@ export function LoadingSkeleton() {
 interface ErrorStateProps {
   message: string;
   onRetry: () => void;
+  locale?: LocaleKey;
 }
 
-export function ErrorState({ message, onRetry }: ErrorStateProps) {
+export function ErrorState({ message, onRetry, locale = "kr" }: ErrorStateProps) {
+  const t = LOCALE_TEXT[locale];
   return (
     <div className="state-panel">
       <div className="state-icon">!</div>
-      <h2>Could not load market data</h2>
+      <h2>{t.could_not_load_market}</h2>
       <p>{message}</p>
-      <p className="state-hint">
-        Check that the FastAPI service is running, or that the static snapshots exist and{" "}
-        <code>VITE_DATA_MODE</code> is set correctly.
-      </p>
+      <p className="state-hint">{t.check_api}</p>
       <button className="primary-button" onClick={onRetry}>
-        Try again
+        {t.try_again}
       </button>
     </div>
   );
@@ -53,7 +60,7 @@ export function EmptyState() {
         <div>
           <span className="command-label">Windows (from the repository root)</span>
           <pre>
-            <code>cd backend{"\n"}..\.venv\Scripts\python -m app.cli refresh --validate</code>
+            <code>cd backend{"\n"}..\\.venv\\Scripts\\python -m app.cli refresh --validate</code>
           </pre>
         </div>
         <div>

@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import type { CSSProperties, KeyboardEvent } from "react";
 import { sparklineOption } from "../charts";
 import { useIndicatorHistory } from "../hooks";
+import { LOCALE_TEXT } from "../i18n";
+import type { LocaleKey } from "../i18n";
 import type { Indicator, ThemeMode } from "../types";
 import {
   categoryColor,
@@ -19,10 +21,12 @@ import { Chart } from "./Chart";
 interface IndicatorCardProps {
   indicator: Indicator;
   theme: ThemeMode;
+  locale: LocaleKey;
   onOpen: (indicator: Indicator) => void;
 }
 
-export function IndicatorCard({ indicator, theme, onOpen }: IndicatorCardProps) {
+export function IndicatorCard({ indicator, theme, locale, onOpen }: IndicatorCardProps) {
+  const t = LOCALE_TEXT[locale];
   const available = Boolean(indicator.latest);
   const history = useIndicatorHistory(indicator.id, "10y", available);
   const score = indicator.score?.score ?? null;
@@ -48,7 +52,7 @@ export function IndicatorCard({ indicator, theme, onOpen }: IndicatorCardProps) 
       tabIndex={0}
       onClick={() => onOpen(indicator)}
       onKeyDown={handleKeyDown}
-      aria-label={`${indicator.name}. ${available ? `Latest ${indicator.latest?.display}` : "Unavailable"}. Open details.`}
+      aria-label={`${indicator.name}. ${available ? `${t.as_of_card} ${indicator.latest?.display}` : t.no_observation}. Open details.`}
       style={{ "--indicator-accent": accent } as CSSProperties}
     >
       <div className="indicator-card-top">
@@ -59,8 +63,10 @@ export function IndicatorCard({ indicator, theme, onOpen }: IndicatorCardProps) 
           </span>
         </div>
         <div className="indicator-badges">
-          {indicator.supplementary && <span className="tiny-badge">Zero weight</span>}
-          {indicator.pending_estimate && <span className="tiny-badge tiny-badge-warn">Preliminary</span>}
+          {indicator.supplementary && <span className="tiny-badge">{t.zero_weight}</span>}
+          {indicator.pending_estimate && (
+            <span className="tiny-badge tiny-badge-warn">{t.preliminary}</span>
+          )}
           <span
             className="status-dot"
             style={{ background: statusColor(indicator.status) }}
@@ -73,7 +79,9 @@ export function IndicatorCard({ indicator, theme, onOpen }: IndicatorCardProps) 
         <div>
           <div className="indicator-value">{indicator.latest?.display ?? "—"}</div>
           <div className="indicator-date">
-            {indicator.latest ? `As of ${formatDate(indicator.latest.date)}` : "No observation"}
+            {indicator.latest
+              ? `${t.as_of_card} ${formatDate(indicator.latest.date)}`
+              : t.no_observation}
           </div>
         </div>
         {score !== null ? (
@@ -102,18 +110,18 @@ export function IndicatorCard({ indicator, theme, onOpen }: IndicatorCardProps) 
         ) : available && history.loading ? (
           <div className="spark-skeleton" />
         ) : available && history.error ? (
-          <div className="spark-placeholder">History unavailable</div>
+          <div className="spark-placeholder">{t.history_unavailable}</div>
         ) : (
           <div className="spark-placeholder">
-            <span className="feed-lock">Feed required</span>
-            <span>{indicator.optional ? "Authorized data not configured" : "No observation"}</span>
+            <span className="feed-lock">{t.feed_required}</span>
+            <span>{indicator.optional ? t.authorized_not_configured : t.no_observation}</span>
           </div>
         )}
       </div>
 
       <div className="indicator-stats">
         <span>
-          Percentile{" "}
+          {t.percentile}{" "}
           <strong>
             {indicator.score?.percentile !== null && indicator.score?.percentile !== undefined
               ? `${Math.round(indicator.score.percentile)}th`
@@ -121,16 +129,17 @@ export function IndicatorCard({ indicator, theme, onOpen }: IndicatorCardProps) 
           </strong>
         </span>
         <span>
-          Window{" "}
+          {t.window}{" "}
           <strong>
-            {indicator.score?.window_years_used !== null && indicator.score?.window_years_used !== undefined
+            {indicator.score?.window_years_used !== null &&
+            indicator.score?.window_years_used !== undefined
               ? `${formatNumber(indicator.score.window_years_used, 1)}y`
               : "—"}
           </strong>
         </span>
         {indicator.scored && indicator.latest?.is_estimate && (
           <span className="indicator-scored">
-            Scored <strong>{indicator.scored.display}</strong>
+            {t.scored} <strong>{indicator.scored.display}</strong>
           </span>
         )}
       </div>
@@ -139,7 +148,7 @@ export function IndicatorCard({ indicator, theme, onOpen }: IndicatorCardProps) 
         <span className="indicator-weight">
           {indicator.weight > 0
             ? `${Math.round(indicator.weight * 100)}% of ${indicator.category_label.toLowerCase()}`
-            : "Supplementary"}
+            : t.supplementary}
         </span>
         <span className="indicator-quality">
           {quality.length > 0 ? quality.join(" · ") : statusLabel(indicator.status)}

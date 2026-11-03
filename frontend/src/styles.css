@@ -244,8 +244,7 @@ code {
   background: var(--border-strong);
 }
 
-.ghost-button,
-.theme-button {
+.ghost-button {
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -259,15 +258,95 @@ code {
     background 160ms ease;
 }
 
-.ghost-button:hover,
-.theme-button:hover {
+.ghost-button:hover {
   color: var(--text);
   border-color: var(--border-strong);
   background: var(--panel-3);
 }
 
-.theme-button {
-  min-width: 58px;
+/* ── Theme toggle pill ─────────────────────────────── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--panel-3);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.theme-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.theme-label {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Language toggle pill ──────────────────────────── */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.lang-toggle:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.lang-option {
+  padding: 7px 11px;
+  color: var(--faint);
+  transition:
+    color 180ms ease,
+    background 180ms ease;
+  text-transform: uppercase;
+}
+
+.lang-option.lang-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.lang-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  flex-shrink: 0;
 }
 
 main {

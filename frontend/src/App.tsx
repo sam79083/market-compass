@@ -10,6 +10,8 @@ import { MethodologyModal } from "./components/MethodologyModal";
 import { ScoreDial } from "./components/ScoreDial";
 import { SignalCard } from "./components/SignalCard";
 import { EmptyState, ErrorState, LoadingSkeleton } from "./components/States";
+import { LOCALE_TEXT } from "./i18n";
+import type { LocaleKey } from "./i18n";
 import type { CompositeHistory, Dashboard, Indicator, RangeKey, ThemeMode } from "./types";
 import {
   filterByRange,
@@ -23,6 +25,7 @@ import {
 } from "./utils";
 
 const THEME_KEY = "market-compass-theme";
+const LOCALE_KEY = "market-compass-locale";
 const COMPOSITE_RANGES: Array<{ key: RangeKey; label: string }> = [
   { key: "1y", label: "1Y" },
   { key: "3y", label: "3Y" },
@@ -30,6 +33,7 @@ const COMPOSITE_RANGES: Array<{ key: RangeKey; label: string }> = [
   { key: "10y", label: "10Y" },
   { key: "max", label: "Max" },
 ];
+
 const SECTION_ORDER = ["valuation", "sentiment", "breadth"];
 
 function readTheme(): ThemeMode {
@@ -52,6 +56,10 @@ function runStatusColor(status: string): string {
 
 export default function App() {
   const [theme, setTheme] = useState<ThemeMode>(readTheme);
+  const [locale, setLocale] = useState<LocaleKey>(() => {
+    const stored = window.localStorage.getItem(LOCALE_KEY);
+    return stored === "en" ? "en" : "kr";
+  });
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,10 +69,17 @@ export default function App() {
   const [selected, setSelected] = useState<Indicator | null>(null);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
 
+  const t = LOCALE_TEXT[locale];
+
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.locale = locale;
+    window.localStorage.setItem(LOCALE_KEY, locale);
+  }, [locale]);
 
   const loadDashboard = useCallback(() => {
     const controller = new AbortController();
@@ -157,37 +172,48 @@ export default function App() {
             </svg>
           </div>
           <div>
-            <div className="brand-name">Market Compass</div>
-            <div className="brand-tag">U.S. equity valuation, in context</div>
+            <div className="brand-name">{t.default_label}</div>
+            <div className="brand-tag">{t.tagline}</div>
           </div>
         </div>
         <div className="header-actions">
           {dashboard && (
             <div className="header-status" title={dashboard.freshness.last_run_message}>
               <span className="status-dot" style={{ background: runStatusColor(headerStatus) }} />
-              <span className="header-status-label">{headerStatus}</span>
+              <span className="header-status-label">{t.header_status}</span>
               <span className="header-sep" />
-              <span>As of {formatDate(dashboard.as_of)}</span>
+              <span>{t.header_as_of} {formatDate(dashboard.as_of)}</span>
             </div>
           )}
           <button className="ghost-button" onClick={() => setMethodologyOpen(true)}>
-            Methodology
+            {t.methodology_btn}
           </button>
           <button
-            className="theme-button"
+            className="theme-toggle"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            aria-label={theme === "dark" ? t.switch_to_light : t.switch_to_dark}
+            title={theme === "dark" ? t.switch_to_light : t.switch_to_dark}
           >
-            {theme === "dark" ? "Light" : "Dark"}
+            <span className="theme-icon">{theme === "dark" ? "☀️" : "🌙"}</span>
+            <span className="theme-label">{theme === "dark" ? t.light : t.dark}</span>
+          </button>
+          <button
+            className="lang-toggle"
+            onClick={() => setLocale(locale === "kr" ? "en" : "kr")}
+            aria-label={`Switch to ${locale === "kr" ? "English" : "한국어"}`}
+          >
+            <span className={`lang-option ${locale === "kr" ? "lang-active" : ""}`}>KR</span>
+            <span className="lang-divider" />
+            <span className={`lang-option ${locale === "en" ? "lang-active" : ""}`}>EN</span>
           </button>
         </div>
       </header>
 
       <main>
         {loading ? (
-          <LoadingSkeleton />
+          <LoadingSkeleton locale={locale} />
         ) : error ? (
-          <ErrorState message={error} onRetry={loadDashboard} />
+          <ErrorState message={error} onRetry={loadDashboard} locale={locale} />
         ) : dashboard && !dashboard.has_data ? (
           <EmptyState />
         ) : dashboard ? (
@@ -196,20 +222,20 @@ export default function App() {
               <div className="panel score-panel">
                 <div className="panel-head">
                   <div>
-                    <div className="eyebrow">Composite reading</div>
-                    <h1>Where the market stands</h1>
+                    <div className="eyebrow">{t.composite_reading}</div>
+                    <h1>{t.where_market_stands}</h1>
                   </div>
-                  <span className="as-of">As of {formatDate(dashboard.as_of)}</span>
+                  <span className="as-of">{t.as_of} {formatDate(dashboard.as_of)}</span>
                 </div>
                 <ScoreDial overall={dashboard.overall} bands={dashboard.bands} theme={theme} />
                 <div className="score-panel-foot">
-                  <span>Latest data {formatDate(dashboard.latest_data)}</span>
-                  <span>Refreshed {formatDateTime(dashboard.freshness.last_refresh)}</span>
+                  <span>{t.latest_data} {formatDate(dashboard.latest_data)}</span>
+                  <span>{t.refreshed} {formatDateTime(dashboard.freshness.last_refresh)}</span>
                 </div>
               </div>
 
               <div className="panel narrative-panel">
-                <div className="eyebrow">The read</div>
+                <div className="eyebrow">{t.the_read}</div>
                 <h2 className="narrative-headline" style={{ color: dashboard.overall.color }}>
                   {dashboard.explanation.headline}
                 </h2>
@@ -217,23 +243,23 @@ export default function App() {
 
                 <div className="signal-grid">
                   <SignalCard
-                    label="Long-term valuation"
+                    label={t.long_term_valuation}
                     value={dashboard.overall.long_term.label}
                     score={dashboard.overall.long_term.score}
                     coverage={dashboard.overall.long_term.coverage}
                     color={dashboard.overall.long_term.color}
-                    detail="Fundamental + relative"
+                    detail={t.fundamental_relative}
                   />
                   <SignalCard
-                    label="Current conditions"
+                    label={t.current_conditions}
                     value={dashboard.overall.conditions.label}
                     score={dashboard.overall.conditions.score}
                     coverage={dashboard.overall.conditions.coverage}
                     color={dashboard.overall.conditions.color}
-                    detail="Sentiment + breadth"
+                    detail={t.sentiment_breadth}
                   />
                   <SignalCard
-                    label="Sentiment"
+                    label={t.sentiment_label}
                     value={dashboard.sentiment.label}
                     color="#c792ea"
                     detail={
@@ -243,7 +269,7 @@ export default function App() {
                     }
                   />
                   <SignalCard
-                    label="Trend"
+                    label={t.trend_label}
                     value={dashboard.trend.label}
                     color={trendColor(dashboard.trend.label)}
                     detail={
@@ -252,7 +278,7 @@ export default function App() {
                             dashboard.trend.ma200,
                             0,
                           )} · ${formatNumber(dashboard.trend.deviation_pct, 1)}%`
-                        : "Trend data unavailable"
+                        : t.trend_unavailable
                     }
                   />
                 </div>
@@ -304,12 +330,9 @@ export default function App() {
             <section className="panel composite-panel" id="history">
               <div className="panel-head composite-head">
                 <div>
-                  <div className="eyebrow">History</div>
-                  <h2>Composite score over time</h2>
-                  <p className="panel-sub">
-                    Higher means more attractive relative to its own history. Hover the line to
-                    inspect the components behind each reading.
-                  </p>
+                  <div className="eyebrow">{t.history_eyebrow}</div>
+                  <h2>{t.composite_score_over_time}</h2>
+                  <p className="panel-sub">{t.higher_means}</p>
                 </div>
                 <div className="range-buttons" role="group" aria-label="Composite history range">
                   {COMPOSITE_RANGES.map((item) => (
@@ -324,7 +347,7 @@ export default function App() {
                 </div>
               </div>
               {compositeError ? (
-                <div className="chart-empty">Could not load composite history: {compositeError}</div>
+                <div className="chart-empty">{t.could_not_load_composite}: {compositeError}</div>
               ) : !compositeHistory ? (
                 <div className="chart-skeleton chart-skeleton-large" />
               ) : compositeOption ? (
@@ -334,7 +357,7 @@ export default function App() {
                   ariaLabel="Composite valuation score history"
                 />
               ) : (
-                <div className="chart-empty">No scored history is available in this range.</div>
+                <div className="chart-empty">{t.no_history_range}</div>
               )}
               <div className="composite-legend">
                 {dashboard.bands.map((band) => (
@@ -343,27 +366,24 @@ export default function App() {
                     {band.label}
                   </span>
                 ))}
-                <span className="legend-note">20-year rolling percentile · point-in-time</span>
+                <span className="legend-note">{t.legend_rolling}</span>
               </div>
             </section>
 
             <section className="indicators-section" id="indicators">
               <div className="section-heading">
                 <div>
-                  <div className="eyebrow">Signals</div>
-                  <h2>Ten ways to read the market</h2>
-                  <p className="panel-sub">
-                    Each signal is scored 0–100 against its own history. Click a card for the full
-                    chart, method, and limitations.
-                  </p>
+                  <div className="eyebrow">{t.signals}</div>
+                  <h2>{t.composite_reading}</h2>
+                  <p className="panel-sub">{t.signals_sub}</p>
                 </div>
-                <span className="section-count">{dashboard.indicators.length} indicators</span>
+                <span className="section-count">{t.indicators_count(dashboard.indicators.length)}</span>
               </div>
               {groupedIndicators.map((group) => (
                 <div className="indicator-group" key={group.section}>
                   <div className="group-head">
                     <h3>{group.label}</h3>
-                    <span>{group.indicators.length} signals</span>
+                    <span>{t.signals_count(group.indicators.length)}</span>
                   </div>
                   <div className="indicator-grid">
                     {group.indicators.map((indicator) => (
@@ -371,6 +391,7 @@ export default function App() {
                         key={indicator.id}
                         indicator={indicator}
                         theme={theme}
+                        locale={locale}
                         onOpen={setSelected}
                       />
                     ))}
@@ -384,11 +405,11 @@ export default function App() {
             <section className="panel quality-panel">
               <div className="panel-head">
                 <div>
-                  <div className="eyebrow">Data notes</div>
-                  <h2>What to keep in mind</h2>
+                  <div className="eyebrow">{t.data_notes_eyebrow}</div>
+                  <h2>{t.what_to_keep_in_mind}</h2>
                 </div>
                 <button className="text-button" onClick={() => setMethodologyOpen(true)}>
-                  Full methodology ↗
+                  {t.full_methodology}
                 </button>
               </div>
               <div className="quality-chip-row">
@@ -404,9 +425,9 @@ export default function App() {
                 ))}
               </ul>
               <div className="quality-footer">
-                <span>Weights hash {dashboard.weights_hash}</span>
-                <span>API {dataSourceLabel}</span>
-                <span>{dashboard.freshness.available}/{dashboard.freshness.total} indicators available</span>
+                <span>{t.footer_meta_weights} {dashboard.weights_hash}</span>
+                <span>{t.footer_meta_api} {dataSourceLabel}</span>
+                <span>{dashboard.freshness.available}/{dashboard.freshness.total} {t.footer_meta_available}</span>
               </div>
             </section>
           </>
@@ -416,19 +437,19 @@ export default function App() {
       <footer className="site-footer">
         <div>
           <nav className="footer-links" aria-label="Site information">
-            <a href="/about">About</a>
-            <a href="/methodology">Methodology</a>
-            <a href="/faq">FAQ</a>
-            <a href="/privacy">Privacy</a>
-            <a href="/terms">Terms</a>
+            <a href="/about">{t.footer_links_about}</a>
+            <a href="/methodology">{t.footer_links_methodology}</a>
+            <a href="/faq">{t.footer_links_faq}</a>
+            <a href="/privacy">{t.footer_links_privacy}</a>
+            <a href="/terms">{t.footer_links_terms}</a>
           </nav>
-          <strong>Market Compass</strong> · A historical relative-attractiveness summary, not a
-          forecast or an automated buy/sell signal.
+          <div>
+            <strong>{t.footer}</strong>
+          </div>
         </div>
         <div className="footer-meta">
-          <span>Point-in-time methodology</span>
-          <span>Research tooling</span>
-          {dashboard && <span>Weights {dashboard.weights_hash}</span>}
+          <span>{t.footer_meta_point_in_time}</span>
+          <span>{t.footer_meta_research}</span>
         </div>
       </footer>
 
