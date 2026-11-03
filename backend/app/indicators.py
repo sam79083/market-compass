@@ -305,75 +305,75 @@ INDICATORS: dict[str, IndicatorDef] = {
         chart_kind="relative",
     ),
 }
-
-SECTION_LABELS = {
-    "valuation": "Valuation",
-    "sentiment": "Sentiment & momentum",
-    "breadth": "Market breadth",
-}
-
-CATEGORY_LABELS = {
-    "fundamental": "Fundamental valuation",
-    "relative": "Relative attractiveness",
-    "sentiment": "Sentiment & momentum",
-    "breadth": "Market breadth",
-}
-
-CATEGORY_DESCRIPTIONS = {
-    "fundamental": "Long-term valuation relative to earnings.",
-    "relative": "Compensation offered by equities versus Treasuries.",
-    "sentiment": "Short-term fear, volatility, momentum, and trend conditions.",
-    "breadth": "Participation and concentration inside the index.",
-}
-
-CATEGORY_ORDER = ["fundamental", "relative", "sentiment", "breadth"]
-
-VALUATION_BANDS = [
-    {"key": "very_overvalued", "label": "Very Overvalued", "min": 0, "max": 20, "color": "#e06c75"},
-    {"key": "overvalued", "label": "Overvalued", "min": 20, "max": 40, "color": "#e39a5c"},
-    {"key": "neutral", "label": "Neutral", "min": 40, "max": 60, "color": "#d8c07a"},
-    {"key": "undervalued", "label": "Undervalued", "min": 60, "max": 80, "color": "#6fcfb2"},
-    {"key": "very_undervalued", "label": "Very Undervalued", "min": 80, "max": 100, "color": "#4fb98a"},
+# ------------------------------------------------------------------
+# 20 sector forward‑P/E indicators (external reference only)
+# ------------------------------------------------------------------
+_SECTOR_TICKERS = [
+    "SOXX", "ITA", "GLDM", "XLV", "XLU",
+    "AIPO", "NCLD", "LYTE", "XLP",
+    "XLF", "XLE", "XLI", "XLK", "XLY",
+    "IYR", "KIE", "SMH", "MBC", "VDV", "IVO",
 ]
 
+_SECTOR_NAMES = {
+    "SOXX": "SOXX – Semiconductor ETF",
+    "ITA":  "ITA – U.S. Information Technology ETF",
+    "GLDM": "GLDM – Physical Gold Miners ETF",
+    "XLV":  "XLV – Health Care Select Sector ETF",
+    "XLU":  "XLU – Utilities Select Sector ETF",
+    "AIPO": "AIPO – MSCI Global Agriculture Producers ETF",
+    "NCLD": "NCLD – (your ticker – replace if needed)",
+    "LYTE": "LYTE – Pacer Lithium & Battery Producers ETF",
+    "XLP":  "XLP – Consumer Staples Select Sector ETF",
+    "XLF":  "XLF – Financials Select Sector ETF",
+    "XLE":  "XLE – Energy Select Sector ETF",
+    "XLI":  "XLI – Industrials Select Sector ETF",
+    "XLK":  "XLK – Information Technology Select Sector ETF",
+    "XLY":  "XLY – Consumer Discretionary Select Sector ETF",
+    "IYR":  "IYR – Real Estate Select Sector ETF",
+    "KIE":  "KIE – iShares U.S. Construction & Housing ETF",
+    "SMH":  "SMH – iShares Semiconductor ETF",
+    "MBC":  "MBC – (your ticker – replace if needed)",
+    "VDV":  "VDV – (your ticker – replace if needed)",
+    "IVO":  "IVO – (your ticker – replace if needed)",
+}
 
-def classify_valuation(score: float | None) -> dict:
-    if score is None:
-        return {"key": "unavailable", "label": "Insufficient data", "color": "#8b9aa8"}
-    if score < 20:
-        band = VALUATION_BANDS[0]
-    elif score < 40:
-        band = VALUATION_BANDS[1]
-    elif score < 60:
-        band = VALUATION_BANDS[2]
-    elif score < 80:
-        band = VALUATION_BANDS[3]
-    else:
-        band = VALUATION_BANDS[4]
-    return {"key": band["key"], "label": band["label"], "color": band["color"]}
+# ------------------------------------------------------------------
+# Build an IndicatorDef for every ticker and add it to INDICATORS
+# ------------------------------------------------------------------
+for tid in _SECTOR_TICKERS:
+    name = _SECTOR_NAMES[tid]
 
+    reason = (
+        f"Requires a licensed forward‑earnings CSV for {tid}. "
+        "Set the GitHub‑Actions secret `SECTOR_{tid}_CSV_URL` to point at a CSV "
+        "with columns `date, value` (optionally `ticker`). "
+        "The CSV is filtered to this ticker automatically."
+    )
 
-def classify_conditions(score: float | None) -> dict:
-    if score is None:
-        return {"key": "unavailable", "label": "Insufficient data", "color": "#8b9aa8"}
-    if score < 40:
-        return {"key": "unfavorable", "label": "Unfavorable", "color": "#e06c75"}
-    if score < 60:
-        return {"key": "mixed", "label": "Mixed", "color": "#d8c07a"}
-    return {"key": "supportive", "label": "Supportive", "color": "#6fcfb2"}
+    def _make_def(t, n, r):
+        return IndicatorDef(
+            id=t,
+            name=n,
+            short_name=t,
+            description=f"Forward P/E for {n}. Display‑only, CC‑BY‑4.0 attribution required.",
+            section="valuation",
+            category="fundamental",
+            unit="x",
+            value_kind="multiple",
+            frequency="Monthly",
+            source_name="Licensed feed (not bundled)",
+            source_url="",
+            methodology=(
+                "S&P 500‑consensus forward P/E for the sector ETF. "
+                "Data is displayed with attribution; not included in the composite score."
+            ),
+            limitations=r,
+            order=_SECTOR_TICKERS.index(t) + 1,
+            transform="inverse_percentile",
+            optional=True,
+            unavailable_reason=r,
+        )
 
-
-def format_value(value: float | None, value_kind: str, unit: str = "") -> str:
-    if value is None:
-        return "—"
-    if value_kind == "multiple":
-        return f"{value:,.1f}x"
-    if value_kind == "percent":
-        return f"{value:,.1f}%"
-    if value_kind == "percentage_points":
-        return f"{value:+.2f} pp"
-    if value_kind == "score":
-        return f"{value:,.0f}{unit}"
-    if value_kind == "ratio":
-        return f"{value:,.3f}"
-    return f"{value:,.2f}"
+    globals()[f"__{tid}_def"] = _make_def(tid, name, reason)
+    INDICATORS[tid] = globals()[f"__{tid}_def"]
