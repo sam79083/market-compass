@@ -1,13 +1,15 @@
 """Append FactSet Earnings Insight's weekly S&P 500 forward 12-month P/E to a CSV.
 
-Output columns: date,value,release_date   (matches backend/app/ingestion/csv_feed.py)
+Output columns: date,value,release_date (matches backend/app/ingestion/csv_feed.py)
+
 Do NOT add a `ticker` column: csv_feed keeps only rows whose ticker == "forward_pe".
 
 Usage (from repo root):
     pip install requests pypdf
-    python scripts/fetch_forward_pe.py --out data/forward_pe.csv            # last 21 days
-    python scripts/fetch_forward_pe.py --out data/forward_pe.csv --since 2019-01-01   # backfill
+    python scripts/fetch_forward_pe.py --out data/forward_pe.csv                   # last 21 days
+    python scripts/fetch_forward_pe.py --out data/forward_pe.csv --since 2019-01-01  # backfill
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,6 +18,7 @@ import datetime as dt
 import re
 import sys
 import time
+import unicodedata
 from io import BytesIO
 from pathlib import Path
 
@@ -24,18 +27,37 @@ BASE = (
     "Research%20Desk/Earnings%20Insight/EarningsInsight_{stamp}{suffix}.pdf"
 )
 SUFFIXES = ["", "A", "B", "C"]  # some weeks have EarningsInsight_120823A.pdf style names
-PE_RE = re.compile(r"forward 12-month P/E ratio (?:for the S&P 500 )?is (\d{1,2}(?:\.\d+)?)", re.I)
+
+# Tolerant of hyphen variants, "P / E", "was/of" instead of "is", and a missing "ratio"/"for the S&P 500".
+PE_RE = re.compile(
+    r"forward\s*12\s*-?\s*month\s+P\s*/\s*E(?:\s+ratio)?(?:\s+for\s+the\s+S&P\s*500)?"
+    r"\s+(?:is|was|of)\s+(\d{1,2}(?:\.\d+)?)",
+    re.I,
+)
+# Last resort: first one-decimal number shortly after the phrase.
+FALLBACK_RE = re.compile(r"forward\s*12\s*-?\s*month\s+P\s*/\s*E.{0,150}?(\d{1,2}\.\d)", re.I)
+
 MIN_PE, MAX_PE = 5.0, 60.0  # sanity bounds; anything outside is treated as a parse error
 HEADERS = {"User-Agent": "market-compass-refresh/1.0"}
 
 
+def _norm(text: str) -> str:
+    """Normalize unicode, unify hyphen-like characters, collapse whitespace."""
+    text = unicodedata.normalize("NFKC", text)
+    text = re.sub(r"[\u00ad\u2010-\u2015\u2212]", "-", text)  # soft/en/em/minus -> "-"
+    return re.sub(r"\s+", " ", text)
+
+
 def parse_forward_pe(text: str) -> float | None:
-    """Return the first 'forward 12-month P/E ratio ... is X' value found in report text."""
-    m = PE_RE.search(re.sub(r"\s+", " ", text))
-    if not m:
-        return None
-    value = float(m.group(1))
-    return value if MIN_PE <= value <= MAX_PE else None
+    """Return the forward 12-month P/E value found in report text, or None."""
+    text = _norm(text)
+    for rx in (PE_RE, FALLBACK_RE):
+        m = rx.search(text)
+        if m:
+            value = float(m.group(1))
+            if MIN_PE <= value <= MAX_PE:
+                return value
+    return None
 
 
 def fetch_report_text(day: dt.date) -> str | None:
@@ -44,10 +66,19 @@ def fetch_report_text(day: dt.date) -> str | None:
 
     stamp = day.strftime("%m%d%y")
     for suffix in SUFFIXES:
-        resp = requests.get(BASE.format(stamp=stamp, suffix=suffix), headers=HEADERS, timeout=30)
+        try:
+            resp = requests.get(BASE.format(stamp=stamp, suffix=suffix), headers=HEADERS, timeout=30)
+        except requests.RequestException as exc:
+            print(f"WARN {day}: request failed ({exc.__class__.__name__})", file=sys.stderr)
+            continue
         if resp.status_code == 200 and resp.content[:4] == b"%PDF":
-            reader = PdfReader(BytesIO(resp.content))
-            return "\n".join((page.extract_text() or "") for page in reader.pages[:3])
+            try:
+                reader = PdfReader(BytesIO(resp.content))
+                # Read every page: older reports may place the P/E paragraph later.
+                return "\n".join((page.extract_text() or "") for page in reader.pages)
+            except Exception as exc:  # corrupt/odd PDF should not abort a long backfill
+                print(f"WARN {day}: PDF read failed ({exc.__class__.__name__})", file=sys.stderr)
+                return None
     return None
 
 
@@ -79,23 +110,28 @@ def main() -> int:
 
     end = dt.date.today()
     start = dt.date.fromisoformat(args.since) if args.since else end - dt.timedelta(days=21)
+
     found: dict[str, float] = {}
-    found_weeks: set[tuple[int, int]] = set()
     day = start
+    last_month = None
     while day <= end:
+        if (day.year, day.month) != last_month:
+            last_month = (day.year, day.month)
+            print(f"... scanning {day:%Y-%m} (found {len(found)} so far)", flush=True)
         # Reports are normally Friday; holiday weeks shift to Wed/Thu, so also try those.
-        # Once a week has a report, skip its other days to keep a backfill short.
-        week = day.isocalendar()[:2]
-        if day.weekday() in (2, 3, 4) and week not in found_weeks:
+        if day.weekday() in (2, 3, 4):
             text = fetch_report_text(day)
             if text:
                 value = parse_forward_pe(text)
                 if value is not None:
                     found[day.isoformat()] = value
-                    found_weeks.add(week)
                 else:
-                    print(f"WARN {day}: report found but P/E sentence not parsed", file=sys.stderr)
-            time.sleep(0.5)
+                    t = _norm(text)
+                    i = t.lower().find("p/e")
+                    snippet = t[max(0, i - 100): i + 300] if i >= 0 else "no 'P/E' text found in PDF"
+                    print(f"WARN {day}: report found but P/E sentence not parsed. snippet: {snippet}",
+                          file=sys.stderr)
+                time.sleep(0.5)
         day += dt.timedelta(days=1)
 
     added = merge_rows(Path(args.out), found)
