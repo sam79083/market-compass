@@ -177,16 +177,18 @@ def run_refresh(
                     client,
                     "forward_pe",
                     settings.forward_pe_csv_url,
-                    "Licensed forward P/E feed",
+                    "FactSet Earnings Insight (weekly report)",
                     settings.forward_pe_earnings_basis,
                 )
             except Exception as exc:
-                forward_pe = _error_result("forward_pe", exc, "Licensed forward P/E feed")
+                forward_pe = _error_result(
+                    "forward_pe", exc, "FactSet Earnings Insight (weekly report)"
+                )
         else:
             forward_pe = _skipped_result(
                 "forward_pe",
-                INDICATORS["forward_pe"].unavailable_reason or "No licensed forward P/E feed configured.",
-                "Licensed forward P/E feed",
+                INDICATORS["forward_pe"].unavailable_reason or "No forward P/E feed configured.",
+                "FactSet Earnings Insight (weekly report)",
             )
         series_results["forward_pe"] = forward_pe
         results.append(_store_result(session, forward_pe))

@@ -15,7 +15,7 @@ number was produced. It is a research and education tool, not investment advice.
 | Section | Indicator | Weight | Source |
 | --- | --- | --- | --- |
 | Fundamental valuation | Shiller CAPE | 0.6 | Robert Shiller / shillerdata.com |
-| Fundamental valuation | Forward P/E (optional) | 0.4 | Licensed CSV feed |
+| Fundamental valuation | Forward P/E (optional) | 0.4 | FactSet Earnings Insight (weekly) |
 | Fundamental valuation | Market cap / GDP (supplementary) | 0.0 | World Bank |
 | Relative attractiveness | Equity risk premium | 1.0 | Shiller earnings yield − 10Y Treasury |
 | Sentiment & momentum | Fear & Greed (optional) | 0.3 | Licensed CSV feed |
@@ -95,7 +95,18 @@ python -m app.cli import-csv --indicator fear_greed --file fg.csv --skip-score
 
 CSV format: `date,value[,release_date][,is_estimate][,earnings_basis]`.
 Dates are ISO `YYYY-MM-DD`. `earnings_basis` accepts `operating` or `reported`
-for forward P/E.
+for forward P/E. Do not add a `ticker` column: when present, only rows whose
+ticker equals the indicator id (`forward_pe`) are kept.
+
+### Forward P/E automation
+
+The refresh workflow runs `scripts/fetch_forward_pe.py`, which reads the forward
+12-month P/E from FactSet's weekly Earnings Insight PDF and appends it to
+`data/forward_pe.csv` (`date,value,release_date`). The workflow commits that file
+with the refreshed snapshots. Run it once with a backfill so percentile scores
+have history: Actions → Refresh market data → Run workflow → set
+`forward_pe_since` (for example `2019-01-01`). A `FORWARD_PE_CSV_URL` secret, if
+set, overrides the fetched file.
 
 ## API
 
@@ -145,10 +156,16 @@ windows are not independent, and historical data uses current-vintage series.
 
 ## Known limitations
 
-- **Forward P/E and Fear & Greed** require licensed feeds. Without them the
-  dashboard runs on 7–8 available components and labels the result accordingly.
-- **Equity risk premium** falls back to a trailing-earnings proxy when no licensed
-  forward P/E is available. The flag `erp_proxy` is shown in the UI.
+- **Forward P/E** is read weekly from FactSet's free Earnings Insight report by
+  `scripts/fetch_forward_pe.py` (run by the refresh workflow, stored in
+  `data/forward_pe.csv`). It is rounded to one decimal, parsed from a PDF, and its
+  history starts at the first fetched report unless you backfill (see below).
+  Check FactSet's terms of use before redistributing the series.
+- **Fear & Greed** requires an authorized feed. Without it the dashboard runs on
+  the remaining components and labels the result accordingly.
+- **Equity risk premium** falls back to a trailing-earnings proxy until forward
+  P/E has at least 12 observations and the latest is under 120 days old. The flag
+  `erp_proxy` is shown in the UI.
 - **Breadth** uses the current index constituent list for all history, which
   introduces survivorship bias. The flag `breadth_survivorship` is shown.
 - **Market cap / GDP** is a slow annual proxy with a long publication lag and zero
