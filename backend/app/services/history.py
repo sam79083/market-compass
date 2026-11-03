@@ -76,11 +76,11 @@ DATA_SOURCES = [
     },
     {
         "id": "forward_pe",
-        "name": "Licensed forward P/E feed",
-        "url": "",
+        "name": "FactSet Earnings Insight (weekly report)",
+        "url": "https://insight.factset.com/",
         "used_for": ["Forward P/E", "Forward ERP"],
-        "frequency": "Vendor-defined",
-        "limitations": "Not bundled. Requires a licensed CSV/URL and an explicit earnings basis.",
+        "frequency": "Weekly",
+        "limitations": "Parsed from a weekly PDF report, rounded to one decimal. History starts at the first fetched report unless backfilled.",
     },
     {
         "id": "fear_greed",

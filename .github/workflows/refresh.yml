@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "30 22 * * 1-5"
   workflow_dispatch:
+    inputs:
+      forward_pe_since:
+        description: "Backfill forward P/E from this date (YYYY-MM-DD). Leave empty for the last 21 days."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -28,6 +33,19 @@ jobs:
       - name: Install backend dependencies
         run: pip install -r backend/requirements.txt
 
+      - name: Fetch forward P/E from FactSet Earnings Insight
+        # A parser or network failure must not block the rest of the daily refresh.
+        continue-on-error: true
+        env:
+          SINCE: ${{ github.event.inputs.forward_pe_since }}
+        run: |
+          pip install requests pypdf
+          if [ -n "$SINCE" ]; then
+            python scripts/fetch_forward_pe.py --out data/forward_pe.csv --since "$SINCE"
+          else
+            python scripts/fetch_forward_pe.py --out data/forward_pe.csv
+          fi
+
       - name: Restore observation cache
         uses: actions/cache@v4
         with:
@@ -43,7 +61,8 @@ jobs:
           ALLOW_UNOFFICIAL_PRICE_FEED: "true"
           BREADTH_ENABLED: "true"
           ERP_METHOD: auto
-          FORWARD_PE_CSV_URL: ${{ secrets.FORWARD_PE_CSV_URL }}
+          # A FORWARD_PE_CSV_URL secret, if set, overrides the file fetched above.
+          FORWARD_PE_CSV_URL: ${{ secrets.FORWARD_PE_CSV_URL || format('file://{0}/data/forward_pe.csv', github.workspace) }}
           FEAR_GREED_CSV_URL: ${{ secrets.FEAR_GREED_CSV_URL }}
         run: |
           python -m app.cli refresh --validate
@@ -54,6 +73,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add frontend/public/data
+          if [ -f data/forward_pe.csv ]; then git add data/forward_pe.csv; fi
           if git diff --cached --quiet; then
             echo "No snapshot changes"
           else
