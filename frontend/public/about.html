@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Market Compass is a transparent, point-in-time valuation dashboard for the U.S. stock market, built from public data and open methodology."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/pages.css" />
+    <title>About — Market Compass</title>
+  </head>
+  <body>
+    <header class="site-head">
+      <a class="brand" href="/">Market Compass</a>
+      <nav aria-label="Site">
+        <a href="/about" aria-current="page">About</a>
+        <a href="/methodology">Methodology</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </nav>
+    </header>
+
+    <main>
+      <span class="badge">About the project</span>
+      <h1>A transparent valuation compass for the U.S. stock market.</h1>
+      <p class="lede">
+        Market Compass turns ten public market signals into one 0–100 relative-attractiveness
+        score, then shows its work: the raw data, the percentile windows, the weights, the missing
+        inputs, and the historical record.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Point-in-time by design</h3>
+          <p class="small muted">
+            Each score uses only information that would have been available on that date, including
+            publication lags. The history is not rebuilt with hindsight.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Missing data stays missing</h3>
+          <p class="small muted">
+            Unavailable indicators are disclosed and excluded, never silently replaced with a
+            different metric. Coverage and confidence are shown next to the score.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Open and reproducible</h3>
+          <p class="small muted">
+            The scoring code, weights, and validation output are public. A weights hash lets you
+            confirm which configuration produced a snapshot.
+          </p>
+        </div>
+      </div>
+
+      <h2>What the dashboard shows</h2>
+      <p>
+        The composite combines four categories: fundamental valuation, relative attractiveness
+        versus Treasuries, sentiment and momentum, and market breadth. Each underlying indicator is
+        converted to a 0–100 score against its own rolling history. Higher scores mean conditions
+        have historically been more favorable; lower scores mean more expensive or more stretched
+        conditions.
+      </p>
+      <p>
+        The score is a description of the present, not a forecast. A market can stay expensive for
+        years, and a cheap market can get cheaper. The validation page shows what forward returns
+        have looked like after similar readings, including how often the signal was early or wrong.
+      </p>
+
+      <h2>Why it exists</h2>
+      <p>
+        Most valuation dashboards hide their assumptions behind a single number. Market Compass was
+        built to make the assumptions inspectable: which data is stale, which indicator is a proxy,
+        which history has survivorship bias, and how much of the composite is actually covered.
+      </p>
+      <p>
+        It is also a deliberately small project. There is no account, no portfolio tracking, no
+        trading integration, and no paywall. The goal is a useful public reference, not a signal
+        service.
+      </p>
+
+      <h2>Data and refresh schedule</h2>
+      <p>
+        The site is a static snapshot. A scheduled GitHub Actions workflow refreshes the data on
+        weekday evenings (U.S. market days), recomputes the scores, and publishes new JSON files.
+        The page you are reading is served from the same static build.
+      </p>
+      <ul>
+        <li>Shiller CAPE and earnings: Robert Shiller / shillerdata.com.</li>
+        <li>VIX: Cboe Global Markets.</li>
+        <li>10-year Treasury yield: U.S. Department of the Treasury.</li>
+        <li>Market capitalization / GDP: World Bank.</li>
+        <li>S&amp;P 500 prices and ETFs: Yahoo Finance’s public chart interface.</li>
+        <li>S&amp;P 500 constituents: public constituent dataset on GitHub.</li>
+      </ul>
+      <p class="note">
+        Some feeds are unofficial or have publication lags. Forward P/E and CNN Fear &amp; Greed
+        require licensed or authorized feeds and stay marked unavailable until configured. Read the
+        <a href="/methodology">methodology</a> and the data notes on the dashboard before using a
+        score.
+      </p>
+
+      <h2>Who it is for</h2>
+      <p>
+        Individual investors, students, journalists, and researchers who want a transparent starting
+        point for thinking about long-term market conditions. It is not a substitute for a financial
+        adviser, a licensed data terminal, or your own risk tolerance.
+      </p>
+      <p>
+        It is not intended for high-frequency trading, professional investment advice, or decisions
+        that require real-time or licensed data. See the <a href="/terms">terms and disclaimer</a>.
+      </p>
+
+      <h2>Independence and funding</h2>
+      <p>
+        Market Compass is independently run. There are no sponsored rankings, paid placements, or
+        affiliate recommendations. The site may display advertising to cover domain and hosting
+        costs; ads are separated from the analysis and do not influence the methodology.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions, corrections, or data-source suggestions:
+        <a href="mailto:[YOUR CONTACT EMAIL]">[YOUR CONTACT EMAIL]</a>. Please include the date and
+        indicator you are writing about.
+      </p>
+    </main>
+
+    <footer class="site-foot">
+      <nav aria-label="Footer">
+        <a href="/">Dashboard</a>
+        <a href="/about">About</a>
+        <a href="/methodology">Methodology</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </nav>
+      <p>
+        Market Compass is an informational research tool, not investment advice. Data may be
+        delayed, incomplete, or estimated. Past performance does not guarantee future results.
+      </p>
+      <p>© 2026 Market Compass. Built with public data.</p>
+    </footer>
+  </body>
+</html>

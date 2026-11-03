@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { dataSourceLabel, fetchCompositeHistory, fetchDashboard } from "./api";
 import { compositeChartOption } from "./charts";
+import { AdSlot } from "./components/AdSlot";
 import { CategoryStrip } from "./components/CategoryStrip";
 import { Chart } from "./components/Chart";
 import { IndicatorCard } from "./components/IndicatorCard";
@@ -378,6 +379,8 @@ export default function App() {
               ))}
             </section>
 
+            <AdSlot />
+
             <section className="panel quality-panel">
               <div className="panel-head">
                 <div>
@@ -412,6 +415,13 @@ export default function App() {
 
       <footer className="site-footer">
         <div>
+          <nav className="footer-links" aria-label="Site information">
+            <a href="/about">About</a>
+            <a href="/methodology">Methodology</a>
+            <a href="/faq">FAQ</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+          </nav>
           <strong>Market Compass</strong> · A historical relative-attractiveness summary, not a
           forecast or an automated buy/sell signal.
         </div>

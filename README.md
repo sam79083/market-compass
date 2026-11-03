@@ -162,12 +162,34 @@ windows are not independent, and historical data uses current-vintage series.
 
 ## Deployment
 
-### Cloudflare Pages (recommended if you add ads)
+### Cloudflare Workers (static assets, recommended)
+
+The repository includes `frontend/wrangler.jsonc`, which serves the Vite build
+(`frontend/dist`) as static assets. Workers Builds installs dependencies, runs
+the build, and deploys with Wrangler.
+
+1. Push the repository to GitHub.
+2. In Cloudflare, go to **Workers & Pages → Create → Workers → Connect to Git**
+   and select the repository.
+3. Set **Root directory** to `frontend`, **Build command** to `npm run build`,
+   and keep **Deploy command** `npx wrangler deploy`. `frontend/.nvmrc` pins
+   Node 22.
+4. Deploy. The URL is `https://market-compass.<account>.workers.dev`.
+5. Add a custom domain under the Worker's **Settings → Domains & Routes**.
+   Workers custom domains require the domain's nameservers to be on Cloudflare;
+   buying through Cloudflare Registrar is the simplest option. TLS is automatic.
+6. Open **Actions → Refresh market data → Run workflow** once. The workflow
+   commits fresh snapshots and triggers a new Workers build.
+
+Workers Free includes 3,000 build minutes/month and 20,000 static files at
+25 MiB each; static asset requests are free and unlimited. This project uses
+about 21 files and a 3.4 MiB maximum.
+
+### Cloudflare Pages (alternative)
 
 Cloudflare Pages' free plan allows commercial use and does not charge for static
 requests or bandwidth. The limits that matter are 500 builds/month, 20,000 files,
-and 25 MiB per file. This project uses about 15 files and a 3.4 MiB maximum, so
-it fits comfortably.
+and 25 MiB per file.
 
 1. Push the repository to GitHub.
 2. In the Cloudflare dashboard, go to **Workers & Pages → Create → Pages →
@@ -271,22 +293,31 @@ not need to be deployed. The refresh workflow is host-agnostic: it only updates
 
 | Host | Free static hosting | Notes |
 | --- | --- | --- |
-| Cloudflare Pages | 500 builds/month, unlimited static requests, 25 MiB per file | Recommended for ads/commercial; no bandwidth charge |
+| Cloudflare Workers | 3,000 build minutes/month, unlimited static requests, 20,000 files, 25 MiB per file | Recommended; custom domains require Cloudflare nameservers |
+| Cloudflare Pages | 500 builds/month, unlimited static requests, 25 MiB per file | Commercial-friendly; custom domains can use external DNS |
 | Vercel Hobby | 100 GB transfer/month, 100 deployments/day | No ads or commercial use |
 | Render static | 5 GB bandwidth/month, 500 build minutes/month | Hobby is for personal projects; free web services spin down and cron is not free |
 | GitHub Pages | ~100 GB/month soft limit, 1 GB site size | Free accounts require a public repository; not for commercial/business use |
 
 ### If you add ads
 
-- Start with Google AdSense. Approval needs a real domain, crawlable content, a
-  privacy policy, and a certified consent banner for EEA/UK traffic. A
-  client-rendered dashboard may be rejected, so add crawlable About, Methodology,
-  and FAQ pages rather than keeping everything inside modals.
-- Add an `ads.txt` file with your publisher ID, keep ads below the fold, and
-  never click your own ads.
-- Hosting stays free on Cloudflare Pages as traffic grows. The real upgrade
-  thresholds are set by the ad network (AdSense, Ezoic, Mediavine, Raptive), not
-  by hosting.
+- The repository includes crawlable `/about`, `/methodology`, `/faq`, `/privacy`,
+  and `/terms` pages, plus an optional ad slot below the indicator grid. The slot
+  is hidden unless both `VITE_ADSENSE_CLIENT` and `VITE_ADSENSE_SLOT` are set as
+  build variables. See `frontend/.env.example`.
+- Replace the bracketed placeholders in `frontend/public/privacy.html` and
+  `frontend/public/terms.html` (contact email, last-updated date, jurisdiction)
+  and have the policy reviewed for your jurisdiction.
+- After AdSense approval, rename `frontend/public/ads.txt.example` to `ads.txt`
+  and replace `pub-XXXXXXXXXXXXXXXX` with your publisher ID. When
+  `VITE_ADSENSE_CLIENT` is set, the build injects the AdSense account meta tag
+  and loader into `index.html` automatically.
+- In AdSense, enable a Google-certified consent management platform for EEA/UK
+  traffic. The privacy page links to Google Ads Settings and industry opt-outs.
+- Keep ads below the fold, never click your own ads, and do not place ads next to
+  misleading claims.
+- Hosting stays free on Cloudflare as traffic grows. The real upgrade thresholds
+  are set by the ad network (AdSense, Ezoic, Mediavine, Raptive), not by hosting.
 - Ad income is taxable and payouts usually start after a minimum threshold; treat
   it as pocket money, not a revenue plan.
 

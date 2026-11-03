@@ -84,7 +84,9 @@ INDICATORS: dict[str, IndicatorDef] = {
         optional=True,
         unavailable_reason=(
             "Requires a licensed forward-earnings feed. Set FORWARD_PE_CSV_URL or import a "
-            "licensed CSV to enable this indicator."
+            "licensed CSV. An external reference is available from "
+            "historyofmarket.com S&P 500 Forward P/E (CC BY 4.0, display only, do not redistribute; "
+            "external chart with attribution can be rendered client‑side)."
         ),
     ),
     "buffett": IndicatorDef(
@@ -167,7 +169,9 @@ INDICATORS: dict[str, IndicatorDef] = {
         optional=True,
         unavailable_reason=(
             "Requires an authorized CNN Fear & Greed feed. Set FEAR_GREED_CSV_URL or import a "
-            "licensed CSV. A labeled VIX/RSI proxy is shown in the summary."
+            "licensed CSV. An independent daily Fear & Greed index is available from "
+            "FearGreedChart.com (free API, history from Oct 2016, CORS-enabled). "
+            "A labeled VIX/RSI proxy is shown in the summary."
         ),
     ),
     "vix": IndicatorDef(
