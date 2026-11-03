@@ -1,0 +1,74 @@
+{
+  "version": "1.0.0",
+  "overall": {
+    "fundamental": 0.5,
+    "relative": 0.2,
+    "sentiment": 0.2,
+    "breadth": 0.1
+  },
+  "fundamental": {
+    "cape": 0.6,
+    "forward_pe": 0.4,
+    "buffett": 0.0
+  },
+  "relative": {
+    "erp": 1.0
+  },
+  "sentiment": {
+    "fear_greed": 0.3,
+    "vix": 0.25,
+    "rsi": 0.2,
+    "ma200_deviation": 0.25
+  },
+  "breadth": {
+    "breadth_200dma": 0.5,
+    "ew_cw_relative": 0.5
+  },
+  "thresholds": {
+    "very_overvalued": 20,
+    "overvalued": 40,
+    "neutral": 60,
+    "undervalued": 80
+  },
+  "windows": {
+    "default_years": 20,
+    "minimum_observations": {
+      "cape": 110,
+      "forward_pe": 60,
+      "buffett": 10,
+      "erp": 756,
+      "fear_greed": 60,
+      "vix": 756,
+      "rsi": 756,
+      "ma200_deviation": 756,
+      "breadth_200dma": 252,
+      "ew_cw_relative": 756
+    }
+  },
+  "staleness_days": {
+    "cape": 75,
+    "forward_pe": 120,
+    "buffett": 500,
+    "erp": 200,
+    "fear_greed": 10,
+    "vix": 10,
+    "rsi": 10,
+    "ma200_deviation": 10,
+    "breadth_200dma": 15,
+    "ew_cw_relative": 15
+  },
+  "availability_lag_days": {
+    "cape": 30,
+    "forward_pe": 45,
+    "buffett": 270,
+    "erp": 0,
+    "fear_greed": 0,
+    "vix": 0,
+    "rsi": 0,
+    "ma200_deviation": 0,
+    "breadth_200dma": 0,
+    "ew_cw_relative": 0
+  },
+  "minimum_coverage": 0.6,
+  "minimum_categories": 2
+}

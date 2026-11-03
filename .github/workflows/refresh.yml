@@ -1,0 +1,62 @@
+name: Refresh market data
+
+on:
+  schedule:
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-market-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Restore observation cache
+        uses: actions/cache@v4
+        with:
+          path: backend/data/valuation.db
+          key: valuation-db-${{ github.run_id }}
+          restore-keys: |
+            valuation-db-
+
+      - name: Refresh and export snapshots
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:///./data/valuation.db
+          ALLOW_UNOFFICIAL_PRICE_FEED: "true"
+          BREADTH_ENABLED: "true"
+          ERP_METHOD: auto
+          FORWARD_PE_CSV_URL: ${{ secrets.FORWARD_PE_CSV_URL }}
+          FEAR_GREED_CSV_URL: ${{ secrets.FEAR_GREED_CSV_URL }}
+        run: |
+          python -m app.cli refresh --validate
+          python -m app.cli export-static --out ../frontend/public/data
+
+      - name: Commit refreshed snapshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/public/data
+          if git diff --cached --quiet; then
+            echo "No snapshot changes"
+          else
+            git commit -m "chore: refresh market data"
+            git push
+          fi

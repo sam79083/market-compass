@@ -1,0 +1,213 @@
+import type { Band, RangeKey } from "./types";
+
+export const DEFAULT_BANDS: Band[] = [
+  { key: "very_overvalued", label: "Very Overvalued", min: 0, max: 20, color: "#e06c75" },
+  { key: "overvalued", label: "Overvalued", min: 20, max: 40, color: "#e39a5c" },
+  { key: "neutral", label: "Neutral", min: 40, max: 60, color: "#d8c07a" },
+  { key: "undervalued", label: "Undervalued", min: 60, max: 80, color: "#6fcfb2" },
+  { key: "very_undervalued", label: "Very Undervalued", min: 80, max: 100, color: "#4fb98a" },
+];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  fundamental: "#d8b26a",
+  relative: "#7aa2f7",
+  sentiment: "#c792ea",
+  breadth: "#6fcfb2",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  fresh: "#6fcfb2",
+  stored: "#7aa2f7",
+  degraded: "#e39a5c",
+  stale: "#e39a5c",
+  unscored: "#8b9aa8",
+  unavailable: "#8b9aa8",
+  unknown: "#8b9aa8",
+};
+
+export function bandForScore(score: number | null, bands: Band[] = DEFAULT_BANDS): Band {
+  if (score === null || !Number.isFinite(score)) {
+    return { key: "unavailable", label: "Insufficient data", min: 0, max: 100, color: "#8b9aa8" };
+  }
+  return bands.find((band) => score >= band.min && score < band.max) ?? bands[bands.length - 1];
+}
+
+export function scoreColor(score: number | null): string {
+  return bandForScore(score).color;
+}
+
+export function categoryColor(category: string): string {
+  return CATEGORY_COLORS[category] ?? "#d8b26a";
+}
+
+export function statusColor(status: string): string {
+  return STATUS_COLORS[status] ?? STATUS_COLORS.unknown;
+}
+
+export function statusLabel(status: string): string {
+  switch (status) {
+    case "fresh":
+      return "Fresh";
+    case "stored":
+      return "Stored";
+    case "degraded":
+      return "Degraded";
+    case "stale":
+      return "Stale";
+    case "unscored":
+      return "Unscored";
+    case "unavailable":
+      return "Unavailable";
+    default:
+      return "Unknown";
+  }
+}
+
+export function qualityLabels(quality: string | null | undefined): string[] {
+  if (!quality) return [];
+  return quality
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      switch (item) {
+        case "ok":
+          return "OK";
+        case "proxy":
+          return "Trailing proxy";
+        case "survivorship":
+          return "Survivorship bias";
+        case "short_window":
+          return "Short window";
+        case "supplementary":
+          return "Supplementary";
+        case "direct_scale":
+          return "Direct scale";
+        default:
+          return item.replaceAll("_", " ");
+      }
+    });
+}
+
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const parsed = new Date(`${value.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(parsed);
+}
+
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) return "—";
+  const normalized = /[zZ]|[+-]\d\d:\d\d$/.test(value) ? value : `${value}Z`;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(parsed);
+}
+
+export function formatNumber(value: number | null | undefined, digits = 1): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value);
+}
+
+export function formatCompact(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+export function formatCoverage(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return `${Math.round(value * 100)}%`;
+}
+
+export function formatPercent(value: number | null | undefined, digits = 1): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return `${formatNumber(value * 100, digits)}%`;
+}
+
+export function formatSigned(value: number | null | undefined, digits = 2, suffix = ""): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${formatNumber(value, digits)}${suffix}`;
+}
+
+export function formatScore(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return Math.round(value).toString();
+}
+
+export function titleCase(value: string): string {
+  return value
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+export function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace("#", "");
+  const full =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((character) => character + character)
+          .join("")
+      : normalized;
+  const value = Number.parseInt(full, 16);
+  if (Number.isNaN(value)) return `rgba(216, 178, 106, ${alpha})`;
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+export function escapeHtml(value: unknown): string {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+export function rangeStart(latest: string | null | undefined, range: RangeKey): string | null {
+  if (!latest || range === "max") return null;
+  const years = Number.parseInt(range.replace("y", ""), 10);
+  if (!Number.isFinite(years)) return null;
+  const date = new Date(`${latest.slice(0, 10)}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - Math.round(years * 365.25));
+  return date.toISOString().slice(0, 10);
+}
+
+export function filterByRange<T extends { date: string }>(
+  points: T[],
+  latest: string | null | undefined,
+  range: RangeKey,
+): T[] {
+  const start = rangeStart(latest, range);
+  if (!start) return points;
+  return points.filter((point) => point.date >= start);
+}
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+export function percentChange(current: number | null, previous: number | null): number | null {
+  if (current === null || previous === null || previous === 0) return null;
+  return (current / previous - 1) * 100;
+}

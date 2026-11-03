@@ -1,0 +1,69 @@
+services:
+  - type: web
+    name: valuation-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ALLOW_UNOFFICIAL_PRICE_FEED
+        value: "true"
+      - key: BREADTH_ENABLED
+        value: "true"
+      - key: FORWARD_PE_CSV_URL
+        sync: false
+      - key: FORWARD_PE_EARNINGS_BASIS
+        value: operating
+      - key: FEAR_GREED_CSV_URL
+        sync: false
+      - key: ERP_METHOD
+        value: auto
+
+  - type: web
+    name: valuation-dashboard
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: valuation-api
+          property: host
+
+  - type: cron
+    name: valuation-refresh
+    runtime: python
+    rootDir: backend
+    schedule: "0 22 * * 1-5"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.cli refresh --validate
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOW_UNOFFICIAL_PRICE_FEED
+        value: "true"
+      - key: BREADTH_ENABLED
+        value: "true"
+      - key: FORWARD_PE_CSV_URL
+        sync: false
+      - key: FORWARD_PE_EARNINGS_BASIS
+        value: operating
+      - key: FEAR_GREED_CSV_URL
+        sync: false
+      - key: ERP_METHOD
+        value: auto
