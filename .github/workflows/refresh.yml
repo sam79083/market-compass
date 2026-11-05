@@ -46,6 +46,13 @@ jobs:
             python scripts/fetch_forward_pe.py --out data/forward_pe.csv
           fi
 
+      - name: Fetch Fear & Greed history (unofficial CNN endpoint)
+        # Best effort: if it fails, Fear & Greed just stays unavailable for this run.
+        continue-on-error: true
+        run: |
+          pip install requests
+          python scripts/fetch_fear_greed.py --out data/fear_greed.csv
+
       - name: Restore observation cache
         uses: actions/cache@v4
         with:
@@ -65,7 +72,8 @@ jobs:
           ERP_METHOD: trailing
           # A FORWARD_PE_CSV_URL secret, if set, overrides the file fetched above.
           FORWARD_PE_CSV_URL: ${{ secrets.FORWARD_PE_CSV_URL || format('file://{0}/data/forward_pe.csv', github.workspace) }}
-          FEAR_GREED_CSV_URL: ${{ secrets.FEAR_GREED_CSV_URL }}
+          # A FEAR_GREED_CSV_URL secret, if set, overrides the file fetched above.
+          FEAR_GREED_CSV_URL: ${{ secrets.FEAR_GREED_CSV_URL || format('file://{0}/data/fear_greed.csv', github.workspace) }}
         run: |
           python -m app.cli refresh --validate
           python -m app.cli export-static --out ../frontend/public/data
@@ -76,6 +84,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add frontend/public/data
           if [ -f data/forward_pe.csv ]; then git add data/forward_pe.csv; fi
+          if [ -f data/fear_greed.csv ]; then git add data/fear_greed.csv; fi
           if git diff --cached --quiet; then
             echo "No snapshot changes"
           else
