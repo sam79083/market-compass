@@ -15,7 +15,7 @@ from app.ingestion.breadth import fetch_breadth
 from app.ingestion.cboe import fetch_vix
 from app.ingestion.csv_feed import load_csv_feed
 from app.ingestion.free_fear_greed import fetch_free_fear_greed
-    from app.ingestion.derived import (
+from app.ingestion.derived import (
         compute_erp,
         compute_ew_cw,
         erp_observations,
