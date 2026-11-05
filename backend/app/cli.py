@@ -109,7 +109,6 @@ def main() -> int:
         # Check if database is empty and auto-seed if --seed flag is set
         if args.seed and _database_is_empty(factory):
             _print({"status": "init", "database": settings.database_url.split("@")[-1], "seed": "generating..."})
-            import logging
             from app.seeds.generate_seeds import generate_seeds
             generate_seeds()
             with session_scope(factory) as session:
