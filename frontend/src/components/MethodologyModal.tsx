@@ -68,7 +68,7 @@ function HorizonTable({
 
 export function MethodologyModal({ onClose, locale = "kr" }: MethodologyModalProps) {
   const text = LOCALE_TEXT[locale];
-  const methodologyText = text;
+  const methodologyText = text.methodology_modal;
   const [data, setData] = useState<Methodology | null>(null);
   const [error, setError] = useState<string | null>(null);
 

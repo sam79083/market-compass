@@ -492,7 +492,18 @@ const en = {
   thresholds_localized: ({} as Record<string, Record<string, string>>),
 };
 
-type LocaleText = typeof en;
+export interface IndicatorLocale {
+  name: string;
+  short: string;
+  description: string;
+  methodology: string;
+  limitations: string;
+  source: string;
+}
+
+export type LocaleText = Omit<typeof en, "indicatorLocales"> & {
+  indicatorLocales: Record<string, IndicatorLocale>;
+};
 
 // ---------------------------------------------------------------------------
 
@@ -1029,7 +1040,7 @@ const kr: LocaleText = {
 
 };
 
-export const LOCALE_TEXT = { kr, en };
+export const LOCALE_TEXT: Record<LocaleKey, LocaleText> = { kr, en };
 
 export type LocaleTextType = typeof LOCALE_TEXT["kr"];
 
@@ -1240,6 +1251,6 @@ export function buildNarrative(
 }
 
 export function shortLabelFor(text: LocaleTextType, indicatorId: string): string {
-  const entry = (text.indicatorLocales as Record<string, { short: string }>)[indicatorId];
+  const entry = text.indicatorLocales[indicatorId];
   return entry ? entry.short : indicatorId;
 }
