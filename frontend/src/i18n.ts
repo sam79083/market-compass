@@ -336,7 +336,8 @@ const en = {
     conflict_components: (highName: string, high: number, lowName: string, low: number) =>
       `The components disagree materially: ${highName} scores ${high}/100 while ${lowName} scores ${low}/100.`,
   },
-  // methodology modal\n  methodology_modal: {
+  // methodology modal
+  methodology_modal: {
     eyebrow: "Transparency",
     title: "Methodology & validation",
     weights_hash: (hash: string) => `Weights hash ${hash}`,
@@ -487,7 +488,7 @@ const en = {
       limitations: "Adjusted ETF closes approximate total return with distributions reinvested; they are not an official total-return index. RSP inception is 2003. The ratio reflects concentration in large caps but has many other drivers.",
       source: "RSP and SPY adjusted closes (total-return proxy)",
     },
-  };
+  },
   thresholds_localized: ({} as Record<string, Record<string, string>>),
 };
 
@@ -1239,6 +1240,6 @@ export function buildNarrative(
 }
 
 export function shortLabelFor(text: LocaleTextType, indicatorId: string): string {
-  const entry = text.indicatorLocales[indicatorId];
+  const entry = (text.indicatorLocales as Record<string, { short: string }>)[indicatorId];
   return entry ? entry.short : indicatorId;
 }
