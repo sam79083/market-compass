@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "overall": {
     "fundamental": 0.5,
     "relative": 0.2,
@@ -36,13 +36,13 @@
       "cape": 110,
       "forward_pe": 60,
       "buffett": 10,
-      "erp": 756,
+      "erp": 504,
       "fear_greed": 60,
-      "vix": 756,
-      "rsi": 756,
-      "ma200_deviation": 756,
+      "vix": 504,
+      "rsi": 252,
+      "ma200_deviation": 504,
       "breadth_200dma": 252,
-      "ew_cw_relative": 756
+      "ew_cw_relative": 504
     }
   },
   "staleness_days": {

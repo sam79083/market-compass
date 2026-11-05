@@ -5,6 +5,7 @@ import { AdSlot } from "./components/AdSlot";
 import { CategoryStrip } from "./components/CategoryStrip";
 import { Chart } from "./components/Chart";
 import { IndicatorCard } from "./components/IndicatorCard";
+import { InvestorGuide } from "./components/InvestorGuide";
 import { IndicatorModal } from "./components/IndicatorModal";
 import { MethodologyModal } from "./components/MethodologyModal";
 import { ScoreDial } from "./components/ScoreDial";
@@ -68,6 +69,7 @@ export default function App() {
   const [compositeRange, setCompositeRange] = useState<RangeKey>("max");
   const [selected, setSelected] = useState<Indicator | null>(null);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const [investorGuideOpen, setInvestorGuideOpen] = useState(false);
 
   const t = LOCALE_TEXT[locale];
 

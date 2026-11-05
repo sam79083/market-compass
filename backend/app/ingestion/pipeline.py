@@ -14,14 +14,15 @@ from app.ingestion.base import SeriesResult
 from app.ingestion.breadth import fetch_breadth
 from app.ingestion.cboe import fetch_vix
 from app.ingestion.csv_feed import load_csv_feed
-from app.ingestion.derived import (
-    compute_erp,
-    compute_ew_cw,
-    erp_observations,
-    ew_cw_observations,
-    ma200_observations,
-    rsi_observations,
-)
+from app.ingestion.free_fear_greed import fetch_free_fear_greed
+    from app.ingestion.derived import (
+        compute_erp,
+        compute_ew_cw,
+        erp_observations,
+        ew_cw_observations,
+        ma200_observations,
+        rsi_observations,
+    )
 from app.ingestion.fetch import HttpClient
 from app.ingestion.shiller import fetch_shiller
 from app.ingestion.treasury import fetch_treasury_10y
@@ -205,11 +206,11 @@ def run_refresh(
             except Exception as exc:
                 fear_greed = _error_result("fear_greed", exc, "Authorized Fear & Greed feed")
         else:
-            fear_greed = _skipped_result(
-                "fear_greed",
-                INDICATORS["fear_greed"].unavailable_reason or "No authorized Fear & Greed feed configured.",
-                "Authorized Fear & Greed feed",
-            )
+            # Try free Fear & Greed data source as a fallback
+            try:
+                fear_greed = fetch_free_fear_greed(settings, client)
+            except Exception as exc:
+                fear_greed = _error_result("fear_greed", exc, "free Fear & Greed feed")
         series_results["fear_greed"] = fear_greed
         results.append(_store_result(session, fear_greed))
 

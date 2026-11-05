@@ -1,0 +1,137 @@
+{
+  "title": "What Your Indicator Values Mean for Your Money",
+  "description": "Plain-English guide to help new investors understand the Market Compass scores",
+  "how_scores_work": {
+    "title": "How the scores work",
+    "body": "Each indicator is scored 0-100. Higher scores (70-100) suggest the market is cheap (good time to invest). Lower scores (0-30) suggest the market is expensive (consider waiting). The composite score combines all indicators: 0-20 = \"Very Overvalued\" (expensive), 20-40 = \"Overvalued\", 40-60 = \"Neutral\", 60-80 = \"Undervalued\" (cheap), 80-100 = \"Very Undervalued\"."
+  },
+  "indicators": {
+    "cape": {
+      "title": "Shiller CAPE Ratio",
+      "what_it_is": "The S&P 500 price divided by the average of 10 years of inflation-adjusted earnings.",
+      "simple_explanation": "Imagine buying the entire S&P 500. You pay $X for every $1 of annual earnings you get. A CAPE of 40 means prices are 40 times earnings. Historically, CAPE above 30 often means lower future returns over the next 10 years. CAPE below 20 often means higher future returns.",
+      "actionable_meaning": "If CAPE is high (score below 30) -> the market may be expensive. Consider dollar-cost averaging into the market rather than lump-sum investing. If CAPE is low (score above 70) -> the market may be cheap. This could be a good time to invest.",
+      "analogy": "Think of it like buying a rental house. If the rent is $1,200/month and the house costs $600,000, that's a 50x multiple. If the rent doubles to $2,400 and the price stays $600,000, the multiple drops to 25x -- a better deal. CAPE does exactly this for stocks."
+    },
+    "forward_pe": {
+      "title": "S&P 500 Forward P/E Ratio",
+      "what_it_is": "The S&P 500 price divided by what analysts expect companies to earn over the next 12 months.",
+      "simple_explanation": "Similar to CAPE, but using future estimates instead of past earnings. It tells you: for every $100 you invest, how much are you expecting companies to earn next year? A P/E of 25 means for every $25 you pay, $1 of future earnings.",
+      "actionable_meaning": "A forward P/E above 25 typically means investors are optimistic about future growth. When it drops below 18, the market may be undervalued. Watch for changes from the past year -- rising forward P/E means either prices are getting expensive or earnings expectations are falling.",
+      "analogy": "Like guessing what a lemonade stand will earn next summer (forward PE) rather than looking at what it earned last summer (CAPE). Analysts try to predict this, but they can be too optimistic during booms."
+    },
+    "buffett": {
+      "title": "Buffett Indicator",
+      "what_it_is": "The total value of the U.S. stock market divided by the total value of the U.S. economy.",
+      "simple_explanation": "Warren Buffett called this 'probably the best single measure of where we stand in valuations today.' If the stock market is worth more than the entire country's GDP, things may be overvalued. If it's below 80% of GDP, stocks may be cheap.",
+      "actionable_meaning": "When the Buffett Indicator is above 200% (market > 2x GDP) -> very overvalued. Around 100-150% -> moderate pricing. Below 80% -> potentially undervalued. Historically, the market has averaged around 70-90% of GDP, but this ratio has risen over time.",
+      "analogy": "If your country produces $25 trillion in goods and services (GDP) and all the companies are worth $50 trillion (stock market), the stock market is 'worth more than the entire country.' That usually means prices are too high."
+    },
+    "erp": {
+      "title": "Equity Risk Premium",
+      "what_it_is": "How much extra return you get for buying stocks instead of safe government bonds.",
+      "simple_explanation": "If you could buy a 10-year government bond yielding 4%, and the stock market's earnings yield is 3.5%, the risk premium is -0.5%. You're getting LESS for taking MORE risk -- not a good trade. A positive ERP (say 3-4%) means stocks offer better compensation for the risk you're taking.",
+      "actionable_meaning": "ERP above 3% (score above 70) -> stocks are cheap relative to bonds. Good time to invest. ERP between 0-3% (score 40-60) -> fairly valued. ERP below 0% (score below 30) -> bonds pay more than stocks earn. Bonds may be the better choice right now.",
+      "analogy": "You have $10,000. A government bond pays you $400/year guaranteed (4%). Stocks might earn $350/year but come with swings and risk. If stocks pay less than bonds for taking more risk, where's the upside?"
+    },
+    "fear_greed": {
+      "title": "Fear & Greed Index",
+      "what_it_is": "A daily reading of whether investors are scared (0-0-40) or greedy (60-100) about the market.",
+      "simple_explanation": "When everyone is greedy and buying, prices tend to get too high (bad time for new investors). When everyone is fearful and selling, prices tend to get too low (good buying opportunity). This follows the classic advice: 'Be fearful when others are greedy, and greedy when others are fearful.'",
+      "actionable_meaning": "Below 20 (Extreme Fear) -> historically a buying opportunity. Between 20-40 (Fear) -> caution but not necessarily panic selling. Between 60-80 (Greed) -> market may be getting overvalued. Above 80 (Extreme Greed) -> very risky, consider taking some profits or waiting.",
+      "analogy": "Imagine everyone at the beach. When the water is calm (Extreme Greed), more people swim but drownings increase. When storms roll in (Extreme Fear), everyone runs from the water -- but the best swimmers know this is when to take a refreshing dip."
+    },
+    "vix": {
+      "title": "VIX (Volatility Index)",
+      "what_it_is": "Options traders' expectation of how much the S&P 500 will fluctuate over the next 30 days.",
+      "simple_explanation": "Known as the 'fear gauge.' A VIX below 20 suggests calm markets. A VIX above 30 indicates significant fear. Very high VIX (above 40) often coincides with market bottoms -- investors are panicking so much that prices become undervalued.",
+      "actionable_meaning": "VIX below 15 (score above 70) -> complacency. Markets are calm but potentially overvalued. VIX between 15-30 (score 40-60) -> normal market conditions. VIX above 30 (score below 30) -> fear is high. Historically, buying when VIX is high has produced strong returns over the following 12 months.",
+      "analogy": "VIX is like a weather forecast for market storms. VIX 10 means 'sunny days ahead.' VIX 40 means a hurricane warning. If the warning is wrong (markets rally), early buyers win big. If the warning is right, you've already braced the windows."
+    },
+    "rsi": {
+      "title": "RSI (Relative Strength Index)",
+      "what_it_is": "A speedometer measuring how fast and hard the S&P 500 has been rising or falling over the last 14 days.",
+      "simple_explanation": "RSI ranges from 0-100. Above 70 means the market has been rising strongly -- it might be 'overbought' and due for a pause. Below 30 means the market has been falling -- it might be 'oversold' and due for a bounce. But these levels are just conventions, not guarantees.",
+      "actionable_meaning": "RSI below 30 (score above 70) -> short-term oversold. Markets may bounce. RSI above 70 (score below 30) -> short-term overbought. Consider waiting for a dip before investing. Note: during strong trends, RSI can stay at extremes for a long time.",
+      "analogy": "Like a rubber band being stretched. The longer and harder it's pulled in one direction, the more likely it is to snap back. RSI measures how stretched the market is. A stretched band (high RSI) could snap back down. But sometimes it just stays stretched."
+    },
+    "ma200_deviation": {
+      "title": "Price vs 200-Day Moving Average",
+      "what_it_is": "How far above or below the S&P 500 is from its average price over the last 200 trading days.",
+      "simple_explanation": "The 200-day moving average is like a 'fair price' line based on recent history. If the market is above it, the trend is up. Below it, the trend is down. If it's 20% above, stocks may be getting expensive. If 10% below, they may be getting a discount.",
+      "actionable_meaning": "Above +20% -> the market may be overextended and overvalued. Below -20% -> the market may be undervalued. Between -10% and +10% -> near fair value. This is a trend-following measure, so it lags behind price but helps confirm whether trends are healthy or overheated.",
+      "analogy": "Your house just sold for $100 more than your block's average. That's exciting! But if every house is $50k above average, maybe the whole neighborhood got overinflated. The 200-day average is your block's 'normal' price."
+    },
+    "breadth_200dma": {
+      "title": "Market Breadth (Above 200-day Average)",
+      "what_it_is": "What percentage of all S&P 500 stocks are trading above their own 200-day average.",
+      "simple_explanation": "Even if the S&P 500 is up, only a few mega-tech stocks can be pulling the index higher. Breadth tells you how many stocks are participating. If only 30% of stocks are above their 200-day average, the rally is narrow and fragile. If 70%+ are above, the market is broadly healthy.",
+      "actionable_meaning": "Below 25% -> only a few stocks are strong. Market rally may be artificial. Above 75% -> broad market strength. A healthy breadth with good valuation suggests confidence in investing. Divergence (index rising but breadth falling) warns of weakness ahead.",
+      "analogy": "A party. If only the DJ and the most popular dancer are having fun while everyone else sits in the corner, it doesn't matter how loud the music is -- the party is failing. Breadth tells you how many people are actually having a good time."
+    },
+    "ew_cw_relative": {
+      "title": "Equal-Weight vs Cap-Weight Performance",
+      "what_it_is": "How the equal-weighted S&P 500 (RSP) is doing compared to the cap-weighted S&P 500 (SPY).",
+      "simple_explanation": "In a cap-weighted index, the largest companies dominate. In an equal-weighted index, all 500 companies get equal weight. When equal-weight outperforms, it means mid and small companies are doing well too -- broad market strength. When only mega-caps outperform, the market rally is narrow.",
+      "actionable_meaning": "When RSP (equal-weight) is outperforming SPY (cap-weight) -> good sign. The broader market is healthy. When SPY is significantly outperforming -> the rally is concentrated in mega-caps. Be cautious -- this often happens before market corrections.",
+      "analogy": "A school class. If only the valedictorian (mega-cap tech) is doing well, but everyone else is falling behind, the test might be unfair for the average student. An equal-weight perspective checks if the whole class is thriving -- or if it's just one star student."
+    }
+  },
+  "overall_scores": {
+    "composite_score": {
+      "title": "The Composite Score",
+      "meaning": "This is the big picture score combining all 10 indicators into one number from 0-100. It's your overall market valuation reading.",
+      "bands": [
+        {"range": "0-20", "label": "Very Overvalued", "advice": "Prices are historically expensive relative to earnings, GDP, and bonds. Strong caution is warranted. Consider reducing risky investments or waiting for a better entry point. If you must invest, keep positions smaller and diversify widely."},
+        {"range": "20-40", "label": "Overvalued", "advice": "The market is on the expensive side. It's still a valid strategy to invest, but manage risk. Use dollar-cost averaging (investing a fixed amount regularly) rather than going all-in at once."},
+        {"range": "40-60", "label": "Neutral", "advice": "The market is priced fairly based on available data. A reasonable time to invest with a long-term horizon. Don't try to time the market -- just invest consistently and hold."},
+        {"range": "60-80", "label": "Undervalued", "advice": "Prices are relatively cheap compared to historical norms. This is a favorable environment for investing. Consider increasing regular contributions. The market may offer strong returns over the next several years."},
+        {"range": "80-100", "label": "Very Undervalued", "advice": "Very rare. Markets are historically cheap. Historically, this has been an excellent time to invest. However, markets can stay 'cheap' longer than you expect -- don't go all-in at once."}
+      ]
+    },
+    "long_term_valuation": {
+      "title": "Long-term Valuation",
+      "meaning": "This focuses on fundamental measures (CAPE, earnings yield, risk premium) that predict returns over 10+ years.",
+      "advice": "If long-term valuation is favorable (score above 60) -> your 10-year strategy should emphasize stocks. If unfavorable (score below 40) -> consider a more balanced allocation with bonds, even if you have a long time horizon. This is about building resilience."
+    },
+    "current_conditions": {
+      "title": "Current Conditions",
+      "meaning": "This focuses on short-term sentiment, momentum, and market breadth -- the pulse of where the market is right now.",
+      "advice": "If conditions are supportive (score above 60) -> trends are favorable, momentum is positive. Good for continuing or starting investments. If unfavorable (score below 40) -> the market is sending caution signals. Wait for improvement or use dollar-cost averaging to smooth entries."
+    }
+  },
+  "key_principles": [
+    {
+      "principle": "No indicator is perfect",
+      "explanation": "Every indicator has blind spots. CAPE is slow to change. RSI can stay extreme during strong trends. The Buffett Indicator has drifted higher over time. Use the composite (all indicators combined) rather than any single measure."
+    },
+    {
+      "principle": "Time horizon matters most",
+      "explanation": "If you're investing for 20+ years (retirement, college fund), today's valuation matters less -- you have time to recover. If you need the money within 3 years, today's valuation is critical -- don't buy stocks before a major purchase if markets are expensive."
+    },
+    {
+      "principle": "Dollar-cost averaging beats timing",
+      "explanation": "Instead of trying to buy at the perfect moment, invest the same amount regularly (monthly, biweekly). This automatically buys more when prices are low and less when prices are high -- historically producing better results for most investors."
+    },
+    {
+      "principle": "Diversify to protect yourself",
+      "explanation": "Even during 'expensive' periods, a diversified portfolio (stocks + bonds + international) tends to survive and grow. The goal of valuation analysis is not to predict the market, but to inform your risk level and asset allocation."
+    },
+    {
+      "principle": "Past performance doesn't guarantee future results",
+      "explanation": "Historical percentiles (like 'CAPE has been higher 90% of the time') describe where we've been, not where we're going. Markets can reach 'extreme' valuations that last for years or even decades."
+    }
+  ],
+  "glossary": {
+    "S&P 500": "A collection of 500 large U.S. companies that represents about 80% of the total U.S. stock market. It's the most popular benchmark for 'the stock market.'",
+    "P/E Ratio": "Price-to-Earnings ratio. Price per share divided by earnings per share. A P/E of 20 means you pay $20 for $1 of annual earnings.",
+    "CAPE": "Cyclically Adjusted Price-to-Earnings ratio. Uses average of 10 years of inflation-adjusted earnings to smooth out temporary booms and busts.",
+    "Earnings Yield": "The inverse of P/E. If P/E is 25, earnings yield is 4% (1/25). It tells you the annual earnings return on your investment.",
+    "Risk Premium": "The extra return you earn for choosing stocks (risky) over bonds (safer). Positive premium = stocks pay more than bonds. Negative premium = bonds pay more.",
+    "Dollar-Cost Averaging": "Investing a fixed amount of money at regular intervals (e.g., $500 every month). This reduces the risk of investing all at once at a bad time.",
+    "Bonds": "Loans you give to governments or corporations in exchange for fixed interest payments. Generally less risky but also less rewarding than stocks.",
+    "Market Cap": "The total value of a company's shares. Larger companies have more influence on the S&P 500's performance.",
+    "Volatility": "How much prices fluctuate. High volatility = big swings. Low volatility = stable prices. The VIX measures expected volatility.",
+    "Mean Reversion": "The tendency for prices and metrics to return to their historical average over time. This is why valuation analysis has power."
+  }
+}
