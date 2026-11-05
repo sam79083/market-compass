@@ -60,7 +60,9 @@ jobs:
           DATABASE_URL: sqlite:///./data/valuation.db
           ALLOW_UNOFFICIAL_PRICE_FEED: "true"
           BREADTH_ENABLED: "true"
-          ERP_METHOD: auto
+          # "trailing" keeps the long earnings-yield history. "auto" switches to forward P/E,
+          # whose CSV is short and truncates ERP (and the composite history) to ~2022 onward.
+          ERP_METHOD: trailing
           # A FORWARD_PE_CSV_URL secret, if set, overrides the file fetched above.
           FORWARD_PE_CSV_URL: ${{ secrets.FORWARD_PE_CSV_URL || format('file://{0}/data/forward_pe.csv', github.workspace) }}
           FEAR_GREED_CSV_URL: ${{ secrets.FEAR_GREED_CSV_URL }}
