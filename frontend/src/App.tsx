@@ -5,8 +5,8 @@ import { AdSlot } from "./components/AdSlot";
 import { CategoryStrip } from "./components/CategoryStrip";
 import { Chart } from "./components/Chart";
 import { IndicatorCard } from "./components/IndicatorCard";
-import { InvestorGuide } from "./components/InvestorGuide";
 import { IndicatorModal } from "./components/IndicatorModal";
+import { InvestorGuide } from "./components/InvestorGuide";
 import { MethodologyModal } from "./components/MethodologyModal";
 import { ScoreDial } from "./components/ScoreDial";
 import { SignalCard } from "./components/SignalCard";
@@ -229,7 +229,7 @@ export default function App() {
                   </div>
                   <span className="as-of">{t.as_of} {formatDate(dashboard.as_of)}</span>
                 </div>
-                <ScoreDial overall={dashboard.overall} bands={dashboard.bands} theme={theme} />
+                <ScoreDial overall={dashboard.overall} bands={dashboard.bands} />
                 <div className="score-panel-foot">
                   <span>{t.latest_data} {formatDate(dashboard.latest_data)}</span>
                   <span>{t.refreshed} {formatDateTime(dashboard.freshness.last_refresh)}</span>
@@ -459,6 +459,9 @@ export default function App() {
         <IndicatorModal indicator={selected} theme={theme} onClose={() => setSelected(null)} />
       )}
       {methodologyOpen && <MethodologyModal onClose={() => setMethodologyOpen(false)} />}
+      {investorGuideOpen && (
+        <InvestorGuide locale={locale} onClose={() => setInvestorGuideOpen(false)} />
+      )}
     </div>
   );
 }

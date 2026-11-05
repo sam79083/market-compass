@@ -8,11 +8,10 @@ import { Chart } from "./Chart";
 interface ScoreDialProps {
   overall: Overall;
   bands: Band[];
-  theme: ThemeMode;
 }
 
-export function ScoreDial({ overall, bands, theme }: ScoreDialProps) {
-  const option = useMemo(() => gaugeOption(overall.score, theme), [overall.score, theme]);
+export function ScoreDial({ overall, bands }: ScoreDialProps) {
+  const option = useMemo(() => gaugeOption(overall.score, "dark" as ThemeMode), [overall.score]);
   const flagCount = overall.quality_flags.length;
 
   return (

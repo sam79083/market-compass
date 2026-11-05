@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
-import { formatScore } from "../utils";
 
 interface InvestorGuideProps {
-  theme: "dark" | "light";
   locale: LocaleKey;
-  hasData: boolean;
+  onClose?: () => void;
 }
 
 const bands = [
@@ -100,7 +97,7 @@ const indicatorGuideData = [
   },
 ];
 
-export function InvestorGuide({ theme, locale, hasData }: InvestorGuideProps) {
+export function InvestorGuide({ locale, onClose }: InvestorGuideProps) {
   const t = LOCALE_TEXT[locale];
   const guide = (t as any).glossary || {};
 
@@ -112,6 +109,9 @@ export function InvestorGuide({ theme, locale, hasData }: InvestorGuideProps) {
           <h2>{t.investor_guide_title}</h2>
           <p className="panel-sub">{t.investor_guide_intro}</p>
         </div>
+        {onClose && (
+          <button className="ghost-button" onClick={onClose}>Close</button>
+        )}
       </div>
 
       {/* Scoring bands */}
