@@ -28,14 +28,19 @@ BASE = (
 )
 SUFFIXES = ["", "A", "B", "C"]  # some weeks have EarningsInsight_120823A.pdf style names
 
+# Some PDFs extract with stray spaces inside the number ("2 1.5" for 21.5), so the
+# value pattern tolerates a space between digits; whitespace is stripped before float().
+NUM = r"(\d(?:\s?\d)?(?:\s?\.\s?\d+)?)"
+NUM_1DP = r"(\d(?:\s?\d)?\s?\.\s?\d)"
+
 # Tolerant of hyphen variants, "P / E", "was/of" instead of "is", and a missing "ratio"/"for the S&P 500".
 PE_RE = re.compile(
     r"forward\s*12\s*-?\s*month\s+P\s*/\s*E(?:\s+ratio)?(?:\s+for\s+the\s+S&P\s*500)?"
-    r"\s+(?:is|was|of)\s+(\d{1,2}(?:\.\d+)?)",
+    r"\s+(?:is|was|of)\s+" + NUM,
     re.I,
 )
 # Last resort: first one-decimal number shortly after the phrase.
-FALLBACK_RE = re.compile(r"forward\s*12\s*-?\s*month\s+P\s*/\s*E.{0,150}?(\d{1,2}\.\d)", re.I)
+FALLBACK_RE = re.compile(r"forward\s*12\s*-?\s*month\s+P\s*/\s*E.{0,150}?" + NUM_1DP, re.I)
 
 MIN_PE, MAX_PE = 5.0, 60.0  # sanity bounds; anything outside is treated as a parse error
 HEADERS = {"User-Agent": "market-compass-refresh/1.0"}
@@ -54,7 +59,7 @@ def parse_forward_pe(text: str) -> float | None:
     for rx in (PE_RE, FALLBACK_RE):
         m = rx.search(text)
         if m:
-            value = float(m.group(1))
+            value = float(re.sub(r"\s+", "", m.group(1)))
             if MIN_PE <= value <= MAX_PE:
                 return value
     return None
