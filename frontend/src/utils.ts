@@ -1,3 +1,4 @@
+import type { LocaleKey } from "./i18n";
 import type { Band, RangeKey } from "./types";
 
 export const DEFAULT_BANDS: Band[] = [
@@ -44,56 +45,73 @@ export function statusColor(status: string): string {
   return STATUS_COLORS[status] ?? STATUS_COLORS.unknown;
 }
 
-export function statusLabel(status: string): string {
-  switch (status) {
-    case "fresh":
-      return "Fresh";
-    case "stored":
-      return "Stored";
-    case "degraded":
-      return "Degraded";
-    case "stale":
-      return "Stale";
-    case "unscored":
-      return "Unscored";
-    case "unavailable":
-      return "Unavailable";
-    default:
-      return "Unknown";
-  }
+export function statusLabel(status: string, locale: LocaleKey = "en"): string {
+  const t = LOCALE_HELPER_TEXT[locale];
+  return t.status[status] ?? t.status.unknown;
 }
 
-export function qualityLabels(quality: string | null | undefined): string[] {
+export function qualityLabels(
+  quality: string | null | undefined,
+  locale: LocaleKey = "en",
+): string[] {
   if (!quality) return [];
+  const t = LOCALE_HELPER_TEXT[locale];
   return quality
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
-    .map((item) => {
-      switch (item) {
-        case "ok":
-          return "OK";
-        case "proxy":
-          return "Trailing proxy";
-        case "survivorship":
-          return "Survivorship bias";
-        case "short_window":
-          return "Short window";
-        case "supplementary":
-          return "Supplementary";
-        case "direct_scale":
-          return "Direct scale";
-        default:
-          return item.replaceAll("_", " ");
-      }
-    });
+    .map((item) => t.quality[item] ?? item.replaceAll("_", " "));
 }
 
-export function formatDate(value: string | null | undefined): string {
+const LOCALE_HELPER_TEXT = {
+  en: {
+    status: {
+      fresh: "Fresh",
+      stored: "Stored",
+      degraded: "Degraded",
+      stale: "Stale",
+      unscored: "Unscored",
+      unavailable: "Unavailable",
+      unknown: "Unknown",
+    } as Record<string, string>,
+    quality: {
+      ok: "OK",
+      proxy: "Trailing proxy",
+      survivorship: "Survivorship bias",
+      short_window: "Short window",
+      supplementary: "Supplementary",
+      direct_scale: "Direct scale",
+    } as Record<string, string>,
+  },
+  kr: {
+    status: {
+      fresh: "최신",
+      stored: "저장됨",
+      degraded: "일부 저하",
+      stale: "데이터 경과",
+      unscored: "미채점",
+      unavailable: "이용 불가",
+      unknown: "알 수 없음",
+    } as Record<string, string>,
+    quality: {
+      ok: "정상",
+      proxy: "후행 추정치",
+      survivorship: "생존편향",
+      short_window: "짧은 기간",
+      supplementary: "보조 지표",
+      direct_scale: "직접 스케일",
+    } as Record<string, string>,
+  },
+};
+
+export function formatDate(
+  value: string | null | undefined,
+  locale: LocaleKey = "en",
+): string {
   if (!value) return "—";
   const parsed = new Date(`${value.slice(0, 10)}T00:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return value;
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale === "kr" ? "ko-KR" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -101,12 +119,15 @@ export function formatDate(value: string | null | undefined): string {
   }).format(parsed);
 }
 
-export function formatDateTime(value: string | null | undefined): string {
+export function formatDateTime(
+  value: string | null | undefined,
+  locale: LocaleKey = "en",
+): string {
   if (!value) return "—";
   const normalized = /[zZ]|[+-]\d\d:\d\d$/.test(value) ? value : `${value}Z`;
   const parsed = new Date(normalized);
   if (Number.isNaN(parsed.getTime())) return value;
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale === "kr" ? "ko-KR" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

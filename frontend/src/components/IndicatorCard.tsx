@@ -26,17 +26,27 @@ interface IndicatorCardProps {
 }
 
 export function IndicatorCard({ indicator, theme, locale, onOpen }: IndicatorCardProps) {
-  const t = LOCALE_TEXT[locale];
+  const text = LOCALE_TEXT[locale];
   const available = Boolean(indicator.latest);
   const history = useIndicatorHistory(indicator.id, "10y", available);
   const score = indicator.score?.score ?? null;
   const color = scoreColor(score);
   const accent = categoryColor(indicator.category);
-  const quality = qualityLabels(indicator.score?.quality).slice(0, 2);
+  const quality = qualityLabels(indicator.score?.quality, locale).slice(0, 2);
   const option = useMemo(
     () => (history.data ? sparklineOption(history.data.points, indicator, theme) : null),
     [history.data, indicator, theme],
   );
+
+  const localized = text.indicatorLocales[indicator.id];
+  const displayName = localized?.short ?? indicator.short_name;
+  const fullName = localized?.name ?? indicator.name;
+  const categoryLabel =
+    text.category_labels[indicator.category as keyof typeof text.category_labels] ??
+    indicator.category_label;
+  const ariaLabel = `${fullName}. ${
+    available ? `${text.as_of_card} ${indicator.latest?.display}` : text.no_observation
+  }. ${text.aria_open_details}`;
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -52,25 +62,25 @@ export function IndicatorCard({ indicator, theme, locale, onOpen }: IndicatorCar
       tabIndex={0}
       onClick={() => onOpen(indicator)}
       onKeyDown={handleKeyDown}
-      aria-label={`${indicator.name}. ${available ? `${t.as_of_card} ${indicator.latest?.display}` : t.no_observation}. Open details.`}
+      aria-label={ariaLabel}
       style={{ "--indicator-accent": accent } as CSSProperties}
     >
       <div className="indicator-card-top">
         <div className="indicator-title">
-          <span className="indicator-name">{indicator.short_name}</span>
+          <span className="indicator-name">{displayName}</span>
           <span className="indicator-category" style={{ color: accent }}>
-            {indicator.category_label}
+            {categoryLabel}
           </span>
         </div>
         <div className="indicator-badges">
-          {indicator.supplementary && <span className="tiny-badge">{t.zero_weight}</span>}
+          {indicator.supplementary && <span className="tiny-badge">{text.zero_weight}</span>}
           {indicator.pending_estimate && (
-            <span className="tiny-badge tiny-badge-warn">{t.preliminary}</span>
+            <span className="tiny-badge tiny-badge-warn">{text.preliminary}</span>
           )}
           <span
             className="status-dot"
             style={{ background: statusColor(indicator.status) }}
-            title={statusLabel(indicator.status)}
+            title={statusLabel(indicator.status, locale)}
           />
         </div>
       </div>
@@ -80,8 +90,8 @@ export function IndicatorCard({ indicator, theme, locale, onOpen }: IndicatorCar
           <div className="indicator-value">{indicator.latest?.display ?? "—"}</div>
           <div className="indicator-date">
             {indicator.latest
-              ? `${t.as_of_card} ${formatDate(indicator.latest.date)}`
-              : t.no_observation}
+              ? `${text.as_of_card} ${formatDate(indicator.latest.date, locale)}`
+              : text.no_observation}
           </div>
         </div>
         {score !== null ? (
@@ -105,41 +115,41 @@ export function IndicatorCard({ indicator, theme, locale, onOpen }: IndicatorCar
           <Chart
             option={option}
             height={78}
-            ariaLabel={`${indicator.short_name} history`}
+            ariaLabel={`${displayName} ${locale === "kr" ? "히스토리" : "history"}`}
           />
         ) : available && history.loading ? (
           <div className="spark-skeleton" />
         ) : available && history.error ? (
-          <div className="spark-placeholder">{t.history_unavailable}</div>
+          <div className="spark-placeholder">{text.history_unavailable}</div>
         ) : (
           <div className="spark-placeholder">
-            <span className="feed-lock">{t.feed_required}</span>
-            <span>{indicator.optional ? t.authorized_not_configured : t.no_observation}</span>
+            <span className="feed-lock">{text.feed_required}</span>
+            <span>{indicator.optional ? text.authorized_not_configured : text.no_observation}</span>
           </div>
         )}
       </div>
 
       <div className="indicator-stats">
         <span>
-          {t.percentile}{" "}
+          {text.percentile}{" "}
           <strong>
             {indicator.score?.percentile !== null && indicator.score?.percentile !== undefined
-              ? `${Math.round(indicator.score.percentile)}th`
-              : "direct"}
+              ? text.percentile_th(Math.round(indicator.score.percentile))
+              : text.direct_scale_word}
           </strong>
         </span>
         <span>
-          {t.window}{" "}
+          {text.window}{" "}
           <strong>
             {indicator.score?.window_years_used !== null &&
             indicator.score?.window_years_used !== undefined
-              ? `${formatNumber(indicator.score.window_years_used, 1)}y`
+              ? `${formatNumber(indicator.score.window_years_used, 1)}${text.years_suffix_short}`
               : "—"}
           </strong>
         </span>
         {indicator.scored && indicator.latest?.is_estimate && (
           <span className="indicator-scored">
-            {t.scored} <strong>{indicator.scored.display}</strong>
+            {text.scored} <strong>{indicator.scored.display}</strong>
           </span>
         )}
       </div>
@@ -147,11 +157,14 @@ export function IndicatorCard({ indicator, theme, locale, onOpen }: IndicatorCar
       <div className="indicator-foot">
         <span className="indicator-weight">
           {indicator.weight > 0
-            ? `${Math.round(indicator.weight * 100)}% of ${indicator.category_label.toLowerCase()}`
-            : t.supplementary}
+            ? text.weight_of_category(
+                Math.round(indicator.weight * 100),
+                categoryLabel,
+              )
+            : text.supplementary}
         </span>
         <span className="indicator-quality">
-          {quality.length > 0 ? quality.join(" · ") : statusLabel(indicator.status)}
+          {quality.length > 0 ? quality.join(" · ") : statusLabel(indicator.status, locale)}
         </span>
         <span className="open-arrow" aria-hidden="true">
           ↗

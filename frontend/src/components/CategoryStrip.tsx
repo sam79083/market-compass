@@ -1,17 +1,37 @@
 import type { CSSProperties } from "react";
+import type { LocaleKey } from "../i18n";
+import { LOCALE_TEXT } from "../i18n";
 import type { Category } from "../types";
 import { formatCoverage, formatScore, hexToRgba } from "../utils";
 
 interface CategoryStripProps {
   categories: Category[];
+  locale?: LocaleKey;
 }
 
-export function CategoryStrip({ categories }: CategoryStripProps) {
+export function CategoryStrip({ categories, locale = "en" }: CategoryStripProps) {
+  const text = LOCALE_TEXT[locale];
   return (
-    <section className="category-grid" aria-label="Category scores">
+    <section
+      className="category-grid"
+      aria-label={locale === "kr" ? "카테고리 점수" : "Category scores"}
+    >
       {categories.map((category) => {
         const components = Object.values(category.components);
         const available = components.filter((component) => component.available).length;
+        const label =
+          text.category_labels[category.key as keyof typeof text.category_labels] ??
+          category.label;
+        const description =
+          text.category_descriptions[
+            category.key as keyof typeof text.category_descriptions
+          ] ?? category.description;
+        const classificationKey =
+          LOCALE_TEXT.en.classification_from_en[category.classification] ??
+          category.classification_key;
+        const classification =
+          text.band_labels[classificationKey as keyof typeof text.band_labels] ??
+          category.classification;
         return (
           <article
             className="category-card"
@@ -19,14 +39,14 @@ export function CategoryStrip({ categories }: CategoryStripProps) {
             style={{ "--category-color": category.color } as CSSProperties}
           >
             <div className="category-head">
-              <span className="category-name">{category.label}</span>
+              <span className="category-name">{label}</span>
               <span className="category-weight">{Math.round(category.weight * 100)}%</span>
             </div>
             <div className="category-main">
               <span className="category-score" style={{ color: category.color }}>
                 {formatScore(category.score)}
               </span>
-              <span className="category-classification">{category.classification}</span>
+              <span className="category-classification">{classification}</span>
             </div>
             <div className="category-bar">
               <span
@@ -37,12 +57,10 @@ export function CategoryStrip({ categories }: CategoryStripProps) {
               />
             </div>
             <div className="category-foot">
-              <span>Coverage {formatCoverage(category.coverage)}</span>
-              <span>
-                {available}/{components.length} signals
-              </span>
+              <span>{text.coverage_label} {formatCoverage(category.coverage)}</span>
+              <span>{text.signals_count(available)}</span>
             </div>
-            <p className="category-description">{category.description}</p>
+            <p className="category-description">{description}</p>
           </article>
         );
       })}

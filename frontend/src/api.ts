@@ -21,6 +21,8 @@ const staticMode =
 
 export const dataSourceLabel = staticMode ? "Static snapshot" : apiBase || "same origin";
 
+export const isStaticMode = staticMode;
+
 export const validationUrl = staticMode ? "/data/validation.json" : `${apiBase}/api/validation`;
 
 function dataPath(path: string): string {

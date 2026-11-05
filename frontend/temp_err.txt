@@ -1,0 +1,40 @@
+﻿src/i18n.ts(490,5): error TS1005: ',' expected.
+src/i18n.ts(490,8): error TS1005: ',' expected.
+src/i18n.ts(490,14): error TS1005: ',' expected.
+src/i18n.ts(490,21): error TS1005: '>' expected.
+src/i18n.ts(490,37): error TS1005: ',' expected.
+src/i18n.ts(490,52): error TS1005: ',' expected.
+src/i18n.ts(490,73): error TS1005: ',' expected.
+src/i18n.ts(490,94): error TS1005: ',' expected.
+src/i18n.ts(490,115): error TS1005: ',' expected.
+src/i18n.ts(490,134): error TS1109: Expression expected.
+src/i18n.ts(491,23): error TS1005: ';' expected.
+src/i18n.ts(491,28): error TS1434: Unexpected keyword or identifier.
+src/i18n.ts(492,1): error TS1109: Expression expected.
+src/i18n.ts(964,41): error TS1002: Unterminated string literal.
+src/i18n.ts(965,2): error TS1005: ',' expected.
+src/i18n.ts(965,6): error TS1005: ',' expected.
+src/i18n.ts(965,9): error TS1005: ',' expected.
+src/i18n.ts(965,14): error TS1005: ',' expected.
+src/i18n.ts(965,20): error TS1005: ',' expected.
+src/i18n.ts(965,22): error TS1005: ',' expected.
+src/i18n.ts(965,25): error TS1005: ',' expected.
+src/i18n.ts(965,28): error TS1005: ',' expected.
+src/i18n.ts(965,31): error TS1005: ',' expected.
+src/i18n.ts(965,35): error TS1005: ',' expected.
+src/i18n.ts(965,43): error TS1005: ',' expected.
+src/i18n.ts(965,47): error TS1005: ',' expected.
+src/i18n.ts(965,50): error TS1005: ',' expected.
+src/i18n.ts(965,53): error TS1005: ',' expected.
+src/i18n.ts(965,57): error TS1005: ',' expected.
+src/i18n.ts(965,60): error TS1005: ',' expected.
+src/i18n.ts(965,66): error TS1005: ',' expected.
+src/i18n.ts(965,70): error TS1005: ',' expected.
+src/i18n.ts(965,74): error TS1005: ',' expected.
+src/i18n.ts(965,77): error TS1005: ',' expected.
+src/i18n.ts(965,82): error TS1005: ',' expected.
+src/i18n.ts(965,83): error TS1003: Identifier expected.
+src/i18n.ts(965,85): error TS1002: Unterminated string literal.
+src/i18n.ts(966,7): error TS1005: ':' expected.
+src/i18n.ts(966,13): error TS1005: ',' expected.
+src/i18n.ts(966,42): error TS1005: ':' expected.

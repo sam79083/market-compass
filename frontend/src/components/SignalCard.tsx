@@ -8,6 +8,7 @@ interface SignalCardProps {
   coverage?: number | null;
   color?: string;
   accent?: string;
+  coverageLabel?: string;
 }
 
 export function SignalCard({
@@ -18,6 +19,7 @@ export function SignalCard({
   coverage,
   color = "#d8b26a",
   accent,
+  coverageLabel = "Coverage",
 }: SignalCardProps) {
   const barColor = accent ?? color;
   return (
@@ -46,7 +48,7 @@ export function SignalCard({
       <div className="signal-detail">
         {detail}
         {coverage !== undefined && coverage !== null && (
-          <span className="signal-coverage">Coverage {formatCoverage(coverage)}</span>
+          <span className="signal-coverage">{coverageLabel} {formatCoverage(coverage)}</span>
         )}
       </div>
     </div>

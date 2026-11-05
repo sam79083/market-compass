@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { indicatorChartOption } from "../charts";
+import { frequencyLabel, indicatorChartOption } from "../charts";
 import { useIndicatorHistory } from "../hooks";
+import { LOCALE_TEXT } from "../i18n";
+import type { LocaleKey } from "../i18n";
 import type { Indicator, IndicatorHistory, RangeKey, ThemeMode } from "../types";
 import {
   categoryColor,
@@ -16,27 +18,22 @@ import {
 } from "../utils";
 import { Chart } from "./Chart";
 
-const RANGES: Array<{ key: RangeKey; label: string }> = [
-  { key: "1y", label: "1Y" },
-  { key: "3y", label: "3Y" },
-  { key: "5y", label: "5Y" },
-  { key: "10y", label: "10Y" },
-  { key: "max", label: "Max" },
-];
-
 interface IndicatorModalProps {
   indicator: Indicator;
   theme: ThemeMode;
+  locale: LocaleKey;
   onClose: () => void;
 }
 
-export function IndicatorModal({ indicator, theme, onClose }: IndicatorModalProps) {
+export function IndicatorModal({ indicator, theme, locale, onClose }: IndicatorModalProps) {
   const [range, setRange] = useState<RangeKey>("10y");
   const history = useIndicatorHistory(indicator.id, "max", true);
+  const text = LOCALE_TEXT[locale];
+  const localized = text.indicatorLocales[indicator.id];
   const score = indicator.score?.score ?? null;
   const color = scoreColor(score);
   const accent = categoryColor(indicator.category);
-  const quality = qualityLabels(indicator.score?.quality);
+  const quality = qualityLabels(indicator.score?.quality, locale);
 
   useEffect(() => {
     const handleKey = (event: globalThis.KeyboardEvent) => {
@@ -59,8 +56,21 @@ export function IndicatorModal({ indicator, theme, onClose }: IndicatorModalProp
   const chartOption = useMemo(() => {
     if (!history.data || filteredPoints.length === 0) return null;
     const sliced: IndicatorHistory = { ...history.data, points: filteredPoints };
-    return indicatorChartOption(sliced, indicator, theme);
-  }, [history.data, filteredPoints, indicator, theme]);
+    return indicatorChartOption(sliced, indicator, theme, locale);
+  }, [history.data, filteredPoints, indicator, theme, locale]);
+
+  const sectionLabel =
+    text.section_labels[indicator.section as keyof typeof text.section_labels] ??
+    indicator.section_label;
+  const categoryLabel =
+    text.category_labels[indicator.category as keyof typeof text.category_labels] ??
+    indicator.category_label;
+  const status = statusLabel(indicator.status, locale);
+  const frequency = frequencyLabel(indicator.frequency, locale);
+  const sourceName = localized?.source ?? indicator.source_name;
+  const unavailableReason =
+    indicator.unavailable_reason ??
+    (locale === "kr" ? text.indicator_modal.not_configured_default : indicator.unavailable_reason);
 
   return (
     <div
@@ -73,66 +83,74 @@ export function IndicatorModal({ indicator, theme, onClose }: IndicatorModalProp
         <header className="modal-head">
           <div>
             <div className="eyebrow" style={{ color: accent }}>
-              {indicator.section_label} · {indicator.category_label}
+              {sectionLabel} · {categoryLabel}
             </div>
-            <h2 id="indicator-modal-title">{indicator.name}</h2>
+            <h2 id="indicator-modal-title">{localized?.name ?? indicator.name}</h2>
             <div className="modal-subhead">
               <span className="status-chip" style={{ borderColor: hexToRgba(statusColor(indicator.status), 0.35) }}>
                 <i className="status-dot" style={{ background: statusColor(indicator.status) }} />
-                {statusLabel(indicator.status)}
+                {status}
               </span>
-              <span>{indicator.frequency}</span>
-              <span>{indicator.source_name}</span>
+              <span>{frequency}</span>
+              <span>{sourceName}</span>
             </div>
           </div>
-          <button className="icon-button" onClick={onClose} aria-label="Close details">
+          <button className="icon-button" onClick={onClose} aria-label={text.close_aria}>
             ×
           </button>
         </header>
 
         {indicator.pending_estimate && indicator.latest?.is_estimate && (
           <div className="callout callout-warn">
-            The newest published observation is preliminary and excluded from scores. The scored
-            value is {indicator.scored?.display ?? "—"} as of {formatDate(indicator.scored?.date)}.
+            {text.indicator_modal.pending_callout_prefix}{" "}
+            {indicator.scored?.display ?? "—"}{" "}
+            {text.indicator_modal.pending_callout_suffix}{" "}
+            {formatDate(indicator.scored?.date, locale)}.
           </div>
         )}
 
         <div className="indicator-detail-grid">
           <div className="indicator-chart-panel">
             <div className="chart-toolbar">
-              <div className="range-buttons" role="group" aria-label="Chart range">
+              <div className="range-buttons" role="group" aria-label={locale === "kr" ? "차트 기간" : "Chart range"}>
                 {RANGES.map((item) => (
                   <button
                     key={item.key}
                     className={range === item.key ? "range-button is-active" : "range-button"}
                     onClick={() => setRange(item.key)}
                   >
-                    {item.label}
+                    {item.key === "max" ? text.max_range : item.label}
                   </button>
                 ))}
               </div>
               <span className="chart-caption">
-                {history.data?.available_from ? `History from ${formatDate(history.data.available_from)}` : ""}
+                {history.data?.available_from
+                  ? text.indicator_modal.history_from(formatDate(history.data.available_from, locale))
+                  : ""}
               </span>
             </div>
             {indicator.latest ? (
               history.loading ? (
                 <div className="chart-skeleton chart-skeleton-large" />
               ) : history.error ? (
-                <div className="chart-empty">Could not load history: {history.error}</div>
+                <div className="chart-empty">
+                  {text.indicator_modal.could_not_load_history} {history.error}
+                </div>
               ) : chartOption ? (
                 <Chart
                   option={chartOption}
                   height={330}
-                  ariaLabel={`${indicator.name} historical chart`}
+                  ariaLabel={`${localized?.name ?? indicator.name} ${
+                    locale === "kr" ? "과거 차트" : "historical chart"
+                  }`}
                 />
               ) : (
-                <div className="chart-empty">No observations in this range.</div>
+                <div className="chart-empty">{text.indicator_modal.no_observations_range}</div>
               )
             ) : (
               <div className="chart-empty chart-empty-feed">
-                <strong>Authorized feed required</strong>
-                <span>{indicator.unavailable_reason ?? "This indicator is not configured."}</span>
+                <strong>{text.indicator_modal.authorized_feed_required}</strong>
+                <span>{unavailableReason ?? text.indicator_modal.not_configured_default}</span>
               </div>
             )}
           </div>
@@ -140,52 +158,52 @@ export function IndicatorModal({ indicator, theme, onClose }: IndicatorModalProp
           <aside className="indicator-facts">
             <div className="fact-score" style={{ color }}>
               <span className="fact-score-number">{formatScore(score)}</span>
-              <span className="fact-score-label">out of 100</span>
+              <span className="fact-score-label">{text.indicator_modal.fact_out_of_100}</span>
             </div>
             <div className="fact-list">
               <div>
-                <span>Latest value</span>
+                <span>{text.indicator_modal.fact_latest_value}</span>
                 <strong>{indicator.latest?.display ?? "—"}</strong>
               </div>
               <div>
-                <span>Latest date</span>
-                <strong>{formatDate(indicator.latest?.date)}</strong>
+                <span>{text.indicator_modal.fact_latest_date}</span>
+                <strong>{formatDate(indicator.latest?.date, locale)}</strong>
               </div>
               <div>
-                <span>Scored date</span>
-                <strong>{formatDate(indicator.scored?.date ?? indicator.score?.score_date)}</strong>
+                <span>{text.indicator_modal.fact_scored_date}</span>
+                <strong>{formatDate(indicator.scored?.date ?? indicator.score?.score_date, locale)}</strong>
               </div>
               <div>
-                <span>Percentile</span>
+                <span>{text.indicator_modal.fact_percentile}</span>
                 <strong>
                   {indicator.score?.percentile !== null && indicator.score?.percentile !== undefined
-                    ? `${Math.round(indicator.score.percentile)}th`
-                    : "Direct scale"}
+                    ? text.percentile_th(Math.round(indicator.score.percentile))
+                    : text.direct_scale_word}
                 </strong>
               </div>
               <div>
-                <span>Window used</span>
+                <span>{text.indicator_modal.fact_window}</span>
                 <strong>
                   {indicator.score?.window_years_used !== null && indicator.score?.window_years_used !== undefined
-                    ? `${formatNumber(indicator.score.window_years_used, 1)} years`
+                    ? `${formatNumber(indicator.score.window_years_used, 1)}${text.years_suffix}`
                     : "—"}
                 </strong>
               </div>
               <div>
-                <span>Observations</span>
+                <span>{text.indicator_modal.fact_observations}</span>
                 <strong>{indicator.score?.observations_used ?? "—"}</strong>
               </div>
               <div>
-                <span>Category weight</span>
+                <span>{text.indicator_modal.fact_category_weight}</span>
                 <strong>{Math.round(indicator.weight * 100)}%</strong>
               </div>
               <div>
-                <span>Quality</span>
-                <strong>{quality.length > 0 ? quality.join(", ") : "OK"}</strong>
+                <span>{text.indicator_modal.fact_quality}</span>
+                <strong>{quality.length > 0 ? quality.join(", ") : qualityLabels("ok", locale).join(", ")}</strong>
               </div>
             </div>
             {indicator.supplementary && (
-              <div className="callout">Supplementary evidence. This indicator carries zero weight in the composite.</div>
+              <div className="callout">{text.indicator_modal.supplementary_note}</div>
             )}
             {indicator.status_message && (
               <div className="callout callout-muted">{indicator.status_message}</div>
@@ -195,22 +213,22 @@ export function IndicatorModal({ indicator, theme, onClose }: IndicatorModalProp
 
         <div className="indicator-notes">
           <section>
-            <h3>What it measures</h3>
-            <p>{indicator.description}</p>
+            <h3>{text.indicator_modal.what_it_measures}</h3>
+            <p>{localized?.description ?? indicator.description}</p>
           </section>
           <section>
-            <h3>Method</h3>
-            <p>{indicator.methodology}</p>
+            <h3>{text.indicator_modal.what_method}</h3>
+            <p>{localized?.methodology ?? indicator.methodology}</p>
           </section>
           <section>
-            <h3>Limitations</h3>
-            <p>{indicator.limitations}</p>
+            <h3>{text.indicator_modal.what_limitations}</h3>
+            <p>{localized?.limitations ?? indicator.limitations}</p>
           </section>
           {indicator.source_url && (
             <section>
-              <h3>Source</h3>
+              <h3>{text.indicator_modal.what_source}</h3>
               <a href={indicator.source_url} target="_blank" rel="noreferrer">
-                {indicator.source_name} ↗
+                {sourceName} ↗
               </a>
             </section>
           )}
@@ -219,3 +237,11 @@ export function IndicatorModal({ indicator, theme, onClose }: IndicatorModalProp
     </div>
   );
 }
+
+const RANGES: Array<{ key: RangeKey; label: string }> = [
+  { key: "1y", label: "1Y" },
+  { key: "3y", label: "3Y" },
+  { key: "5y", label: "5Y" },
+  { key: "10y", label: "10Y" },
+  { key: "max", label: "Max" },
+];

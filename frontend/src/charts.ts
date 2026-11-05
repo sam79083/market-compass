@@ -7,6 +7,8 @@ import type {
   IndicatorPoint,
   ThemeMode,
 } from "./types";
+import type { LocaleKey } from "./i18n";
+import { LOCALE_TEXT } from "./i18n";
 import { chartPalettes } from "./theme";
 import {
   bandForScore,
@@ -92,8 +94,31 @@ function tooltipRow(label: string, value: string, color?: string): string {
   }${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
 }
 
-export function gaugeOption(score: number | null, theme: ThemeMode): EChartsOption {
+/** Localizes the English classification string emitted by the composite history. */
+function compositeClassification(
+  point: CompositePoint & { classification: string },
+  locale: LocaleKey,
+): string {
+  const text = LOCALE_TEXT[locale];
+  const key =
+    LOCALE_TEXT.en.classification_from_en[point.classification] ?? point.classification;
+  const mapped =
+    text.band_labels[key as keyof typeof text.band_labels] ?? point.classification;
+  return mapped;
+}
+
+/** Localizes frequency words ("Daily", "Weekly", ...). */
+export function frequencyLabel(frequency: string, locale: LocaleKey = "en"): string {
+  return LOCALE_TEXT[locale].frequencies[frequency] ?? frequency;
+}
+
+export function gaugeOption(
+  score: number | null,
+  theme: ThemeMode,
+  locale: LocaleKey = "en",
+): EChartsOption {
   const palette = paletteFor(theme);
+  const labels = LOCALE_TEXT[locale].chart_labels;
   const bands = [
     { value: 20, color: "#e06c75" },
     { value: 40, color: "#e39a5c" },
@@ -147,7 +172,7 @@ export function gaugeOption(score: number | null, theme: ThemeMode): EChartsOpti
           fontFamily: "Georgia, Iowan Old Style, serif",
           formatter: (value: number) => (available ? Math.round(value).toString() : "—"),
         },
-        data: [{ value: available ? score : 0, name: "Composite score" }],
+        data: [{ value: available ? score : 0, name: labels.composite_gauge }],
       },
     ],
   };
@@ -185,8 +210,11 @@ export function compositeChartOption(
   bands: Band[],
   theme: ThemeMode,
   indicatorNames: Record<string, string>,
+  locale: LocaleKey = "en",
 ): EChartsOption {
   const palette = paletteFor(theme);
+  const text = LOCALE_TEXT[locale];
+  const labels = text.chart_labels;
   const dates = points.map((point) => point.date);
   const values = points.map((point) => point.score);
   const latest = points[points.length - 1];
@@ -230,14 +258,19 @@ export function compositeChartOption(
             ),
           )
           .join("");
+        const confidenceLabel =
+          text.confidence_labels[point.confidence] ?? point.confidence;
+        const confidenceText = locale === "kr"
+          ? `${labels.confidence_word} ${confidenceLabel}`
+          : `${confidenceLabel} ${labels.confidence_word}`;
         return `<div class="chart-tip">
-          <div class="chart-tip-head"><span>${escapeHtml(formatDate(point.date))}</span><strong style="color:${bandForScore(
+          <div class="chart-tip-head"><span>${escapeHtml(formatDate(point.date, locale))}</span><strong style="color:${bandForScore(
             point.score,
             bands,
           ).color}">${formatScore(point.score)}/100</strong></div>
-          <div class="chart-tip-sub">${escapeHtml(point.classification)} · coverage ${formatCoverage(
-            point.coverage,
-          )} · ${escapeHtml(point.confidence)} confidence</div>
+          <div class="chart-tip-sub">${escapeHtml(compositeClassification(point, locale))} · ${escapeHtml(
+            labels.coverage_word,
+          )} ${formatCoverage(point.coverage)} · ${escapeHtml(confidenceText)}</div>
           <div class="chart-tip-list">${components}</div>
         </div>`;
       },
@@ -252,7 +285,7 @@ export function compositeChartOption(
     }),
     series: [
       {
-        name: "Composite",
+        name: labels.composite_series,
         type: "line",
         data: values,
         showSymbol: false,
@@ -285,8 +318,10 @@ export function indicatorChartOption(
   history: IndicatorHistory,
   indicator: Indicator,
   theme: ThemeMode,
+  locale: LocaleKey = "en",
 ): EChartsOption {
   const palette = paletteFor(theme);
+  const labels = LOCALE_TEXT[locale].chart_labels;
   const points = history.points;
   const dates = points.map((point) => point.date);
   const isMulti = indicator.chart_kind === "ma200" || indicator.chart_kind === "relative";
@@ -304,47 +339,47 @@ export function indicatorChartOption(
         const point = points[list[0]?.dataIndex ?? 0];
         if (!point) return "";
         const header = `<div class="chart-tip-head"><span>${escapeHtml(
-          formatDate(point.date),
+          formatDate(point.date, locale),
         )}</span><strong>${escapeHtml(point.display)}</strong></div>`;
         if (indicator.chart_kind === "ma200") {
           return `<div class="chart-tip">${header}
             <div class="chart-tip-list">
-              ${tooltipRow("S&P 500", formatNumber(point.price, 2), palette.accent)}
-              ${tooltipRow("200-day average", formatNumber(point.ma200, 2), palette.blue)}
-              ${tooltipRow("Deviation", `${formatNumber(point.value, 2)}%`, scoreColor(50 + point.value))}
-              ${tooltipRow("20-day MA slope", `${formatNumber(point.ma200_slope_20d, 2)}%`, palette.muted)}
+              ${tooltipRow(labels.spx, formatNumber(point.price, 2), palette.accent)}
+              ${tooltipRow(labels.ma200, formatNumber(point.ma200, 2), palette.blue)}
+              ${tooltipRow(labels.deviation, `${formatNumber(point.value, 2)}%`, scoreColor(50 + point.value))}
+              ${tooltipRow(labels.ma_slope, `${formatNumber(point.ma200_slope_20d, 2)}%`, palette.muted)}
             </div>
-            <div class="chart-tip-sub">${escapeHtml(indicator.short_name)} · ${escapeHtml(
+            <div class="chart-tip-sub">${escapeHtml(history.indicator.short_name)} · ${escapeHtml(
               point.effective_date,
-            )}${point.is_estimate ? " · preliminary" : ""}</div>
+            )}${point.is_estimate ? ` · ${escapeHtml(labels.preliminary)}` : ""}</div>
           </div>`;
         }
         if (indicator.chart_kind === "relative") {
           return `<div class="chart-tip">${header}
             <div class="chart-tip-list">
-              ${tooltipRow("RSP (normalized)", formatNumber(point.rsp_norm, 1), palette.teal)}
-              ${tooltipRow("SPY (normalized)", formatNumber(point.spy_norm, 1), palette.blue)}
-              ${tooltipRow("RSP / SPY ratio", formatNumber(point.value, 3), primaryColor)}
-              ${tooltipRow("252-day change", `${formatNumber(point.rel_252d, 2)}%`, palette.muted)}
+              ${tooltipRow(labels.rsp_norm, formatNumber(point.rsp_norm, 1), palette.teal)}
+              ${tooltipRow(labels.spy_norm, formatNumber(point.spy_norm, 1), palette.blue)}
+              ${tooltipRow(labels.ratio, formatNumber(point.value, 3), primaryColor)}
+              ${tooltipRow(labels.change_252, `${formatNumber(point.rel_252d, 2)}%`, palette.muted)}
             </div>
-            <div class="chart-tip-sub">Total-return proxy · ${escapeHtml(point.effective_date)}</div>
+            <div class="chart-tip-sub">${escapeHtml(labels.total_return_proxy)} · ${escapeHtml(point.effective_date)}</div>
           </div>`;
         }
         return `<div class="chart-tip">${header}
-          <div class="chart-tip-sub">${escapeHtml(indicator.frequency)} · ${escapeHtml(
+          <div class="chart-tip-sub">${escapeHtml(frequencyLabel(indicator.frequency, locale))} · ${escapeHtml(
             point.effective_date,
-          )}${point.is_estimate ? " · preliminary" : ""}</div>
+          )}${point.is_estimate ? ` · ${escapeHtml(labels.preliminary)}` : ""}</div>
           ${
             indicator.id === "erp"
               ? `<div class="chart-tip-list">${tooltipRow(
-                  "Earnings yield",
+                  labels.earnings_yield,
                   `${formatNumber(point.earnings_yield, 2)}%`,
                   palette.teal,
                 )}${tooltipRow(
-                  "10Y Treasury",
+                  labels.treasury,
                   `${formatNumber(point.treasury_yield, 2)}%`,
                   palette.blue,
-                )}${tooltipRow("Method", point.method === "forward" ? "Forward" : "Trailing proxy", palette.muted)}</div>`
+                )}${tooltipRow(labels.method, point.method === "forward" ? labels.forward : labels.trailing, palette.muted)}</div>`
               : ""
           }
         </div>`;
@@ -367,11 +402,11 @@ export function indicatorChartOption(
         itemWidth: 10,
         itemHeight: 2,
         textStyle: { color: palette.muted, fontSize: 10 },
-        data: ["S&P 500", "200-day average"],
+        data: [labels.spx, labels.ma200],
       },
       series: [
         {
-          name: "S&P 500",
+          name: labels.spx,
           type: "line",
           data: points.map((point) => point.price ?? null),
           showSymbol: false,
@@ -380,7 +415,7 @@ export function indicatorChartOption(
           areaStyle: { color: areaGradient(palette.accent, theme === "dark" ? 0.14 : 0.1) },
         },
         {
-          name: "200-day average",
+          name: labels.ma200,
           type: "line",
           data: points.map((point) => point.ma200 ?? null),
           showSymbol: false,
@@ -424,23 +459,28 @@ export function indicatorChartOption(
     };
   }
 
-  const thresholdLines = indicator.thresholds.map((threshold) => ({
-    yAxis: threshold.value,
-    lineStyle: { color: palette.muted, type: "dashed" as const, width: 1 },
-    label: {
-      show: true,
-      position: "insideEndTop" as const,
-      color: palette.muted,
-      fontSize: 9,
-      formatter: threshold.label,
-    },
-  }));
+  const thresholdLines = indicator.thresholds.map((threshold) => {
+    const localized =
+      LOCALE_TEXT[locale].thresholds_localized[indicator.id]?.[String(threshold.value)] ??
+      threshold.label;
+    return {
+      yAxis: threshold.value,
+      lineStyle: { color: palette.muted, type: "dashed" as const, width: 1 },
+      label: {
+        show: true,
+        position: "insideEndTop" as const,
+        color: palette.muted,
+        fontSize: 9,
+        formatter: localized,
+      },
+    };
+  });
 
   return {
     ...base,
     series: [
       {
-        name: indicator.short_name,
+        name: LOCALE_TEXT[locale].indicatorLocales[indicator.id]?.short ?? indicator.short_name,
         type: "line",
         data: points.map((point) => point.value),
         showSymbol: false,
