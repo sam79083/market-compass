@@ -488,7 +488,7 @@ const en = {
       source: "RSP and SPY adjusted closes (total-return proxy)",
     },
   };
-  thresholds_localized: {} as Record<string, Record<string, string>>,
+  thresholds_localized: ({} as Record<string, Record<string, string>>),
 };
 
 type LocaleText = typeof en;
