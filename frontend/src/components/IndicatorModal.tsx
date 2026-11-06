@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { frequencyLabel, indicatorChartOption } from "../charts";
+import type { IndexKey } from "../api";
 import { useIndicatorHistory } from "../hooks";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
@@ -22,12 +23,13 @@ interface IndicatorModalProps {
   indicator: Indicator;
   theme: ThemeMode;
   locale: LocaleKey;
+  index: IndexKey;
   onClose: () => void;
 }
 
-export function IndicatorModal({ indicator, theme, locale, onClose }: IndicatorModalProps) {
+export function IndicatorModal({ indicator, theme, locale, index, onClose }: IndicatorModalProps) {
   const [range, setRange] = useState<RangeKey>("10y");
-  const history = useIndicatorHistory(indicator.id, "max", true);
+  const history = useIndicatorHistory(indicator.id, "max", true, index);
   const text = LOCALE_TEXT[locale];
   const localized = text.indicatorLocales[indicator.id];
   const score = indicator.score?.score ?? null;

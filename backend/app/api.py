@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api")
 
 RangeKey = Literal["1y", "3y", "5y", "10y", "max"]
 RangeQuery = Annotated[RangeKey, Query(alias="range")]
-IndexQuery = Annotated[str, Query(alias="index", regex="^(sp500|nasdaq)$")]
+IndexQuery = Annotated[str, Query(alias="index", pattern="^(sp500|nasdaq)$")]
 
 
 def get_session(request: Request):
@@ -53,9 +53,10 @@ def indicator_history(
     session: SessionDep,
     settings: SettingsDep,
     range_key: RangeQuery = "max",
+    index: IndexQuery = "sp500",
 ):
     try:
-        return get_indicator_history(session, settings, indicator_id, range_key)
+        return get_indicator_history(session, settings, indicator_id, range_key, index)
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Unknown indicator: {indicator_id}") from None
 
@@ -65,8 +66,9 @@ def composite_history(
     session: SessionDep,
     settings: SettingsDep,
     range_key: RangeQuery = "max",
+    index: IndexQuery = "sp500",
 ):
-    return get_composite_history(session, settings, range_key)
+    return get_composite_history(session, settings, range_key, index)
 
 
 @router.get("/methodology")
