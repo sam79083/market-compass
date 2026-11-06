@@ -12,6 +12,7 @@ from app.indicators import (
     CATEGORY_LABELS,
     CATEGORY_ORDER,
     INDICATORS,
+    INDICATORS_NASDAQ,
     SECTION_LABELS,
     VALUATION_BANDS,
     classify_valuation,
@@ -187,12 +188,15 @@ def _indicator_payloads(
     settings: Settings,
     composite: CompositeScore | None,
     run_status: dict[str, dict],
+    index: str = "sp500",
 ) -> dict[str, dict]:
     as_of = composite.score_date if composite else None
     today = date.today()
+    # Select the appropriate indicator dictionary based on the index parameter
+    indicators = INDICATORS_NASDAQ if index == "nasdaq" else INDICATORS
     payloads: dict[str, dict] = {}
     weights = settings.weights
-    for indicator_id, definition in INDICATORS.items():
+    for indicator_id, definition in indicators.items():
         published = _latest_observation(session, indicator_id, include_estimates=True)
         scored = _latest_observation(
             session, indicator_id, include_estimates=False, as_of=as_of
@@ -318,11 +322,11 @@ def _freshness(
     }
 
 
-def build_dashboard(session: Session, settings: Settings) -> dict[str, Any]:
+def build_dashboard(session: Session, settings: Settings, index: str = "sp500") -> dict[str, Any]:
     composite = _latest_composite(session)
     run = _latest_run(session)
     run_status = _run_status_map(run)
-    payloads = _indicator_payloads(session, settings, composite, run_status)
+    payloads = _indicator_payloads(session, settings, composite, run_status, index)
     weights = settings.weights
     categories = _category_payloads(composite, weights)
     stored_components = (composite.components or {}) if composite else {}

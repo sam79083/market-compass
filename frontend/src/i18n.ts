@@ -65,6 +65,8 @@ const en = {
   switch_to_dark: "Switch to dark mode",
   light: "Light",
   dark: "Dark",
+  index_sp500: "S&P 500",
+  index_nasdaq: "NASDAQ",
   signals_sub:
     "Each signal is scored 0-100 against its own history. Click a card for the full chart, method, and limitations.",
   // IndicatorCard strings
@@ -564,6 +566,8 @@ const kr: LocaleText = {
   switch_to_dark: "다크 모드로 전환",
   light: "라이트",
   dark: "다크",
+  index_sp500: "S&P 500",
+  index_nasdaq: "NASDAQ",
   signals_sub:
     "각 시그널은 자체 역사 기준 0~100점으로 환산됩니다. 카드를 클릭하면 상세 차트, 산출 방식, 한계를 볼 수 있습니다.",
   // IndicatorCard strings

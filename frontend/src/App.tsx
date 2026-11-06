@@ -69,6 +69,7 @@ export default function App() {
   const [selected, setSelected] = useState<Indicator | null>(null);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
   const [investorGuideOpen, setInvestorGuideOpen] = useState(false);
+  const [index, setIndex] = useState<"sp500" | "nasdaq">("nasdaq");
 
   const t = LOCALE_TEXT[locale];
 
@@ -86,7 +87,7 @@ export default function App() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetchDashboard(controller.signal)
+    fetchDashboard(controller.signal, { index })
       .then((payload) => {
         if (controller.signal.aborted) return;
         setDashboard(payload);
@@ -98,7 +99,7 @@ export default function App() {
         setLoading(false);
       });
     return () => controller.abort();
-  }, []);
+  }, [index]);
 
   useEffect(() => {
     const cleanup = loadDashboard();
@@ -248,6 +249,20 @@ export default function App() {
             <span className="lang-divider" />
             <span className={`lang-option ${locale === "en" ? "lang-active" : ""}`}>EN</span>
           </button>
+          <div className="index-selector">
+            <button
+              className={index === "sp500" ? "index-button is-active" : "index-button"}
+              onClick={() => setIndex("sp500")}
+            >
+              {t.index_sp500}
+            </button>
+            <button
+              className={index === "nasdaq" ? "index-button is-active" : "index-button"}
+              onClick={() => setIndex("nasdaq")}
+            >
+              {t.index_nasdaq}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -358,7 +373,7 @@ export default function App() {
                     color={trendColor(dashboard.trend.label)}
                     detail={
                       dashboard.trend.available
-                        ? `S&P 500 ${formatNumber(dashboard.trend.price, 0)} · ${
+                        ? `${trendIndexLabel} ${formatNumber(dashboard.trend.price, 0)} · ${
                             locale === "kr" ? "200일선" : "200d"
                           } ${formatNumber(dashboard.trend.ma200, 0)} · ${formatNumber(
                             dashboard.trend.deviation_pct,

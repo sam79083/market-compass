@@ -18,6 +18,7 @@ router = APIRouter(prefix="/api")
 
 RangeKey = Literal["1y", "3y", "5y", "10y", "max"]
 RangeQuery = Annotated[RangeKey, Query(alias="range")]
+IndexQuery = Annotated[str, Query(alias="index", regex="^(sp500|nasdaq)$")]
 
 
 def get_session(request: Request):
@@ -38,8 +39,12 @@ SettingsDep = Annotated[Settings, Depends(get_app_settings)]
 
 
 @router.get("/dashboard")
-def dashboard(session: SessionDep, settings: SettingsDep):
-    return build_dashboard(session, settings)
+def dashboard(
+    session: SessionDep,
+    settings: SettingsDep,
+    index: IndexQuery = "sp500",
+):
+    return build_dashboard(session, settings, index)
 
 
 @router.get("/indicators/{indicator_id}/history")
