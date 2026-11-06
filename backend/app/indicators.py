@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Literal
 
 Transform = Literal["inverse_percentile", "percentile", "inverse_level"]
@@ -29,6 +29,20 @@ class IndicatorDef:
     optional: bool = False
     unavailable_reason: str | None = None
     index: str = "sp500"
+    # Observation series that backs this indicator. Defaults to ``id``. The S&P 500 and
+    # NASDAQ views share indicator ids (so weights and the UI stay uniform) but must read
+    # different stored series; otherwise both views would show the same numbers.
+    obs_id: str | None = None
+    # False when no honest series exists for this index. The indicator is then reported as
+    # unavailable instead of silently borrowing another index's data.
+    has_series: bool = True
+
+
+def series_id_for(definition: IndicatorDef) -> str | None:
+    """Return the stored observation series id for an indicator, or None if it has none."""
+    if not definition.has_series:
+        return None
+    return definition.obs_id or definition.id
 
 
 INDICATORS: dict[str, IndicatorDef] = {
@@ -310,7 +324,7 @@ chart_kind="relative",
     ),
 }
 
-INDICATORS_NASDAQ: dict[str, IndicatorDef] = {
+_NASDAQ_BASE: dict[str, IndicatorDef] = {
     "cape": IndicatorDef(
         id="cape",
         name="Shiller CAPE Ratio",
@@ -588,6 +602,121 @@ INDICATORS_NASDAQ: dict[str, IndicatorDef] = {
         chart_kind="relative",
     ),
 }
+
+
+def _nasdaq_view() -> dict[str, IndicatorDef]:
+    """Rebind the NASDAQ definitions to NASDAQ-specific series.
+
+    Indicators with a real NASDAQ source read their own stored series. Indicators whose
+    source only covers the S&P 500 (Shiller CAPE, FactSet forward P/E, the earnings-based
+    equity risk premium, constituent breadth) are marked as having no series, so they show
+    as unavailable rather than repeating S&P 500 numbers under a NASDAQ label.
+    """
+    shared_note = (
+        " CNN Fear & Greed measures the broad U.S. market, so the same series is shown in "
+        "the S&P 500 and NASDAQ views."
+    )
+    overrides: dict[str, dict] = {
+        "cape": dict(
+            has_series=False,
+            description="Shiller's CAPE is published for the S&P 500 only; there is no NASDAQ CAPE.",
+            methodology="Not computed for the NASDAQ view.",
+            limitations="No free, consistent NASDAQ earnings history exists to build a CAPE.",
+            unavailable_reason=(
+                "Shiller CAPE covers the S&P 500 only. It is not repeated in the NASDAQ view."
+            ),
+        ),
+        "forward_pe": dict(
+            has_series=False,
+            description="Forward P/E for the NASDAQ is not available from the configured feed.",
+            methodology="Not computed for the NASDAQ view.",
+            limitations="FactSet Earnings Insight reports the S&P 500 forward P/E only.",
+            unavailable_reason=(
+                "The FactSet feed reports the S&P 500 forward P/E only. No NASDAQ forward "
+                "earnings feed is configured."
+            ),
+        ),
+        "buffett": dict(
+            has_series=False,
+            description="Market cap / GDP is a whole-market ratio and is not split by index.",
+            methodology="Not computed for the NASDAQ view.",
+            limitations="The World Bank series covers all U.S. listed companies.",
+            unavailable_reason="Market cap / GDP is not available per index.",
+        ),
+        "erp": dict(
+            has_series=False,
+            description="An equity risk premium needs NASDAQ earnings, which are not available.",
+            methodology="Not computed for the NASDAQ view.",
+            limitations="The S&P 500 earnings yield is not substituted for NASDAQ.",
+            unavailable_reason=(
+                "The equity risk premium is built from S&P 500 earnings and is not repeated "
+                "in the NASDAQ view."
+            ),
+        ),
+        "fear_greed": dict(
+            limitations=_NASDAQ_BASE["fear_greed"].limitations + shared_note,
+        ),
+        "vix": dict(
+            obs_id="vxn",
+            name="Cboe NASDAQ-100 Volatility Index (VXN)",
+            short_name="VXN",
+            description=(
+                "The options-implied expected 30-day volatility of the NASDAQ-100, "
+                "the NASDAQ counterpart of the VIX."
+            ),
+            source_name="Cboe VXN via Yahoo Finance (^VXN)",
+            methodology=(
+                "Daily closes of the Cboe NASDAQ-100 Volatility Index. The score is the "
+                "historical percentile of the current level over the configured window."
+            ),
+        ),
+        "rsi": dict(
+            obs_id="nasdaq_rsi",
+            name="NASDAQ Composite RSI (14-day)",
+            description="Wilder's 14-day Relative Strength Index of the NASDAQ Composite.",
+            source_name="NASDAQ Composite daily closes (^IXIC), Wilder RSI",
+        ),
+        "ma200_deviation": dict(
+            obs_id="nasdaq_ma200_deviation",
+            source_name="NASDAQ Composite daily closes (^IXIC), 200-day SMA",
+        ),
+        "breadth_200dma": dict(
+            has_series=False,
+            description="Share of NASDAQ constituents above their 200-day averages.",
+            methodology="Not computed for the NASDAQ view.",
+            limitations="No NASDAQ constituent list is configured.",
+            unavailable_reason=(
+                "NASDAQ breadth needs a NASDAQ constituent list, which is not configured. "
+                "S&P 500 breadth is not substituted."
+            ),
+        ),
+        "ew_cw_relative": dict(
+            obs_id="nasdaq_ew_cw_relative",
+            name="Equal-weight vs Cap-weight NASDAQ-100",
+            description=(
+                "Cumulative relative performance of the equal-weighted NASDAQ-100 (QQEW) "
+                "versus the cap-weighted NASDAQ-100 (QQQ)."
+            ),
+            source_name="QQEW / QQQ adjusted closes",
+            methodology=(
+                "The ratio of QQEW (First Trust NASDAQ-100 Equal Weighted ETF) adjusted close "
+                "to QQQ (Invesco QQQ, cap-weighted NASDAQ-100) adjusted close. Both series are "
+                "normalized to 100 at their common start. Scoring uses the trailing 252-day "
+                "relative return."
+            ),
+            limitations=(
+                "ETF-based proxy, not an official total-return index. QQEW began trading in "
+                "2006. The ratio reflects concentration in mega-caps but has other drivers."
+            ),
+        ),
+    }
+    return {
+        key: replace(definition, index="nasdaq", **overrides.get(key, {}))
+        for key, definition in _NASDAQ_BASE.items()
+    }
+
+
+INDICATORS_NASDAQ: dict[str, IndicatorDef] = _nasdaq_view()
 
 
 SECTION_LABELS = {

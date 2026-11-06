@@ -7,7 +7,8 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.indicators import INDICATORS
+from app.indicators import INDICATORS, INDICATORS_NASDAQ
+from app.scoring.engine import INDEX_KEYS
 from app.services.dashboard import build_dashboard
 from app.services.history import (
     get_composite_history,
@@ -37,10 +38,21 @@ def export_static(session: Session, settings: Settings, out_dir: Path) -> dict[s
     out = Path(out_dir)
     files: dict[str, int] = {}
 
-    files["dashboard.json"] = _write_json(out / "dashboard.json", build_dashboard(session, settings))
+    # The static frontend requests dashboard.<index>.json for each index it can show.
+    # dashboard.json (the S&P 500 view) is kept for older clients and the API default.
+    for index in INDEX_KEYS:
+        name = f"dashboard.{index}.json"
+        files[name] = _write_json(out / name, build_dashboard(session, settings, index))
+    files["dashboard.json"] = _write_json(
+        out / "dashboard.json", build_dashboard(session, settings, "sp500")
+    )
     files["composite-history.json"] = _write_json(
         out / "composite-history.json",
         get_composite_history(session, settings, "max"),
+    )
+    files["composite-history.nasdaq.json"] = _write_json(
+        out / "composite-history.nasdaq.json",
+        get_composite_history(session, settings, "max", "nasdaq"),
     )
     files["methodology.json"] = _write_json(
         out / "methodology.json",
@@ -51,6 +63,13 @@ def export_static(session: Session, settings: Settings, out_dir: Path) -> dict[s
         payload = get_indicator_history(session, settings, indicator_id, "max")
         files[f"indicators/{indicator_id}.json"] = _write_json(
             out / "indicators" / f"{indicator_id}.json",
+            payload,
+        )
+    # NASDAQ history lives in its own folder so the S&P 500 layout is unchanged.
+    for indicator_id in INDICATORS_NASDAQ:
+        payload = get_indicator_history(session, settings, indicator_id, "max", "nasdaq")
+        files[f"indicators/nasdaq/{indicator_id}.json"] = _write_json(
+            out / "indicators" / "nasdaq" / f"{indicator_id}.json",
             payload,
         )
 

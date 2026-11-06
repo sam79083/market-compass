@@ -35,6 +35,28 @@ excluded from the weighted average, and disclosed in the UI. The dashboard
 requires at least 60% component coverage and two categories before publishing a
 composite score; otherwise it returns "Insufficient data".
 
+## S&P 500 and NASDAQ views
+
+The dashboard has two views. Each reads its own stored series, so the numbers differ.
+
+| Indicator | S&P 500 view | NASDAQ view |
+| --- | --- | --- |
+| RSI, 200-day deviation | `^GSPC` | `^IXIC` |
+| Volatility | VIX | VXN (`^VXN`) |
+| Equal-weight vs cap-weight | RSP / SPY | QQEW / QQQ |
+| Fear & Greed | CNN (market-wide) | same series, shown in both |
+| CAPE, forward P/E, ERP, Market cap / GDP, constituent breadth | available | **unavailable** (S&P 500-only sources) |
+
+Indicators with no NASDAQ source are reported as unavailable rather than reusing S&P 500
+numbers. With CAPE, forward P/E and ERP missing, NASDAQ coverage is below the 60% minimum,
+so the NASDAQ composite score is withheld ("Insufficient data") while its sentiment, trend
+and breadth panels still show.
+
+`export-static` writes `dashboard.sp500.json`, `dashboard.nasdaq.json`,
+`composite-history.nasdaq.json` and `indicators/nasdaq/*.json` next to the S&P 500 files.
+The API takes `?index=sp500|nasdaq` on `/api/dashboard`, `/api/composite/history` and
+`/api/indicators/{id}/history`.
+
 ## Quick start
 
 ### 1. Backend

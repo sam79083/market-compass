@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { dataSourceLabel, fetchCompositeHistory, fetchDashboard, isStaticMode } from "./api";
+import type { IndexKey } from "./api";
 import { compositeChartOption } from "./charts";
 import { AdSlot } from "./components/AdSlot";
 import { CategoryStrip } from "./components/CategoryStrip";
@@ -69,7 +70,7 @@ export default function App() {
   const [selected, setSelected] = useState<Indicator | null>(null);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
   const [investorGuideOpen, setInvestorGuideOpen] = useState(false);
-  const [index, setIndex] = useState<"sp500" | "nasdaq">("nasdaq");
+  const [index, setIndex] = useState<IndexKey>("nasdaq");
 
   const t = LOCALE_TEXT[locale];
 
@@ -108,6 +109,11 @@ export default function App() {
     return cleanup;
   }, [loadDashboard]);
 
+  // An open indicator modal belongs to the previous index once the view switches.
+  useEffect(() => {
+    setSelected(null);
+  }, [index]);
+
   useEffect(() => {
     if (!dashboard?.has_data) {
       setCompositeHistory(null);
@@ -115,7 +121,7 @@ export default function App() {
     }
     const controller = new AbortController();
     setCompositeError(null);
-    fetchCompositeHistory("max", controller.signal)
+    fetchCompositeHistory("max", controller.signal, index)
       .then((payload) => {
         if (!controller.signal.aborted) setCompositeHistory(payload);
       })
@@ -125,7 +131,7 @@ export default function App() {
         }
       });
     return () => controller.abort();
-  }, [dashboard?.generated_at, dashboard?.has_data]);
+  }, [dashboard?.generated_at, dashboard?.has_data, index]);
 
   const compositePoints = useMemo(
     () =>
@@ -494,6 +500,7 @@ export default function App() {
                         indicator={indicator}
                         theme={theme}
                         locale={locale}
+                        index={index}
                         onOpen={setSelected}
                       />
                     ))}
@@ -560,6 +567,7 @@ export default function App() {
           indicator={selected}
           theme={theme}
           locale={locale}
+          index={index}
           onClose={() => setSelected(null)}
         />
       )}

@@ -79,7 +79,9 @@ def test_export_static_writes_snapshots(tmp_path):
         result = export_static(session, settings, out)
 
     assert result["status"] == "ok"
-    assert result["files"] == len(INDICATORS) + 4
+    # dashboard.json + dashboard.{sp500,nasdaq}.json, composite-history{,.nasdaq}.json,
+    # methodology.json, validation.json, and one history file per indicator per index.
+    assert result["files"] == 2 * len(INDICATORS) + 7
     assert (out / "dashboard.json").exists()
     assert (out / "composite-history.json").exists()
     assert (out / "methodology.json").exists()

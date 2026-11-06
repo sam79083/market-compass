@@ -158,6 +158,11 @@ def run_refresh(
             ("^GSPC", "sp500_price", False, "Yahoo Finance / S&P 500"),
             ("RSP", "rsp", True, "Yahoo Finance / RSP adjusted close"),
             ("SPY", "spy", True, "Yahoo Finance / SPY adjusted close"),
+            # NASDAQ view: its own price, volatility and equal-weight/cap-weight series.
+            ("^IXIC", "nasdaq_price", False, "Yahoo Finance / NASDAQ Composite"),
+            ("^VXN", "vxn", False, "Yahoo Finance / Cboe NASDAQ-100 Volatility (VXN)"),
+            ("QQQ", "qqq", True, "Yahoo Finance / QQQ adjusted close"),
+            ("QQEW", "qqew", True, "Yahoo Finance / QQEW adjusted close"),
         ]:
             try:
                 result, frame = fetch_yahoo_series(
@@ -283,6 +288,54 @@ def run_refresh(
         )
     series_results["ew_cw_relative"] = ew_cw_result
     results.append(_store_result(session, ew_cw_result))
+
+    # NASDAQ-view derived series, computed from NASDAQ prices (never from S&P 500 prices).
+    nasdaq_price = series_results.get("nasdaq_price")
+    nasdaq_ok = bool(nasdaq_price and nasdaq_price.ok)
+    for series_id, builder, source in [
+        ("nasdaq_rsi", rsi_observations, "NASDAQ Composite daily closes / Wilder RSI"),
+        (
+            "nasdaq_ma200_deviation",
+            ma200_observations,
+            "NASDAQ Composite daily closes / 200-day SMA",
+        ),
+    ]:
+        if nasdaq_ok:
+            try:
+                derived = builder(price_frames["nasdaq_price"], source)
+                derived_result = _derived_result(
+                    series_id, derived, source, f"Computed {len(derived)} observations"
+                )
+            except Exception as exc:
+                derived_result = _error_result(series_id, exc, source)
+        else:
+            derived_result = _skipped_result(series_id, "NASDAQ price history is unavailable.")
+        series_results[series_id] = derived_result
+        results.append(_store_result(session, derived_result))
+
+    qqq = series_results.get("qqq")
+    qqew = series_results.get("qqew")
+    if qqq and qqew and qqq.ok and qqew.ok:
+        try:
+            # compute_ew_cw takes (equal-weight, cap-weight) frames.
+            nasdaq_relative = compute_ew_cw(price_frames["qqew"], price_frames["qqq"])
+            nasdaq_ew_cw = ew_cw_observations(nasdaq_relative, "QQEW/QQQ adjusted closes")
+            nasdaq_ew_cw_result = _derived_result(
+                "nasdaq_ew_cw_relative",
+                nasdaq_ew_cw,
+                "QQEW/QQQ adjusted closes",
+                f"Computed {len(nasdaq_ew_cw)} relative-performance observations",
+            )
+        except Exception as exc:
+            nasdaq_ew_cw_result = _error_result(
+                "nasdaq_ew_cw_relative", exc, "QQEW/QQQ adjusted closes"
+            )
+    else:
+        nasdaq_ew_cw_result = _skipped_result(
+            "nasdaq_ew_cw_relative", "QQEW and/or QQQ price history is unavailable."
+        )
+    series_results["nasdaq_ew_cw_relative"] = nasdaq_ew_cw_result
+    results.append(_store_result(session, nasdaq_ew_cw_result))
 
     earnings = series_results.get("earnings_yield")
     treasury_result = series_results.get("treasury_10y")

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchIndicatorHistory } from "./api";
+import type { IndexKey } from "./api";
 import type { IndicatorHistory, RangeKey } from "./types";
 
 export interface AsyncState<T> {
@@ -12,6 +13,7 @@ export function useIndicatorHistory(
   indicatorId: string,
   range: RangeKey,
   enabled = true,
+  index: IndexKey = "sp500",
 ): AsyncState<IndicatorHistory> {
   const [state, setState] = useState<AsyncState<IndicatorHistory>>({
     data: null,
@@ -26,7 +28,7 @@ export function useIndicatorHistory(
     }
     const controller = new AbortController();
     setState((current) => ({ ...current, loading: true, error: null }));
-    fetchIndicatorHistory(indicatorId, range, controller.signal)
+    fetchIndicatorHistory(indicatorId, range, controller.signal, index)
       .then((data) => {
         if (!controller.signal.aborted) setState({ data, loading: false, error: null });
       })
@@ -39,7 +41,7 @@ export function useIndicatorHistory(
         });
       });
     return () => controller.abort();
-  }, [indicatorId, range, enabled]);
+  }, [indicatorId, range, enabled, index]);
 
   return state;
 }

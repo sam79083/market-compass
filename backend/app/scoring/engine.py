@@ -8,13 +8,23 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.indicators import INDICATORS
+from app.indicators import INDICATORS, INDICATORS_NASDAQ, series_id_for
 from app.models import CategoryScore, ComponentScore, CompositeScore, Observation
 from app.scoring.composite import compute_composite
 from app.scoring.explain import build_explanation
 from app.scoring.percentile import component_history, score_dates_from_prices
 
 SCORED_INDICATORS = list(INDICATORS)
+PRICE_SERIES = {"sp500": "sp500_price", "nasdaq": "nasdaq_price"}
+INDEX_KEYS = tuple(PRICE_SERIES)
+
+
+def indicators_for(index: str):
+    if index not in PRICE_SERIES:
+        raise KeyError(index)
+    return INDICATORS_NASDAQ if index == "nasdaq" else INDICATORS
+
+
 RAW_INDICATORS = [
     "sp500_price",
     "rsp",
@@ -49,12 +59,17 @@ def load_observations(session: Session) -> dict[str, pd.DataFrame]:
     return result
 
 
-def _score_dates(observations: dict[str, pd.DataFrame], settings: Settings) -> list[date]:
-    price = observations.get("sp500_price")
+def _score_dates(
+    observations: dict[str, pd.DataFrame], settings: Settings, index: str = "sp500"
+) -> list[date]:
+    price = observations.get(PRICE_SERIES[index])
     if price is not None and not price.empty:
         valid = price[~price["is_estimate"].fillna(False).astype(bool)]
         dates = sorted(pd.to_datetime(valid["period_date"]).dt.date.tolist())
         return score_dates_from_prices(dates, settings.score_start_year)
+    if index != "sp500":
+        # No price history for this index yet: there is nothing honest to score.
+        return []
     start = pd.Timestamp(f"{settings.score_start_year}-01-01")
     end = pd.Timestamp(date.today())
     dates = pd.date_range(start=start, end=end, freq="BME").date.tolist()
@@ -90,15 +105,17 @@ def _quality_tags(indicator_id: str, frame: pd.DataFrame) -> tuple[str, ...]:
 def build_score_tables(
     observations: dict[str, pd.DataFrame],
     settings: Settings,
+    index: str = "sp500",
 ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
     weights = settings.weights
-    score_dates = _score_dates(observations, settings)
+    score_dates = _score_dates(observations, settings, index)
     if not score_dates:
         return pd.DataFrame(), []
 
     component_frames: list[pd.DataFrame] = []
-    for indicator_id, definition in INDICATORS.items():
-        frame = observations.get(indicator_id)
+    for indicator_id, definition in indicators_for(index).items():
+        series_id = series_id_for(definition)
+        frame = observations.get(series_id) if series_id else None
         if frame is None or frame.empty:
             continue
         prepared, score_column = _score_value_frame(indicator_id, frame)

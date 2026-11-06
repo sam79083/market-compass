@@ -16,9 +16,12 @@ from app.indicators import (
     INDICATORS,
     VALUATION_BANDS,
     format_value,
+    series_id_for,
 )
 from app.models import CompositeScore, Observation
+from app.scoring.engine import indicators_for
 from app.scoring.explain import DATA_NOTES, DISCLAIMER
+from app.services.index_scores import score_source
 
 RANGE_YEARS = {"1y": 1, "3y": 3, "5y": 5, "10y": 10, "max": None}
 
@@ -111,8 +114,7 @@ def _filter_start(latest: date | None, range_key: str) -> date | None:
     return latest - timedelta(days=round(years * 365.25))
 
 
-def _observation_point(row: Observation, indicator_id: str) -> dict:
-    definition = INDICATORS[indicator_id]
+def _observation_point(row: Observation, indicator_id: str, definition) -> dict:
     point = {
         "date": row.period_date.isoformat(),
         "effective_date": row.effective_date.isoformat(),
@@ -146,23 +148,28 @@ def get_indicator_history(
     settings: Settings,
     indicator_id: str,
     range_key: str = "max",
+    index: str = "sp500",
 ) -> dict[str, Any]:
-    if indicator_id not in INDICATORS:
+    definitions = indicators_for(index)
+    if indicator_id not in definitions:
         raise KeyError(indicator_id)
-    definition = INDICATORS[indicator_id]
+    definition = definitions[indicator_id]
+    series_id = series_id_for(definition)
     rows = (
         session.execute(
             select(Observation)
-            .where(Observation.indicator_id == indicator_id)
+            .where(Observation.indicator_id == series_id)
             .order_by(Observation.period_date, Observation.effective_date)
         )
         .scalars()
         .all()
+        if series_id
+        else []
     )
     latest_date = rows[-1].period_date if rows else None
     start = _filter_start(latest_date, range_key)
     filtered = [row for row in rows if start is None or row.period_date >= start]
-    points = [_observation_point(row, indicator_id) for row in filtered]
+    points = [_observation_point(row, indicator_id, definition) for row in filtered]
     return {
         "indicator": {
             "id": definition.id,
@@ -191,12 +198,9 @@ def get_composite_history(
     session: Session,
     settings: Settings,
     range_key: str = "max",
+    index: str = "sp500",
 ) -> dict[str, Any]:
-    rows = (
-        session.execute(select(CompositeScore).order_by(CompositeScore.score_date))
-        .scalars()
-        .all()
-    )
+    rows = score_source(session, settings, index).composites()
     scored = [row for row in rows if row.score is not None]
     latest_date = scored[-1].score_date if scored else (rows[-1].score_date if rows else None)
     start = _filter_start(latest_date, range_key)

@@ -19,6 +19,8 @@ const rawMode = (import.meta.env.VITE_DATA_MODE as string | undefined)?.trim().t
 const staticMode =
   rawMode === "static" || (rawMode !== "api" && import.meta.env.PROD && !rawBase);
 
+export type IndexKey = "sp500" | "nasdaq";
+
 export const dataSourceLabel = staticMode ? "Static snapshot" : apiBase || "same origin";
 
 export const isStaticMode = staticMode;
@@ -48,7 +50,7 @@ async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function fetchDashboard(signal?: AbortSignal, index?: "sp500" | "nasdaq"): Promise<Dashboard> {
+export function fetchDashboard(signal?: AbortSignal, index?: IndexKey): Promise<Dashboard> {
   const url = index
     ? staticMode ? `/data/dashboard.${index}.json` : `${dataPath("/dashboard")}?index=${index}`
     : staticMode ? "/data/dashboard.json" : dataPath("/dashboard");
@@ -58,23 +60,27 @@ export function fetchDashboard(signal?: AbortSignal, index?: "sp500" | "nasdaq")
 export function fetchCompositeHistory(
   range: RangeKey = "max",
   signal?: AbortSignal,
+  index: IndexKey = "sp500",
 ): Promise<CompositeHistory> {
-  return getJson<CompositeHistory>(
-    staticMode ? "/data/composite-history.json" : dataPath(`/composite/history?range=${range}`),
-    signal,
-  );
+  const url = staticMode
+    ? index === "nasdaq"
+      ? "/data/composite-history.nasdaq.json"
+      : "/data/composite-history.json"
+    : dataPath(`/composite/history?range=${range}&index=${index}`);
+  return getJson<CompositeHistory>(url, signal);
 }
 
 export function fetchIndicatorHistory(
   indicatorId: string,
   range: RangeKey = "10y",
   signal?: AbortSignal,
+  index: IndexKey = "sp500",
 ): Promise<IndicatorHistory> {
   const encoded = encodeURIComponent(indicatorId);
+  const staticPath =
+    index === "nasdaq" ? `/data/indicators/nasdaq/${encoded}.json` : `/data/indicators/${encoded}.json`;
   return getJson<IndicatorHistory>(
-    staticMode
-      ? `/data/indicators/${encoded}.json`
-      : dataPath(`/indicators/${encoded}/history?range=${range}`),
+    staticMode ? staticPath : dataPath(`/indicators/${encoded}/history?range=${range}&index=${index}`),
     signal,
   );
 }

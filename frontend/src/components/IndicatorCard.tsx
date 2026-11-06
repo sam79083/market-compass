@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { CSSProperties, KeyboardEvent } from "react";
 import { sparklineOption } from "../charts";
+import type { IndexKey } from "../api";
 import { useIndicatorHistory } from "../hooks";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
@@ -22,13 +23,14 @@ interface IndicatorCardProps {
   indicator: Indicator;
   theme: ThemeMode;
   locale: LocaleKey;
+  index: IndexKey;
   onOpen: (indicator: Indicator) => void;
 }
 
-export function IndicatorCard({ indicator, theme, locale, onOpen }: IndicatorCardProps) {
+export function IndicatorCard({ indicator, theme, locale, index, onOpen }: IndicatorCardProps) {
   const text = LOCALE_TEXT[locale];
   const available = Boolean(indicator.latest);
-  const history = useIndicatorHistory(indicator.id, "10y", available);
+  const history = useIndicatorHistory(indicator.id, "10y", available, index);
   const score = indicator.score?.score ?? null;
   const color = scoreColor(score);
   const accent = categoryColor(indicator.category);

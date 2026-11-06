@@ -11,16 +11,17 @@ from app.indicators import (
     CATEGORY_DESCRIPTIONS,
     CATEGORY_LABELS,
     CATEGORY_ORDER,
-    INDICATORS,
-    INDICATORS_NASDAQ,
     SECTION_LABELS,
     VALUATION_BANDS,
     classify_valuation,
     format_value,
+    series_id_for,
 )
 from app.models import ComponentScore, CompositeScore, IngestRun, Observation
 from app.scoring.composite import quality_flags, summarize_conditions, summarize_long_term
+from app.scoring.engine import indicators_for
 from app.scoring.explain import DISCLAIMER, build_explanation
+from app.services.index_scores import score_source
 
 
 def _latest_composite(session: Session) -> CompositeScore | None:
@@ -59,10 +60,9 @@ def _latest_observation(
     return session.execute(statement).scalar_one_or_none()
 
 
-def _observation_payload(observation: Observation | None, indicator_id: str) -> dict | None:
+def _observation_payload(observation: Observation | None, definition) -> dict | None:
     if observation is None:
         return None
-    definition = INDICATORS[indicator_id]
     return {
         "date": observation.period_date.isoformat(),
         "effective_date": observation.effective_date.isoformat(),
@@ -189,28 +189,34 @@ def _indicator_payloads(
     composite: CompositeScore | None,
     run_status: dict[str, dict],
     index: str = "sp500",
+    scores=None,
 ) -> dict[str, dict]:
     as_of = composite.score_date if composite else None
     today = date.today()
-    # Select the appropriate indicator dictionary based on the index parameter
-    indicators = INDICATORS_NASDAQ if index == "nasdaq" else INDICATORS
+    # Each index reads its own stored series (see IndicatorDef.obs_id / has_series).
+    indicators = indicators_for(index)
+    scores = scores or score_source(session, settings, index)
     payloads: dict[str, dict] = {}
     weights = settings.weights
     for indicator_id, definition in indicators.items():
-        published = _latest_observation(session, indicator_id, include_estimates=True)
-        scored = _latest_observation(
-            session, indicator_id, include_estimates=False, as_of=as_of
-        )
-        component = _latest_component(session, indicator_id)
-        published_payload = _observation_payload(published, indicator_id)
-        scored_payload = _observation_payload(scored, indicator_id)
+        series_id = series_id_for(definition)
+        if series_id is None:
+            published = scored = None
+        else:
+            published = _latest_observation(session, series_id, include_estimates=True)
+            scored = _latest_observation(
+                session, series_id, include_estimates=False, as_of=as_of
+            )
+        component = scores.latest_component(indicator_id)
+        published_payload = _observation_payload(published, definition)
+        scored_payload = _observation_payload(scored, definition)
         age_days = None
         pending = False
         if published is not None:
             age_days = (today - published.effective_date).days
             pending = published.effective_date > today
         stale = bool(age_days is not None and age_days > weights.staleness(indicator_id))
-        result = run_status.get(indicator_id, {})
+        result = run_status.get(series_id, {}) if series_id else {}
         run_state = result.get("status", "unknown")
         if published is None:
             status = "unavailable"
@@ -322,11 +328,12 @@ def _freshness(
     }
 
 
-def build_dashboard(session: Session, settings: Settings, index: str = "nasdaq") -> dict[str, Any]:
-    composite = _latest_composite(session)
+def build_dashboard(session: Session, settings: Settings, index: str = "sp500") -> dict[str, Any]:
+    scores = score_source(session, settings, index)
+    composite = scores.latest_composite()
     run = _latest_run(session)
     run_status = _run_status_map(run)
-    payloads = _indicator_payloads(session, settings, composite, run_status, index)
+    payloads = _indicator_payloads(session, settings, composite, run_status, index, scores)
     weights = settings.weights
     categories = _category_payloads(composite, weights)
     stored_components = (composite.components or {}) if composite else {}
@@ -402,7 +409,8 @@ def build_dashboard(session: Session, settings: Settings, index: str = "nasdaq")
         "trend": _trend(payloads),
         "explanation": explanation,
         "freshness": freshness,
-        "indicators": [payloads[indicator_id] for indicator_id in INDICATORS],
+        "index": index,
+        "indicators": [payloads[indicator_id] for indicator_id in payloads],
         "bands": VALUATION_BANDS,
         "weights": weights.model_dump(mode="json"),
         "weights_hash": weights.hash,
