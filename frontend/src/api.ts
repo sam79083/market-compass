@@ -48,11 +48,11 @@ async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function fetchDashboard(signal?: AbortSignal): Promise<Dashboard> {
-  return getJson<Dashboard>(
-    staticMode ? "/data/dashboard.json" : dataPath("/dashboard"),
-    signal,
-  );
+export function fetchDashboard(signal?: AbortSignal, index?: "sp500" | "nasdaq"): Promise<Dashboard> {
+  const url = index
+    ? staticMode ? `/data/dashboard.${index}.json` : `${dataPath("/dashboard")}?index=${index}`
+    : staticMode ? "/data/dashboard.json" : dataPath("/dashboard");
+  return getJson<Dashboard>(url, signal);
 }
 
 export function fetchCompositeHistory(

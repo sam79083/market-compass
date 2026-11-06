@@ -322,7 +322,7 @@ def _freshness(
     }
 
 
-def build_dashboard(session: Session, settings: Settings, index: str = "sp500") -> dict[str, Any]:
+def build_dashboard(session: Session, settings: Settings, index: str = "nasdaq") -> dict[str, Any]:
     composite = _latest_composite(session)
     run = _latest_run(session)
     run_status = _run_status_map(run)

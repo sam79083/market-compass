@@ -73,6 +73,8 @@ export default function App() {
 
   const t = LOCALE_TEXT[locale];
 
+  const trendIndexLabel = useMemo(() => (index === "nasdaq" ? "NASDAQ Composite" : "S&P 500"), [index]);
+
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_KEY, theme);
@@ -87,7 +89,7 @@ export default function App() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetchDashboard(controller.signal, { index })
+    fetchDashboard(controller.signal, index)
       .then((payload) => {
         if (controller.signal.aborted) return;
         setDashboard(payload);
