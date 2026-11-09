@@ -45,12 +45,15 @@ The dashboard has two views. Each reads its own stored series, so the numbers di
 | Volatility | VIX | VXN (`^VXN`) |
 | Equal-weight vs cap-weight | RSP / SPY | QQEW / QQQ |
 | Fear & Greed | CNN (market-wide) | same series, shown in both |
-| CAPE, forward P/E, ERP, Market cap / GDP, constituent breadth | available | **unavailable** (S&P 500-only sources) |
+| Market cap / GDP | World Bank (whole U.S. market) | same series, shown in both |
+| Constituent breadth | current S&P 500 members | current NASDAQ-100 members (`backend/app/data/nasdaq100_constituents.csv`, or `NASDAQ_CONSTITUENTS_URL`) |
+| CAPE, forward P/E, ERP | available | **unavailable** (S&P 500-only sources) |
 
 Indicators with no NASDAQ source are reported as unavailable rather than reusing S&P 500
 numbers. With CAPE, forward P/E and ERP missing, NASDAQ coverage is below the 60% minimum,
-so the NASDAQ composite score is withheld ("Insufficient data") while its sentiment, trend
-and breadth panels still show.
+so the NASDAQ composite score is withheld ("Insufficient data") while its other panels
+still show. The NASDAQ-100 list is reconstituted by Nasdaq every December; refresh the CSV
+then (breadth skips any symbol Yahoo can't price).
 
 `export-static` writes `dashboard.sp500.json`, `dashboard.nasdaq.json`,
 `composite-history.nasdaq.json` and `indicators/nasdaq/*.json` next to the S&P 500 files.

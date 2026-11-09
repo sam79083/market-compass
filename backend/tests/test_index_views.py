@@ -95,7 +95,6 @@ def seeded(tmp_path):
             "cape": 33.0,
             "forward_pe": 21.0,
             "erp": 1.5,
-            "buffett": 190.0,
             "breadth_200dma": 61.0,
         }.items():
             session.add(
@@ -106,6 +105,20 @@ def seeded(tmp_path):
                     value=value,
                     is_estimate=False,
                     source="test sp500 only",
+                    meta={},
+                )
+            )
+        # Market cap / GDP is whole-market and shared by both views; NASDAQ-100 breadth is its own
+        # series and deliberately differs from the S&P 500 value above.
+        for series_id, value in {"buffett": 190.0, "nasdaq_breadth_200dma": 47.0}.items():
+            session.add(
+                Observation(
+                    indicator_id=series_id,
+                    period_date=date(2024, 6, 28),
+                    effective_date=date(2024, 6, 28),
+                    value=value,
+                    is_estimate=False,
+                    source="test",
                     meta={},
                 )
             )
@@ -145,11 +158,26 @@ def test_nasdaq_does_not_borrow_sp500_only_indicators(seeded):
         nq = _by_id(build_dashboard(session, settings, "nasdaq"))
         sp = _by_id(build_dashboard(session, settings, "sp500"))
 
-    for indicator_id in ("cape", "forward_pe", "erp", "buffett", "breadth_200dma"):
+    # Earnings-based indicators have no NASDAQ source yet, so they stay unavailable.
+    for indicator_id in ("cape", "forward_pe", "erp"):
         assert sp[indicator_id]["latest"] is not None  # S&P 500 does have these
         assert nq[indicator_id]["latest"] is None
         assert nq[indicator_id]["status"] == "unavailable"
         assert nq[indicator_id]["unavailable_reason"]
+
+    # Breadth reads the NASDAQ-100 series, never the S&P 500 one.
+    assert nq["breadth_200dma"]["latest"]["value"] == pytest.approx(47.0)
+    assert sp["breadth_200dma"]["latest"]["value"] == pytest.approx(61.0)
+
+
+def test_market_cap_to_gdp_is_shared_by_both_views(seeded):
+    settings, factory = seeded
+    with factory() as session:
+        nq = _by_id(build_dashboard(session, settings, "nasdaq"))
+        sp = _by_id(build_dashboard(session, settings, "sp500"))
+    assert nq["buffett"]["latest"]["value"] == pytest.approx(190.0)
+    assert sp["buffett"]["latest"]["value"] == pytest.approx(190.0)
+    assert nq["buffett"]["status"] != "unavailable"
 
 
 def test_nasdaq_composite_is_withheld_without_valuation_inputs(seeded):
@@ -169,7 +197,7 @@ def test_index_definitions_have_no_silent_sp500_fallback():
         series_id = series_id_for(definition)
         if series_id is None:
             assert definition.unavailable_reason
-        elif indicator_id != "fear_greed":
+        elif indicator_id not in {"fear_greed", "buffett"}:  # deliberately market-wide
             assert series_id not in sp500_series
 
 

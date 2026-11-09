@@ -161,6 +161,10 @@ class Settings(BaseSettings):
     breadth_max_tickers: int = 503
     breadth_chunk_size: int = 100
     breadth_min_constituents: int = 400
+    # NASDAQ-100 breadth. With no URL the bundled app/data/nasdaq100_constituents.csv is used.
+    nasdaq_constituents_url: str | None = None
+    nasdaq_max_tickers: int = 110
+    nasdaq_breadth_min_constituents: int = 80
 
     score_start_year: int = 1990
     request_timeout_seconds: float = 45.0

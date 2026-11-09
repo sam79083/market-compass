@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.indicators import INDICATORS
 from app.ingestion.base import SeriesResult
-from app.ingestion.breadth import fetch_breadth
+from app.ingestion.breadth import fetch_breadth, fetch_nasdaq_breadth
 from app.ingestion.cboe import fetch_vix
 from app.ingestion.csv_feed import load_csv_feed
 from app.ingestion.free_fear_greed import fetch_free_fear_greed
@@ -233,6 +233,23 @@ def run_refresh(
             )
         series_results["breadth_200dma"] = breadth
         results.append(_store_result(session, breadth))
+
+        if include_breadth and settings.breadth_enabled:
+            try:
+                nasdaq_breadth = fetch_nasdaq_breadth(settings, client)
+            except Exception as exc:
+                logger.exception("NASDAQ-100 breadth ingestion failed")
+                nasdaq_breadth = _error_result(
+                    "nasdaq_breadth_200dma", exc, "NASDAQ-100 constituents"
+                )
+        else:
+            nasdaq_breadth = _skipped_result(
+                "nasdaq_breadth_200dma",
+                "Breadth ingestion is disabled for this run.",
+                "NASDAQ-100 constituents",
+            )
+        series_results["nasdaq_breadth_200dma"] = nasdaq_breadth
+        results.append(_store_result(session, nasdaq_breadth))
 
     price_obs = series_results.get("sp500_price")
     if price_obs and price_obs.ok:

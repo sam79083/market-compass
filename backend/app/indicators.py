@@ -637,11 +637,11 @@ def _nasdaq_view() -> dict[str, IndicatorDef]:
             ),
         ),
         "buffett": dict(
-            has_series=False,
-            description="Market cap / GDP is a whole-market ratio and is not split by index.",
-            methodology="Not computed for the NASDAQ view.",
-            limitations="The World Bank series covers all U.S. listed companies.",
-            unavailable_reason="Market cap / GDP is not available per index.",
+            # Whole-market ratio (all U.S. listed companies, which NASDAQ-listed firms are part
+            # of), so the same series is shown in both views, like Fear & Greed.
+            limitations=_NASDAQ_BASE["buffett"].limitations
+            + " It measures the whole U.S. listed market, not the NASDAQ alone, so the same "
+            "series is shown in the S&P 500 and NASDAQ views.",
         ),
         "erp": dict(
             has_series=False,
@@ -681,13 +681,25 @@ def _nasdaq_view() -> dict[str, IndicatorDef]:
             source_name="NASDAQ Composite daily closes (^IXIC), 200-day SMA",
         ),
         "breadth_200dma": dict(
-            has_series=False,
-            description="Share of NASDAQ constituents above their 200-day averages.",
-            methodology="Not computed for the NASDAQ view.",
-            limitations="No NASDAQ constituent list is configured.",
-            unavailable_reason=(
-                "NASDAQ breadth needs a NASDAQ constituent list, which is not configured. "
-                "S&P 500 breadth is not substituted."
+            obs_id="nasdaq_breadth_200dma",
+            name="NASDAQ-100 Constituents Above 200-day Average",
+            description=(
+                "The percentage of current NASDAQ-100 constituents trading above their own "
+                "200-day averages."
+            ),
+            source_name="Yahoo Finance adjusted prices for current NASDAQ-100 constituents",
+            source_url="https://www.nasdaq.com/market-activity/quotes/nasdaq-ndx-index",
+            methodology=(
+                "For each trading day, the percentage of the current NASDAQ-100 constituent "
+                "list whose adjusted close exceeds its own 200-trading-day simple moving "
+                "average. The component is trend-oriented: higher breadth maps to a higher "
+                "score through a historical percentile."
+            ),
+            limitations=(
+                "Current constituents are used for the whole history, so the series has "
+                "survivorship bias. The list is bundled with the project (or read from "
+                "NASDAQ_CONSTITUENTS_URL) and the index is reconstituted every December. "
+                "History is limited to the configured lookback (six years by default)."
             ),
         ),
         "ew_cw_relative": dict(
