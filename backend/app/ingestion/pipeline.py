@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.indicators import INDICATORS
 from app.ingestion.base import SeriesResult
-from app.ingestion.breadth import fetch_breadth
+from app.ingestion.breadth import fetch_breadth, fetch_nasdaq_breadth
 from app.ingestion.cboe import fetch_vix
 from app.ingestion.csv_feed import load_csv_feed
 from app.ingestion.free_fear_greed import fetch_free_fear_greed
@@ -21,6 +21,8 @@ from app.ingestion.derived import (
         erp_observations,
         ew_cw_observations,
         ma200_observations,
+        nasdaq_erp_observations,
+        compute_nasdaq_erp,
         rsi_observations,
     )
 from app.ingestion.fetch import HttpClient
@@ -199,6 +201,28 @@ def run_refresh(
         series_results["forward_pe"] = forward_pe
         results.append(_store_result(session, forward_pe))
 
+        if settings.nasdaq_pe_csv_url:
+            try:
+                nasdaq_pe = load_csv_feed(
+                    settings,
+                    client,
+                    "nasdaq_pe",
+                    settings.nasdaq_pe_csv_url,
+                    "NASDAQ-100 trailing P/E (daily snapshots)",
+                )
+            except Exception as exc:
+                nasdaq_pe = _error_result(
+                    "nasdaq_pe", exc, "NASDAQ-100 trailing P/E (daily snapshots)"
+                )
+        else:
+            nasdaq_pe = _skipped_result(
+                "nasdaq_pe",
+                "No NASDAQ-100 P/E snapshot file is configured (NASDAQ_PE_CSV_URL).",
+                "NASDAQ-100 trailing P/E (daily snapshots)",
+            )
+        series_results["nasdaq_pe"] = nasdaq_pe
+        results.append(_store_result(session, nasdaq_pe))
+
         if settings.fear_greed_csv_url:
             try:
                 fear_greed = load_csv_feed(
@@ -233,6 +257,23 @@ def run_refresh(
             )
         series_results["breadth_200dma"] = breadth
         results.append(_store_result(session, breadth))
+
+        if include_breadth and settings.breadth_enabled:
+            try:
+                nasdaq_breadth = fetch_nasdaq_breadth(settings, client)
+            except Exception as exc:
+                logger.exception("NASDAQ-100 breadth ingestion failed")
+                nasdaq_breadth = _error_result(
+                    "nasdaq_breadth_200dma", exc, "NASDAQ-100 constituents"
+                )
+        else:
+            nasdaq_breadth = _skipped_result(
+                "nasdaq_breadth_200dma",
+                "Breadth ingestion is disabled for this run.",
+                "NASDAQ-100 constituents",
+            )
+        series_results["nasdaq_breadth_200dma"] = nasdaq_breadth
+        results.append(_store_result(session, nasdaq_breadth))
 
     price_obs = series_results.get("sp500_price")
     if price_obs and price_obs.ok:
@@ -336,6 +377,34 @@ def run_refresh(
         )
     series_results["nasdaq_ew_cw_relative"] = nasdaq_ew_cw_result
     results.append(_store_result(session, nasdaq_ew_cw_result))
+
+    nasdaq_pe_result = series_results.get("nasdaq_pe")
+    treasury_for_nasdaq = series_results.get("treasury_10y")
+    if (
+        nasdaq_pe_result
+        and treasury_for_nasdaq
+        and nasdaq_pe_result.ok
+        and treasury_for_nasdaq.ok
+    ):
+        try:
+            nasdaq_erp_frame = compute_nasdaq_erp(
+                nasdaq_pe_result.observations, treasury_for_nasdaq.observations
+            )
+            nasdaq_erp = nasdaq_erp_observations(nasdaq_erp_frame)
+            nasdaq_erp_result = _derived_result(
+                "nasdaq_erp",
+                nasdaq_erp,
+                "NASDAQ-100 trailing earnings yield - 10Y Treasury",
+                f"Computed {len(nasdaq_erp)} NASDAQ equity risk premium observations",
+            )
+        except Exception as exc:
+            nasdaq_erp_result = _error_result("nasdaq_erp", exc, "NASDAQ-100 P/E + Treasury")
+    else:
+        nasdaq_erp_result = _skipped_result(
+            "nasdaq_erp", "NASDAQ-100 P/E snapshots and/or the 10Y Treasury yield are unavailable."
+        )
+    series_results["nasdaq_erp"] = nasdaq_erp_result
+    results.append(_store_result(session, nasdaq_erp_result))
 
     earnings = series_results.get("earnings_yield")
     treasury_result = series_results.get("treasury_10y")

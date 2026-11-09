@@ -53,6 +53,12 @@ jobs:
           pip install requests
           python scripts/fetch_fear_greed.py --out data/fear_greed.csv
 
+      - name: Record today's NASDAQ-100 trailing P/E
+        # No free source has NASDAQ-100 earnings history, so one snapshot is added per run.
+        # Best effort: a failure just skips today's row.
+        continue-on-error: true
+        run: python scripts/fetch_nasdaq_pe.py --out data/nasdaq_pe.csv
+
       - name: Restore observation cache
         uses: actions/cache@v4
         with:
@@ -72,6 +78,7 @@ jobs:
           ERP_METHOD: trailing
           # A FORWARD_PE_CSV_URL secret, if set, overrides the file fetched above.
           FORWARD_PE_CSV_URL: ${{ secrets.FORWARD_PE_CSV_URL || format('file://{0}/data/forward_pe.csv', github.workspace) }}
+          NASDAQ_PE_CSV_URL: ${{ format('file://{0}/data/nasdaq_pe.csv', github.workspace) }}
           # A FEAR_GREED_CSV_URL secret, if set, overrides the file fetched above.
           FEAR_GREED_CSV_URL: ${{ secrets.FEAR_GREED_CSV_URL || format('file://{0}/data/fear_greed.csv', github.workspace) }}
         run: |
@@ -85,6 +92,7 @@ jobs:
           git add frontend/public/data
           if [ -f data/forward_pe.csv ]; then git add data/forward_pe.csv; fi
           if [ -f data/fear_greed.csv ]; then git add data/fear_greed.csv; fi
+          if [ -f data/nasdaq_pe.csv ]; then git add data/nasdaq_pe.csv; fi
           if git diff --cached --quiet; then
             echo "No snapshot changes"
           else
