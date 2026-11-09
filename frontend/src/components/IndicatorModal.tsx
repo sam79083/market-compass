@@ -10,10 +10,7 @@ import {
   filterByRange,
   formatDate,
   formatNumber,
-  formatScore,
   hexToRgba,
-  qualityLabels,
-  scoreColor,
   statusColor,
   statusLabel,
 } from "../utils";
@@ -32,10 +29,7 @@ export function IndicatorModal({ indicator, theme, locale, index, onClose }: Ind
   const history = useIndicatorHistory(indicator.id, "max", true, index);
   const text = LOCALE_TEXT[locale];
   const localized = text.indicatorLocales[indicator.id];
-  const score = indicator.score?.score ?? null;
-  const color = scoreColor(score);
   const accent = categoryColor(indicator.category);
-  const quality = qualityLabels(indicator.score?.quality, locale);
 
   useEffect(() => {
     const handleKey = (event: globalThis.KeyboardEvent) => {
@@ -158,11 +152,8 @@ export function IndicatorModal({ indicator, theme, locale, index, onClose }: Ind
           </div>
 
           <aside className="indicator-facts">
-            <div className="fact-score" style={{ color }}>
-              <span className="fact-score-number">{formatScore(score)}</span>
-              <span className="fact-score-label">{text.indicator_modal.fact_out_of_100}</span>
-            </div>
             <div className="fact-list">
+
               <div>
                 <span>{text.indicator_modal.fact_latest_value}</span>
                 <strong>{indicator.latest?.display ?? "—"}</strong>
@@ -170,10 +161,6 @@ export function IndicatorModal({ indicator, theme, locale, index, onClose }: Ind
               <div>
                 <span>{text.indicator_modal.fact_latest_date}</span>
                 <strong>{formatDate(indicator.latest?.date, locale)}</strong>
-              </div>
-              <div>
-                <span>{text.indicator_modal.fact_scored_date}</span>
-                <strong>{formatDate(indicator.scored?.date ?? indicator.score?.score_date, locale)}</strong>
               </div>
               <div>
                 <span>{text.indicator_modal.fact_percentile}</span>
@@ -191,22 +178,7 @@ export function IndicatorModal({ indicator, theme, locale, index, onClose }: Ind
                     : "—"}
                 </strong>
               </div>
-              <div>
-                <span>{text.indicator_modal.fact_observations}</span>
-                <strong>{indicator.score?.observations_used ?? "—"}</strong>
-              </div>
-              <div>
-                <span>{text.indicator_modal.fact_category_weight}</span>
-                <strong>{Math.round(indicator.weight * 100)}%</strong>
-              </div>
-              <div>
-                <span>{text.indicator_modal.fact_quality}</span>
-                <strong>{quality.length > 0 ? quality.join(", ") : qualityLabels("ok", locale).join(", ")}</strong>
-              </div>
             </div>
-            {indicator.supplementary && (
-              <div className="callout">{text.indicator_modal.supplementary_note}</div>
-            )}
             {indicator.status_message && (
               <div className="callout callout-muted">{indicator.status_message}</div>
             )}

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Market Compass is a transparent, point-in-time valuation dashboard for the U.S. stock market, built from public data and open methodology."
+      content="Market Compass is a plain-language dip check for the U.S. stock market: panic level, oversold check, 200-day trend, and Fear &amp; Greed."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/pages.css" />
@@ -25,107 +25,78 @@
 
     <main>
       <span class="badge">About the project</span>
-      <h1>A transparent valuation compass for the U.S. stock market.</h1>
+      <h1>A plain-language dip check for the U.S. stock market.</h1>
       <p class="lede">
-        Market Compass turns ten public market signals into one 0–100 relative-attractiveness
-        score, then shows its work: the raw data, the percentile windows, the weights, the missing
-        inputs, and the historical record.
+        Market Compass shows four public readings of how stressed the S&amp;P 500 or the NASDAQ is
+        right now, each in plain words, so you can tell a normal dip from calm markets or from a
+        deep sell-off.
       </p>
 
       <div class="grid">
         <div class="card">
-          <h3>Point-in-time by design</h3>
+          <h3>Four readings, no score</h3>
           <p class="small muted">
-            Each score uses only information that would have been available on that date, including
-            publication lags. The history is not rebuilt with hindsight.
+            Panic level (VIX or VXN), an oversold check (RSI), the 200-day trend, and the CNN Fear
+            &amp; Greed index. Each one gets a state like “Calm” or “Pullback” instead of a number
+            you have to decode.
           </p>
         </div>
         <div class="card">
-          <h3>Missing data stays missing</h3>
+          <h3>Honest about overlap</h3>
           <p class="small muted">
-            Unavailable indicators are disclosed and excluded, never silently replaced with a
-            different metric. Coverage and confidence are shown next to the score.
+            These readings usually move together, so four of them agreeing is not four separate
+            confirmations. The page says so.
           </p>
         </div>
         <div class="card">
-          <h3>Open and reproducible</h3>
+          <h3>Not a signal service</h3>
           <p class="small muted">
-            The scoring code, weights, and validation output are public. A weights hash lets you
-            confirm which configuration produced a snapshot.
+            It describes current conditions. It does not tell you to buy or sell, and it cannot
+            tell you where the bottom is.
           </p>
         </div>
       </div>
 
-      <h2>What the dashboard shows</h2>
+      <h2>What the page shows</h2>
       <p>
-        The composite combines four categories: fundamental valuation, relative attractiveness
-        versus Treasuries, sentiment and momentum, and market breadth. Each underlying indicator is
-        converted to a 0–100 score against its own rolling history. Higher scores mean conditions
-        have historically been more favorable; lower scores mean more expensive or more stretched
-        conditions.
-      </p>
-      <p>
-        The score is a description of the present, not a forecast. A market can stay expensive for
-        years, and a cheap market can get cheaper. The validation page shows what forward returns
-        have looked like after similar readings, including how often the signal was early or wrong.
-      </p>
-
-      <h2>Why it exists</h2>
-      <p>
-        Most valuation dashboards hide their assumptions behind a single number. Market Compass was
-        built to make the assumptions inspectable: which data is stale, which indicator is a proxy,
-        which history has survivorship bias, and how much of the composite is actually covered.
-      </p>
-      <p>
-        It is also a deliberately small project. There is no account, no portfolio tracking, no
-        trading integration, and no paywall. The goal is a useful public reference, not a signal
-        service.
+        For each of the S&amp;P 500 and the NASDAQ, the page shows how stressed the market is on
+        four measures. Each card has a short state label, a one-to-three dot meter for how much the
+        reading looks like a dip, and a one-sentence reason. Click a card to see its history chart.
+        The thresholds behind each label are listed on the <a href="/methodology">methodology</a>
+        page.
       </p>
 
       <h2>Data and refresh schedule</h2>
       <p>
         The site is a static snapshot. A scheduled GitHub Actions workflow refreshes the data on
-        weekday evenings (U.S. market days), recomputes the scores, and publishes new JSON files.
-        The page you are reading is served from the same static build.
+        weekday evenings (U.S. market days) and publishes new JSON files. The page you are reading
+        is served from the same static build.
       </p>
       <ul>
-        <li>Shiller CAPE and earnings: Robert Shiller / shillerdata.com.</li>
-        <li>VIX: Cboe Global Markets.</li>
-        <li>10-year Treasury yield: U.S. Department of the Treasury.</li>
-        <li>Market capitalization / GDP: World Bank.</li>
-        <li>S&amp;P 500 prices and ETFs: Yahoo Finance’s public chart interface.</li>
-        <li>S&amp;P 500 constituents: public constituent dataset on GitHub.</li>
+        <li>VIX: Cboe Global Markets. VXN (NASDAQ-100 volatility): Cboe, via Yahoo Finance.</li>
+        <li>RSI and the 200-day trend: calculated from daily closes of the S&amp;P 500 and the
+          NASDAQ Composite, from Yahoo Finance’s public chart interface.</li>
+        <li>Fear &amp; Greed: the CNN Business Fear &amp; Greed Index.</li>
       </ul>
       <p class="note">
-        Some feeds are unofficial or have publication lags. Forward P/E and CNN Fear &amp; Greed
-        require licensed or authorized feeds and stay marked unavailable until configured. Read the
-        <a href="/methodology">methodology</a> and the data notes on the dashboard before using a
-        score.
+        Some feeds are unofficial and can be delayed or briefly unavailable. When a reading is
+        missing the page says so instead of substituting another metric. Check the “as of” date on
+        each card.
       </p>
 
       <h2>Who it is for</h2>
       <p>
-        Individual investors, students, journalists, and researchers who want a transparent starting
-        point for thinking about long-term market conditions. It is not a substitute for a financial
-        adviser, a licensed data terminal, or your own risk tolerance.
-      </p>
-      <p>
-        It is not intended for high-frequency trading, professional investment advice, or decisions
-        that require real-time or licensed data. See the <a href="/terms">terms and disclaimer</a>.
+        Individual investors, students, and anyone who wants a quick, plain-language read on market
+        stress. It is not a substitute for a financial adviser or your own risk tolerance, and it is
+        not meant for trading on real-time or licensed data. See the
+        <a href="/terms">terms and disclaimer</a>.
       </p>
 
       <h2>Independence and funding</h2>
       <p>
         Market Compass is independently run. There are no sponsored rankings, paid placements, or
         affiliate recommendations. The site may display advertising to cover domain and hosting
-        costs; ads are separated from the analysis and do not influence the methodology.
-      </p>
-
-      <h2>Contact</h2>
-      <p>
-        Questions, corrections, or data-source suggestions:
-        <a href="mailto:[YOUR CONTACT EMAIL]">[YOUR CONTACT EMAIL]</a>. Please include the date and
-        indicator you are writing about.
+        costs. Advertising never influences what the readings say.
       </p>
     </main>
 
