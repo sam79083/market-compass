@@ -14,6 +14,12 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WEIGHTS_PATH = BACKEND_ROOT / "config" / "weights.json"
 
 
+# Category weights for the NASDAQ view. No free long-term valuation series (CAPE,
+# forward P/E, per-index ERP) exists for the NASDAQ Composite, so the profile carries
+# only the categories the NASDAQ view can actually measure: sentiment and breadth.
+NASDAQ_DEFAULT_OVERALL = {"fundamental": 0.0, "relative": 0.0, "sentiment": 0.6, "breadth": 0.4}
+
+
 class WeightsFile(BaseModel):
     version: str
     overall: dict[str, float]
@@ -25,6 +31,7 @@ class WeightsFile(BaseModel):
     windows: dict
     staleness_days: dict[str, int]
     availability_lag_days: dict[str, int]
+    nasdaq_overall: dict[str, float] | None = None
     minimum_coverage: float = 0.6
     minimum_categories: int = 2
 
@@ -69,6 +76,10 @@ class WeightsFile(BaseModel):
                 raise ValueError(f"missing staleness_days for {indicator_id}")
             if indicator_id not in self.availability_lag_days:
                 raise ValueError(f"missing availability_lag_days for {indicator_id}")
+        if self.nasdaq_overall is not None:
+            if set(self.nasdaq_overall) != set(CATEGORY_ORDER):
+                raise ValueError(f"nasdaq_overall weights must cover exactly {CATEGORY_ORDER}")
+            _require_sum(self.nasdaq_overall, 1.0, "nasdaq_overall")
         return self
 
     @property
@@ -94,7 +105,7 @@ class WeightsFile(BaseModel):
         return int(self.staleness_days[indicator_id])
 
     def availability_lag(self, indicator_id: str) -> int:
-        return int(self.availability_lag_days[indicator_id])
+        return int(self.availability_lag_days.get(indicator_id, 0))
 
     def canonical_json(self) -> str:
         payload = self.model_dump(mode="json")
@@ -104,11 +115,40 @@ class WeightsFile(BaseModel):
     def hash(self) -> str:
         return hashlib.sha256(self.canonical_json().encode("utf-8")).hexdigest()[:16]
 
+    def for_index(self, index: str) -> WeightsFile:
+        """Return the weight profile for a view: ``self`` for S&P 500, a NASDAQ variant otherwise.
+
+        The NASDAQ variant keeps the per-indicator maps (so windows and staleness stay shared)
+        but reweights the overall categories to what the NASDAQ view can measure, and zeroes
+        the maps of disabled categories so their components stop carrying phantom weights.
+        """
+        if index == "sp500":
+            return self
+        if index != "nasdaq":
+            raise KeyError(index)
+        key = (self.hash, index)
+        cached = _INDEX_VARIANTS.get(key)
+        if cached is None:
+            overall = dict(self.nasdaq_overall or NASDAQ_DEFAULT_OVERALL)
+            # model_copy deliberately skips validators: disabled categories have zero-sum
+            # maps, which the point-in-time rules correctly reject for real weight files.
+            cached = _INDEX_VARIANTS[key] = self.model_copy(
+                update={
+                    "overall": overall,
+                    "fundamental": {name: 0.0 for name in self.fundamental},
+                    "relative": {name: 0.0 for name in self.relative},
+                }
+            )
+        return cached
+
 
 def _require_sum(mapping: dict[str, float], expected: float, label: str) -> None:
     total = sum(float(value) for value in mapping.values())
     if abs(total - expected) > 1e-6:
         raise ValueError(f"{label} weights must sum to {expected}, got {total}")
+
+
+_INDEX_VARIANTS: dict[tuple[str, str], WeightsFile] = {}
 
 
 @lru_cache(maxsize=8)
