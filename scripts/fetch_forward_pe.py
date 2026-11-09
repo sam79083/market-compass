@@ -24,8 +24,9 @@ from pathlib import Path
 
 BASE = (
     "https://advantage.factset.com/hubfs/Website/Resources%20Section/"
-    "Research%20Desk/Earnings%20Insight/EarningsInsight_{stamp}{suffix}.pdf"
+    "Research%20Desk/Earnings%20Insight/{prefix}{stamp}{suffix}.pdf"
 )
+PREFIXES = ["EarningsInsight_", "Earnings_Insight_"]  # naming changed in some 2026 reports
 SUFFIXES = ["", "A", "B", "C"]  # some weeks have EarningsInsight_120823A.pdf style names
 
 # Some PDFs extract with stray spaces inside the number ("2 1.5" for 21.5), so the
@@ -65,17 +66,23 @@ def parse_forward_pe(text: str) -> float | None:
     return None
 
 
+STATUS: dict[str, int] = {}  # HTTP status -> count, reset each month in main()
+
+
 def fetch_report_text(day: dt.date) -> str | None:
     import requests
     from pypdf import PdfReader
 
     stamp = day.strftime("%m%d%y")
-    for suffix in SUFFIXES:
+    for prefix, suffix in ((p, x) for p in PREFIXES for x in SUFFIXES):
         try:
-            resp = requests.get(BASE.format(stamp=stamp, suffix=suffix), headers=HEADERS, timeout=30)
+            resp = requests.get(
+                BASE.format(prefix=prefix, stamp=stamp, suffix=suffix), headers=HEADERS, timeout=30
+            )
         except requests.RequestException as exc:
             print(f"WARN {day}: request failed ({exc.__class__.__name__})", file=sys.stderr)
             continue
+        STATUS[str(resp.status_code)] = STATUS.get(str(resp.status_code), 0) + 1
         if resp.status_code == 200 and resp.content[:4] == b"%PDF":
             try:
                 reader = PdfReader(BytesIO(resp.content))
@@ -122,7 +129,7 @@ def main() -> int:
     while day <= end:
         if (day.year, day.month) != last_month:
             last_month = (day.year, day.month)
-            print(f"... scanning {day:%Y-%m} (found {len(found)} so far)", flush=True)
+            print(f"... scanning {day:%Y-%m} (found {len(found)} so far; HTTP statuses so far: {STATUS})", flush=True)
         # Reports are normally Friday; holiday weeks shift to Wed/Thu, so also try those.
         if day.weekday() in (2, 3, 4):
             text = fetch_report_text(day)

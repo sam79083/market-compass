@@ -107,7 +107,7 @@ def build_score_tables(
     settings: Settings,
     index: str = "sp500",
 ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
-    weights = settings.weights
+    weights = settings.weights.for_index(index)
     score_dates = _score_dates(observations, settings, index)
     if not score_dates:
         return pd.DataFrame(), []
@@ -152,8 +152,9 @@ def build_score_tables(
     composite_rows: list[dict[str, Any]] = []
     for score_date in score_dates:
         date_components = by_date.get(score_date, {})
-        composite = compute_composite(date_components, weights)
-        composite["explanation"] = build_explanation(composite)
+        composite = compute_composite(date_components, weights, index)
+        composite["explanation"] = build_explanation(composite, index)
+        composite["explanation"]["quality_flags"] = composite["quality_flags"]
         composite["score_date"] = score_date
         composite_rows.append(composite)
     return components, composite_rows

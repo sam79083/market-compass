@@ -78,7 +78,8 @@ def _fingerprint(session: Session, settings: Settings, index: str) -> tuple:
         select(func.count(Observation.id), func.max(Observation.id))
     ).one()
     database = session.get_bind().url.render_as_string(hide_password=True)
-    return (database, index, settings.weights.hash, int(count or 0), int(max_id or 0))
+    weights_hash = settings.weights.for_index(index).hash
+    return (database, index, weights_hash, int(count or 0), int(max_id or 0))
 
 
 def _compute(session: Session, settings: Settings, index: str) -> MemoryScores:

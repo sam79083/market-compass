@@ -69,6 +69,12 @@
     "breadth_200dma": 0,
     "ew_cw_relative": 0
   },
+  "nasdaq_overall": {
+    "fundamental": 0.0,
+    "relative": 0.0,
+    "sentiment": 0.6,
+    "breadth": 0.4
+  },
   "minimum_coverage": 0.6,
   "minimum_categories": 2
 }

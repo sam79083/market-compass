@@ -197,7 +197,7 @@ def _indicator_payloads(
     indicators = indicators_for(index)
     scores = scores or score_source(session, settings, index)
     payloads: dict[str, dict] = {}
-    weights = settings.weights
+    weights = settings.weights.for_index(index)
     for indicator_id, definition in indicators.items():
         series_id = series_id_for(definition)
         if series_id is None:
@@ -334,14 +334,14 @@ def build_dashboard(session: Session, settings: Settings, index: str = "sp500") 
     run = _latest_run(session)
     run_status = _run_status_map(run)
     payloads = _indicator_payloads(session, settings, composite, run_status, index, scores)
-    weights = settings.weights
+    weights = settings.weights.for_index(index)
     categories = _category_payloads(composite, weights)
     stored_components = (composite.components or {}) if composite else {}
     stored_categories = (composite.categories or {}) if composite else {}
     explanation = (composite.explanation or {}) if composite else {}
     flag_list = sorted(set(explanation.get("quality_flags") or []))
     if not flag_list and stored_components:
-        flag_list = quality_flags(stored_components, weights)
+        flag_list = quality_flags(stored_components, weights, index)
     long_term = explanation.get("long_term")
     conditions = explanation.get("conditions")
     if long_term is None and stored_categories:
@@ -389,7 +389,8 @@ def build_dashboard(session: Session, settings: Settings, index: str = "sp500") 
                 "conditions": conditions,
                 "quality_flags": flag_list,
                 "components": stored_components,
-            }
+            },
+            index,
         )
     explanation["long_term"] = long_term
     explanation["conditions"] = conditions

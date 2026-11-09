@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from app.indicators import INDICATORS
-
 DISCLAIMER = (
     "This dashboard is a historical relative-attractiveness summary, not a forecast, "
     "an intrinsic-value estimate, or an automated buy/sell signal. A low score is not a "
@@ -34,11 +32,23 @@ DATA_NOTES = {
     "direct_scale_component": (
         "CNN Fear & Greed, when available, is transformed directly (100 - index) rather than percentile-ranked."
     ),
+    "nasdaq_conditions_only": (
+        "No free long-term valuation series exists for the NASDAQ Composite (CAPE covers the "
+        "S&P 500 only, and no NASDAQ forward-P/E feed is configured). The NASDAQ composite "
+        "therefore reweights its categories to sentiment (0.6) and breadth (0.4) and reads "
+        "current market conditions, not long-term valuation."
+    ),
 }
 
 
-def _meaning(component: dict) -> str:
-    definition = INDICATORS.get(component["id"])
+def _definitions(index: str) -> dict:
+    from app.scoring.engine import indicators_for
+
+    return indicators_for(index)
+
+
+def _meaning(component: dict, definitions: dict) -> str:
+    definition = definitions.get(component["id"])
     category = definition.category if definition else "fundamental"
     score = component["score"]
     if category in {"fundamental", "relative"}:
@@ -60,8 +70,8 @@ def _meaning(component: dict) -> str:
     return "mixed participation"
 
 
-def _factor_text(component: dict) -> str:
-    definition = INDICATORS.get(component["id"])
+def _factor_text(component: dict, definitions: dict) -> str:
+    definition = definitions.get(component["id"])
     name = definition.short_name if definition else component["id"]
     percentile = component.get("percentile")
     window = component.get("window_years_used")
@@ -69,13 +79,13 @@ def _factor_text(component: dict) -> str:
         window_text = f" over its {window:.1f}-year window" if window else ""
         return (
             f"{name} sits in the {percentile:.0f}th percentile{window_text} and scores "
-            f"{component['score']:.0f}/100, {_meaning(component)}."
+            f"{component['score']:.0f}/100, {_meaning(component, definitions)}."
         )
-    return f"{name} scores {component['score']:.0f}/100, {_meaning(component)}."
+    return f"{name} scores {component['score']:.0f}/100, {_meaning(component, definitions)}."
 
 
-def _factor(component: dict, role: str) -> dict:
-    definition = INDICATORS.get(component["id"])
+def _factor(component: dict, role: str, definitions: dict) -> dict:
+    definition = definitions.get(component["id"])
     return {
         "id": component["id"],
         "name": definition.name if definition else component["id"],
@@ -83,16 +93,17 @@ def _factor(component: dict, role: str) -> dict:
         "score": component["score"],
         "percentile": component.get("percentile"),
         "role": role,
-        "text": _factor_text(component),
+        "text": _factor_text(component, definitions),
     }
 
 
-def build_explanation(composite: dict) -> dict:
+def build_explanation(composite: dict, index: str = "sp500") -> dict:
     score = composite.get("score")
     classification = composite.get("classification", "Insufficient data")
     long_term = composite.get("long_term") or {}
     conditions = composite.get("conditions") or {}
     flags = composite.get("quality_flags") or []
+    definitions = _definitions(index)
     components = [
         component
         for component in composite.get("components", {}).values()
@@ -139,20 +150,20 @@ def build_explanation(composite: dict) -> dict:
         if score < 40:
             support_role = "supports"
             contradiction_role = "contradicts"
-            supporting = [_factor(component, support_role) for component in components[-2:]]
+            supporting = [_factor(component, support_role, definitions) for component in components[-2:]]
             supporting.reverse()
-            contradicting = [_factor(component, contradiction_role) for component in components[:2]]
+            contradicting = [_factor(component, contradiction_role, definitions) for component in components[:2]]
             supporting_label = "Supporting the overvalued assessment"
             contradicting_label = "Contradicting the overvalued assessment"
         elif score > 60:
-            supporting = [_factor(component, "supports") for component in components[:2]]
-            contradicting = [_factor(component, "contradicts") for component in components[-2:]]
+            supporting = [_factor(component, "supports", definitions) for component in components[:2]]
+            contradicting = [_factor(component, "contradicts", definitions) for component in components[-2:]]
             contradicting.reverse()
             supporting_label = "Supporting the undervalued assessment"
             contradicting_label = "Contradicting the undervalued assessment"
         else:
-            supporting = [_factor(component, "cheap_side") for component in components[:2]]
-            contradicting = [_factor(component, "expensive_side") for component in components[-2:]]
+            supporting = [_factor(component, "cheap_side", definitions) for component in components[:2]]
+            contradicting = [_factor(component, "expensive_side", definitions) for component in components[-2:]]
             contradicting.reverse()
             supporting_label = "Evidence on the cheaper side"
             contradicting_label = "Evidence on the expensive side"

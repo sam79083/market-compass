@@ -10,8 +10,17 @@ from app.indicators import (
 )
 
 
-def _component_view(indicator_id: str, component: dict | None, weight: float) -> dict:
-    definition = INDICATORS[indicator_id]
+def _definitions(index: str) -> dict:
+    """Indicator definitions for the view being scored (deferred import avoids a cycle)."""
+    from app.scoring.engine import indicators_for
+
+    return indicators_for(index)
+
+
+def _component_view(
+    indicator_id: str, component: dict | None, weight: float, index: str = "sp500"
+) -> dict:
+    definition = _definitions(index).get(indicator_id) or INDICATORS[indicator_id]
     available = bool(component and component.get("score") is not None)
     return {
         "id": indicator_id,
@@ -47,7 +56,9 @@ def _component_view(indicator_id: str, component: dict | None, weight: float) ->
     }
 
 
-def compute_categories(components: dict[str, dict | None], weights: WeightsFile) -> dict[str, dict]:
+def compute_categories(
+    components: dict[str, dict | None], weights: WeightsFile, index: str = "sp500"
+) -> dict[str, dict]:
     results: dict[str, dict] = {}
     for category in CATEGORY_ORDER:
         mapping = weights.category_maps[category]
@@ -56,7 +67,7 @@ def compute_categories(components: dict[str, dict | None], weights: WeightsFile)
         available_weight = 0.0
         configured_weight = sum(float(weight) for weight in mapping.values())
         for indicator_id, weight in mapping.items():
-            view = _component_view(indicator_id, components.get(indicator_id), float(weight))
+            view = _component_view(indicator_id, components.get(indicator_id), float(weight), index)
             views[indicator_id] = view
             if view["available"] and weight > 0:
                 weighted_scores += weight * float(view["score"])
@@ -123,13 +134,18 @@ def summarize_conditions(categories: dict[str, dict], weights: WeightsFile) -> d
     }
 
 
-def quality_flags(components: dict[str, dict | None], weights: WeightsFile) -> list[str]:
+def quality_flags(
+    components: dict[str, dict | None], weights: WeightsFile, index: str = "sp500"
+) -> list[str]:
+    from app.scoring.engine import indicators_for
+
     flags: set[str] = set()
-    for indicator_id, definition in INDICATORS.items():
+    for indicator_id, definition in indicators_for(index).items():
         component = components.get(indicator_id)
         weight = weights.weight_for(indicator_id)
         if definition.supplementary or weight == 0:
-            flags.add("buffett_supplementary")
+            if definition.supplementary or indicator_id == "buffett":
+                flags.add("buffett_supplementary")
             continue
         if not component or component.get("score") is None:
             flags.add(f"{indicator_id}_unavailable")
@@ -146,8 +162,10 @@ def quality_flags(components: dict[str, dict | None], weights: WeightsFile) -> l
     return sorted(flags)
 
 
-def compute_composite(components: dict[str, dict | None], weights: WeightsFile) -> dict:
-    categories = compute_categories(components, weights)
+def compute_composite(
+    components: dict[str, dict | None], weights: WeightsFile, index: str = "sp500"
+) -> dict:
+    categories = compute_categories(components, weights, index)
     available_categories = [
         key for key in CATEGORY_ORDER if categories.get(key, {}).get("score") is not None
     ]
@@ -156,7 +174,9 @@ def compute_composite(components: dict[str, dict | None], weights: WeightsFile) 
         float(weights.overall.get(key, 0.0)) * float(categories[key]["coverage"])
         for key in CATEGORY_ORDER
     ) / configured_overall
-    flags = quality_flags(components, weights)
+    flags = set(quality_flags(components, weights, index))
+    if index != "sp500" and weights.overall.get("fundamental", 0.0) == 0:
+        flags.add("nasdaq_conditions_only")
 
     score = None
     if (
@@ -184,8 +204,10 @@ def compute_composite(components: dict[str, dict | None], weights: WeightsFile) 
     long_term = summarize_long_term(categories, ["fundamental", "relative"], weights)
     conditions = summarize_conditions(categories, weights)
     views = {
-        indicator_id: _component_view(indicator_id, components.get(indicator_id), weights.weight_for(indicator_id))
-        for indicator_id in INDICATORS
+        indicator_id: _component_view(
+            indicator_id, components.get(indicator_id), weights.weight_for(indicator_id), index
+        )
+        for indicator_id in _definitions(index)
     }
     return {
         "score": round(score, 2) if score is not None else None,
@@ -194,7 +216,7 @@ def compute_composite(components: dict[str, dict | None], weights: WeightsFile) 
         "classification_color": classification["color"],
         "coverage": round(coverage, 4),
         "confidence": confidence,
-        "quality_flags": flags,
+        "quality_flags": sorted(flags),
         "available_categories": available_categories,
         "categories": categories,
         "components": views,
