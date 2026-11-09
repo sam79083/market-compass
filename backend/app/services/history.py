@@ -241,7 +241,7 @@ def get_composite_history(
         "available_to": latest_date.isoformat() if latest_date else None,
         "reference_line": 50,
         "bands": VALUATION_BANDS,
-        "weights_hash": settings.weights.hash,
+        "weights_hash": settings.weights.for_index(index).hash,
         "points": points,
     }
 

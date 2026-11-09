@@ -152,12 +152,22 @@ def test_nasdaq_does_not_borrow_sp500_only_indicators(seeded):
         assert nq[indicator_id]["unavailable_reason"]
 
 
-def test_nasdaq_composite_is_withheld_without_valuation_inputs(seeded):
+def test_nasdaq_composite_scores_available_categories_only(seeded):
     settings, factory = seeded
     with factory() as session:
         overall = build_dashboard(session, settings, "nasdaq")["overall"]
-    assert overall["score"] is None
-    assert overall["coverage"] < settings.weights.minimum_coverage
+        sp_overall = build_dashboard(session, settings, "sp500")["overall"]
+    nasdaq_weights = settings.weights.for_index("nasdaq")
+    assert nasdaq_weights.overall["fundamental"] == 0.0
+    assert nasdaq_weights.overall["sentiment"] > 0
+    # The NASDAQ composite is computed from sentiment + breadth (the only categories it
+    # can measure) instead of being withheld outright.
+    assert overall["score"] is not None
+    assert overall["coverage"] >= settings.weights.minimum_coverage
+    assert overall["conditions"]["score"] is not None
+    assert overall["long_term"]["label"] == "Insufficient data"
+    assert "nasdaq_conditions_only" in overall["quality_flags"]
+    assert overall["score"] != sp_overall["score"]
 
 
 def test_index_definitions_have_no_silent_sp500_fallback():
@@ -208,9 +218,14 @@ def test_unavailable_nasdaq_indicator_history_is_empty_not_sp500(seeded):
         nq_cape = get_indicator_history(session, settings, "cape", "max", "nasdaq")
         sp_cape = get_indicator_history(session, settings, "cape", "max", "sp500")
         nq_history = get_composite_history(session, settings, "max", "nasdaq")
+        sp_history = get_composite_history(session, settings, "max", "sp500")
     assert nq_cape["points"] == []
     assert sp_cape["points"]
-    assert nq_history["points"] == []  # composite withheld => no scored points
+    # A NASDAQ composite now exists, but never with a S&P-only valuation component.
+    assert nq_history["points"]
+    assert nq_history["weights_hash"] != sp_history["weights_hash"]
+    for point in nq_history["points"]:
+        assert point["components"]["cape"]["available"] is False
 
 
 def test_api_index_parameter_selects_the_index(seeded):

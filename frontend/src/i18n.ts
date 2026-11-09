@@ -216,6 +216,7 @@ const en = {
     short_percentile_window: "One or more percentiles use a shorter window than the 20-year default because the available history is shorter. The component cards disclose the window actually used.",
     buffett_supplementary: "The Buffett Indicator is displayed as supplementary evidence and carries zero weight in the composite.",
     direct_scale_component: "CNN Fear & Greed, when available, is transformed directly (100 - index) rather than percentile-ranked.",
+    nasdaq_conditions_only: "The NASDAQ view has no free long-term valuation series (CAPE covers the S&P 500 only, and no NASDAQ forward-P/E feed is configured), so its composite reweights categories to sentiment (0.6) and breadth (0.4) and reads current market conditions, not long-term valuation.",
   } as Record<string, string>,
   // categories / sections (keys from the API)
   category_labels: {
@@ -706,6 +707,7 @@ const kr: LocaleText = {
     short_percentile_window: "짧은 백분위 창",
     buffett_supplementary: "버핏 지표는 보조",
     direct_scale_component: "직접 스케일 변환",
+    nasdaq_conditions_only: "NASDAQ 뷰는 당면 조건 가중",
   },
   data_flag_notes: {
     forward_pe_unavailable: "포워드 P/E를 사용할 수 없어 펀더멘털 밸류에이션 카테고리는 현재 CAPE만으로 채점됩니다. 후행 P/E로 대체하지 않습니다.",
@@ -715,6 +717,7 @@ const kr: LocaleText = {
     short_percentile_window: "하나 이상의 백분위는 이력이 짧아 기본 20년 창보다 짧은 기간으로 계산됩니다. 실제 사용 기간은 각 구성 카드에 표시됩니다.",
     buffett_supplementary: "버핏 지표는 보조 자료로 표시되며 종합 점수에 가중치가 부여되지 않습니다.",
     direct_scale_component: "CNN 공포·탐욕 지수는 사용 가능할 때 백분위수 대신 100 - 지수값을 직접 사용합니다.",
+    nasdaq_conditions_only: "NASDAQ 종합지수에는 무료 장기 밸류에이션 데이터가 없습니다(CAPE는 S&P 500 전용이며 NASDAQ 포워드 P/E 피드도 미설정). 따라서 NASDAQ 뷰의 종합 점수는 감성(0.6)·시장 폭(0.4) 가중으로 재구성되어 장기 밸류에이션이 아닌 당면 시장 상황을 읽어냅니다.",
   },
   // categories / sections (keys from the API)
   category_labels: {
