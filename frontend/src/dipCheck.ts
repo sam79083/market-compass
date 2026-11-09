@@ -68,7 +68,7 @@ const indexName = (index: IndexKey, locale: LocaleKey): string =>
 
 const EN: Strings = {
   titles: {
-    vix: (i) => (i === "nasdaq" ? "Panic level (VXN)" : "Panic level (VIX)"),
+    vix: (i) => (i === "nasdaq" ? "Volatility (VXN)" : "Volatility (VIX)"),
     rsi: () => "Oversold check (RSI)",
     ma200_deviation: () => "200-day trend",
     fear_greed: () => "Fear & Greed",
@@ -76,15 +76,15 @@ const EN: Strings = {
   noData: "No data",
   noDataDetail: "This reading is not available right now.",
   vix: {
-    calm: "Calm",
-    elevated: "Elevated",
-    high: "High fear",
-    extreme: "Extreme panic",
+    calm: "Low volatility",
+    elevated: "Elevated volatility",
+    high: "High volatility",
+    extreme: "Extreme volatility",
     detail: {
-      calm: "Below 20: investors are relaxed.",
-      elevated: "20 to 30: nervous, but not panicking.",
-      high: "30 to 40: real fear. Sharp sell-offs often look like this.",
-      extreme: "Above 40: panic, seen only in major sell-offs.",
+      calm: "Below 20: low volatility, a relaxed expected range.",
+      elevated: "20 to 30: the market prices bigger-than-usual swings.",
+      high: "30 to 40: the market prices big swings. Sharp sell-offs often look like this.",
+      extreme: "Above 40: historic, extreme price swings. Violent moves in either direction.",
     },
   },
   rsi: {
@@ -136,7 +136,7 @@ const EN: Strings = {
     },
   },
   vixHeadline: (name, value) => `${name} is at ${value}`,
-  vixContext: (pct) => `Higher than ${pct}% of days in the past 20 years.`,
+  vixContext: (pct) => `Higher than ${pct}% of days in the past 20 years. Implied volatility, not emotion.`,
   rsiHeadline: (value) => `RSI is ${value}`,
   rsiContext: "A reading under 30 is usually called oversold.",
   fgHeadline: (value) => `${value} / 100`,
@@ -145,7 +145,7 @@ const EN: Strings = {
 
 const KR: Strings = {
   titles: {
-    vix: (i) => (i === "nasdaq" ? "공포 수준 (VXN)" : "공포 수준 (VIX)"),
+    vix: (i) => (i === "nasdaq" ? "변동성 (VXN)" : "변동성 (VIX)"),
     rsi: () => "과매도 점검 (RSI)",
     ma200_deviation: () => "200일 추세",
     fear_greed: () => "공포·탐욕 지수",
@@ -153,15 +153,15 @@ const KR: Strings = {
   noData: "데이터 없음",
   noDataDetail: "지금은 이 지표를 확인할 수 없습니다.",
   vix: {
-    calm: "안정",
-    elevated: "불안",
-    high: "높은 공포",
-    extreme: "극단적 패닉",
+    calm: "낮은 변동성",
+    elevated: "높은 변동성",
+    high: "매우 높은 변동성",
+    extreme: "극심한 변동성",
     detail: {
-      calm: "20 미만: 투자자들이 느긋한 상태입니다.",
-      elevated: "20~30: 불안하지만 패닉은 아닙니다.",
-      high: "30~40: 진짜 공포가 있는 구간. 급락장에서 자주 보입니다.",
-      extreme: "40 초과: 큰 급락장에서만 나타나는 패닉입니다.",
+      calm: "20 미만: 변동성이 낮은, 작은 움직임을 예상하는 구간입니다.",
+      elevated: "20~30: 시장이 평소보다 큰 움직임을 예상하는 구간입니다.",
+      high: "30~40: 큰 흔들림을 예상하는 구간. 급락장에서 자주 보입니다.",
+      extreme: "40 초과: 역사적으로 매우 드문 극심한 변동성입니다. 폭락·급등 모두 일어나는 상태입니다.",
     },
   },
   rsi: {
@@ -213,7 +213,7 @@ const KR: Strings = {
     },
   },
   vixHeadline: (name, value) => `${name} ${value}`,
-  vixContext: (pct) => `최근 20년 중 ${pct}%의 날보다 높은 수준입니다.`,
+  vixContext: (pct) => `최근 20년 중 ${pct}%의 날보다 높은 수준입니다. 감정이 아니라 옵션으로 반영한 변동성입니다.`,
   rsiHeadline: (value) => `RSI ${value}`,
   rsiContext: "30 미만이면 보통 과매도라고 부릅니다.",
   fgHeadline: (value) => `${value} / 100`,
@@ -233,9 +233,10 @@ export const GUIDE_TEXT: Record<LocaleKey, { button: string; title: string; intr
     disclaimer: "These describe current conditions. They are not a buy or sell signal, and they cannot tell you where the bottom is.",
     close: "Close",
     caveats: [
-      "The panic, oversold and fear readings overlap: they usually rise together, so four of them agreeing is not four separate confirmations.",
+      "The volatility (VIX), oversold and fear readings move together: VIX is one of the seven inputs inside the Fear & Greed index, so four of them agreeing is not four separate confirmations.",
       "A deep drop below the 200-day average can be the start of a bear market, not just a dip. Many investors buy in stages rather than at one point.",
       "The thresholds (30 for VIX, 30 for RSI, 2% and 10% for the 200-day line) are common round numbers, not guarantees.",
+      "VIX is not fear itself. It is the annualized 30-day volatility the options market prices; a high reading means big swings are expected, not sadness.",
     ],
   },
   kr: {
@@ -247,9 +248,10 @@ export const GUIDE_TEXT: Record<LocaleKey, { button: string; title: string; intr
     disclaimer: "현재 상태를 설명할 뿐 매수·매도 신호가 아니며, 바닥이 어디인지는 알려주지 않습니다.",
     close: "닫기",
     caveats: [
-      "공포, 과매도, 공포·탐욕 지표는 서로 겹쳐서 보통 함께 움직입니다. 네 개가 일치해도 서로 다른 네 번의 확인은 아닙니다.",
+      "VIX·과매도·공포·탐욕 지표는 급락장에 함께 움직입니다. 특히 VIX는 공포·탐욕 지수의 7개 구성요소 중 하나이므로, 네 개가 일치해도 서로 다른 네 번의 확인은 아닙니다.",
       "200일 평균 아래로 깊게 내려가면 일반적인 눌림목이 아니라 약세장의 시작일 수 있습니다. 한 번에 사기보다 나눠서 사는 투자자도 많습니다.",
       "기준값(VIX 30, RSI 30, 200일선 2%·10%)은 흔히 쓰는 어림수일 뿐 보장이 아닙니다.",
+      "VIX는 공포 그 자체가 아니라 옵션 시장이 예측하는 향후 30일 연환산 변동성(%)입니다. 높다는 것은 큰 흔들림을 예상한다는 뜻이지 투자자가 슬프다는 뜻은 아닙니다.",
     ],
   },
 };
