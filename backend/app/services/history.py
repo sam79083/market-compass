@@ -298,6 +298,50 @@ def get_sector_snapshot(session: Session) -> dict[str, Any]:
     return {"as_of": newest, "sectors": entries}
 
 
+def get_sector_history(session: Session, symbol: str) -> dict[str, Any] | None:
+    """Daily close, 200-day average and RSI(14) for one sector ETF.
+
+    Returns None for a symbol that is not in SECTOR_ETF. A known symbol with no
+    stored observations returns an empty points list so callers can show a
+    "no data" state. The window is whatever the ingestion keeps
+    (SNAPSHOT_WINDOW_DAYS, about two years of trading days).
+    """
+    wanted = symbol.upper()
+    definition = next((item for item in SECTOR_ETF if item["symbol"] == wanted), None)
+    if definition is None:
+        return None
+    rows = (
+        session.execute(
+            select(Observation)
+            .where(Observation.indicator_id == sector_series_id(wanted))
+            .order_by(Observation.period_date)
+        )
+        .scalars()
+        .all()
+    )
+    points: list[dict[str, Any]] = []
+    for row in rows:
+        meta = row.meta or {}
+        close = meta.get("price")
+        if close is None:
+            continue
+        points.append(
+            {
+                "date": row.period_date.isoformat(),
+                "close": float(close),
+                "ma200": meta.get("ma200"),
+                "rsi": float(row.value),
+            }
+        )
+    return {
+        "symbol": wanted,
+        "name": definition["name"],
+        "available_from": points[0]["date"] if points else None,
+        "available_to": points[-1]["date"] if points else None,
+        "points": points,
+    }
+
+
 def get_composite_history(
     session: Session,
     settings: Settings,

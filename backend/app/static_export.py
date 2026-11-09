@@ -15,8 +15,10 @@ from app.services.history import (
     get_indicator_history,
     get_methodology,
     get_price_history,
+    get_sector_history,
     get_sector_snapshot,
 )
+from app.ingestion.sector import SECTOR_ETF
 
 
 def _write_json(path: Path, payload: Any) -> int:
@@ -67,6 +69,13 @@ def export_static(session: Session, settings: Settings, out_dir: Path) -> dict[s
     )
     # Sector ETF snapshot for the bottom section; shared by both index views.
     files["sectors.json"] = _write_json(out / "sectors.json", get_sector_snapshot(session))
+    # Per-ETF history (close, 200-day average, RSI) for the sector chart modal.
+    for definition in SECTOR_ETF:
+        payload = get_sector_history(session, definition["symbol"])
+        if payload is None:
+            continue
+        name = f"sectors/{definition['symbol']}.json"
+        files[name] = _write_json(out / "sectors" / f"{definition['symbol']}.json", payload)
     files["methodology.json"] = _write_json(
         out / "methodology.json",
         get_methodology(settings),

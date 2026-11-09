@@ -13,6 +13,7 @@ from app.services.history import (
     get_indicator_history,
     get_methodology,
     get_price_history,
+    get_sector_history,
     get_sector_snapshot,
 )
 
@@ -86,6 +87,14 @@ def price_history(
 @router.get("/sectors")
 def sectors(session: SessionDep):
     return get_sector_snapshot(session)
+
+
+@router.get("/sectors/{symbol}")
+def sector_history(symbol: str, session: SessionDep):
+    payload = get_sector_history(session, symbol)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Unknown sector symbol")
+    return payload
 
 
 @router.get("/methodology")
