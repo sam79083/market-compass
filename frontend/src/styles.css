@@ -2550,6 +2550,56 @@ button.dip-card:focus-visible {
   color: var(--red);
 }
 
+.sector-dev.is-flat {
+  color: var(--muted);
+}
+
+.sector-card.is-unavailable {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.sector-availability {
+  margin: 0;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.sector-availability.is-stale {
+  color: var(--amber);
+}
+
+.sector-availability.is-missing {
+  color: var(--red);
+  opacity: 0.85;
+}
+
+.sector-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+  min-height: 16px;
+}
+
+.sector-bar-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -2px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.sector-bar-axis .is-axis-under {
+  color: var(--green);
+}
+
+.sector-bar-axis .is-axis-over {
+  color: var(--red);
+}
+
 .sector-skeleton {
   height: 118px;
   border-radius: 12px;

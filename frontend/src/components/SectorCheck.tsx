@@ -21,7 +21,14 @@ const TEXT: Record<
     right: string;
     over: string;
     note: string;
-    criteria: string;
+    axis_under: string;
+    axis_over: string;
+    dev_above_p: string;
+    dev_below_p: string;
+    dev_flat: string;
+    unavailable: string;
+    stale_label: string;
+    hints: Record<HintKey, string>;
   }
 > = {
   en: {
@@ -38,8 +45,25 @@ const TEXT: Record<
     under: "Undervalued",
     right: "Fairly valued",
     over: "Overvalued",
-    note: "RSI under 30 reads oversold: heavy short-term selling, a pullback zone. Above 70 reads overbought: short-term buying is exuberant. This is a momentum gauge, not a long-term valuation measure.",
-    criteria: "Tag rule: RSI(14) under 30 = undervalued, over 70 = overvalued, in between = fairly valued. Momentum view only; it differs from earnings-based valuation.",
+    note: "Tags follow RSI(14): under 30 undervalued, over 70 overvalued, between fairly valued — a 2-3 week momentum read, not earnings-based valuation. The 200-day gap is a separate medium-term trend signal and can disagree; the caption on each card reconciles the two. Tags are a point-in-time snapshot and can change daily.",
+    axis_under: "Undervalued",
+    axis_over: "Overvalued",
+    dev_above_p: "above 200-day",
+    dev_below_p: "below 200-day",
+    dev_flat: "in line with 200-day",
+    unavailable: "No series in feed",
+    stale_label: "Stale data",
+    hints: {
+      under_uptrend: "A dip inside an uptrend — watchlist candidate",
+      under_downtrend: "Oversold inside a downtrend — bounce signal, trend weak",
+      under_plain: "Oversold zone (short-term)",
+      right_uptrend: "Trend intact, not overheated short-term",
+      right_downtrend: "Quiet short-term, but the trend is weak",
+      right_plain: "Neutral short-term momentum",
+      over_uptrend: "Overheated after a strong run — pullback risk",
+      over_downtrend: "Overheated bounce in a weak trend",
+      over_plain: "Overbought zone (short-term)",
+    },
   },
   kr: {
     eyebrow: "부문 점검",
@@ -55,8 +79,25 @@ const TEXT: Record<
     under: "저평가",
     right: "적정",
     over: "과열",
-    note: "RSI 30 미만이면 과매도에 가까운 단기 저평가, 70 초과면 과매수에 가까운 단기 과열로 봅니다. 200일선 위는 상승 추세, 아래는 하락 추세입니다.",
-    criteria: "표시 기준 — RSI(14): 30 미만 저평가 · 70 초과 과열 · 그 사이 적정. 이는 단기(2~3주) 모멘텀 판단이며, 실적 기반의 장기 밸류에이션과 다를 수 있습니다.",
+    note: "태그는 RSI(14) 기준 — 30 미만 저평가 · 70 초과 과열 · 그 사이 적정. 최근 2~3주 매매 강도를 보는 단기 관점이라 실적 기반 밸류에이션과 다릅니다. 200일선 대비는 중기 추세 신호라 방향이 어긋날 수 있습니다 — 각 카드 속 문구가 두 신호를 함께 읽어줍니다. 태그는 오늘의 스냅샷으로 매일 바뀔 수 있습니다.",
+    axis_under: "저평가",
+    axis_over: "과열",
+    dev_above_p: "200일선 위",
+    dev_below_p: "200일선 아래",
+    dev_flat: "200일선과 동일",
+    unavailable: "시계열 미수집",
+    stale_label: "지난 데이터",
+    hints: {
+      under_uptrend: "상승 추세 속 단기 눌림 — 관심 후보",
+      under_downtrend: "약세 속 과매도 — 반등 신호, 추세는 주의",
+      under_plain: "단기 과매도 구간",
+      right_uptrend: "추세는 유지, 단기 과열 아님",
+      right_downtrend: "단기는 평온, 추세는 약세",
+      right_plain: "단기 흐름은 평온",
+      over_uptrend: "강한 상승 후 과열 — 조정 가능성",
+      over_downtrend: "약세 속 반등 과열 — 추세 주의",
+      over_plain: "단기 과매수 구간",
+    },
   },
 };
 
@@ -77,50 +118,97 @@ const KR_NAME: Record<string, string> = {
 
 type TagKey = "under" | "right" | "over";
 
+type HintKey =
+  | "under_uptrend"
+  | "under_downtrend"
+  | "under_plain"
+  | "right_uptrend"
+  | "right_downtrend"
+  | "right_plain"
+  | "over_uptrend"
+  | "over_downtrend"
+  | "over_plain";
+
+const HINT_SIDES: Record<TagKey, [HintKey, HintKey, HintKey]> = {
+  under: ["under_uptrend", "under_downtrend", "under_plain"],
+  right: ["right_uptrend", "right_downtrend", "right_plain"],
+  over: ["over_uptrend", "over_downtrend", "over_plain"],
+};
+
+function hintKeyFor(tag: TagKey, hasDev: boolean, devUp: boolean): HintKey {
+  const [up, down, plain] = HINT_SIDES[tag];
+  if (!hasDev) return plain;
+  return devUp ? up : down;
+}
+
 function tagFromRsi(rsi: number): TagKey {
   if (rsi < 30) return "under";
   if (rsi > 70) return "over";
   return "right";
 }
 
-function SectorCard({ entry, locale }: { entry: SectorEntry; locale: LocaleKey }) {
+function SectorCard({ entry, locale, referenceAsOf }: { entry: SectorEntry; locale: LocaleKey; referenceAsOf: string | null }) {
   const copy = TEXT[locale];
   const rsi = entry.rsi;
   const dev = entry.dev;
-  const hasDev = dev !== null && dev !== undefined && Number.isFinite(dev);
-  const devUp = hasDev && (dev as number) >= 0;
-  const tag: TagKey | null = rsi !== null && Number.isFinite(rsi) ? tagFromRsi(rsi) : null;
+  const rsiVal: number | null = typeof rsi === "number" && Number.isFinite(rsi) ? rsi : null;
+  const devVal: number | null = typeof dev === "number" && Number.isFinite(dev) ? dev : null;
+  const isFlat = devVal !== null && Math.abs(devVal) < 0.05;
+  const devUp = (devVal ?? 0) >= 0;
+  const tag: TagKey | null = rsiVal !== null ? tagFromRsi(rsiVal) : null;
   const tagText = tag ? copy[tag] : copy.noData;
+  const hint = rsiVal !== null && tag ? copy.hints[hintKeyFor(tag, devVal !== null, devUp)] : null;
+  const unavailable = entry.available === false;
+  const stale = !unavailable && entry.as_of != null && referenceAsOf != null && entry.as_of !== referenceAsOf;
+  const bar = rsiVal !== null ? Math.min(100, Math.max(0, rsiVal)) : null;
+  const barAria = rsiVal !== null ? (hint ? `${copy.rsi_label} ${formatNumber(rsiVal, 1)}. ${hint}` : `${copy.rsi_label} ${formatNumber(rsiVal, 1)}`) : copy.noData;
 
   return (
-    <div className="sector-card">
+    <div className={`sector-card${unavailable ? " is-unavailable" : ""}`}>
       <div className="sector-card-head">
         <span className="sector-symbol">{entry.symbol}</span>
         <span className="sector-name">{locale === "kr" ? KR_NAME[entry.symbol] ?? entry.name : entry.name}</span>
       </div>
+      {unavailable ? (
+        <p className="sector-availability is-missing">{copy.unavailable}</p>
+      ) : (
+        stale &&
+        entry.as_of && (
+          <p className="sector-availability is-stale">
+            {copy.stale_label} · {formatDate(entry.as_of, locale)}
+          </p>
+        )
+      )}
       <span className={`sector-tag sector-tag-${tag ?? "none"}`}>{tagText}</span>
-      {rsi !== null && Number.isFinite(rsi) ? (
+      {hint && <p className="sector-hint">{hint}</p>}
+      {rsiVal !== null && bar !== null ? (
         <>
           <div className="sector-rsi-num">
             <span className="sector-rsi-label">{copy.rsi_label}</span>
-            <span className="sector-rsi-value">{formatNumber(rsi, 1)}</span>
+            <span className="sector-rsi-value">{formatNumber(rsiVal, 1)}</span>
           </div>
-          <div className="sector-bar" role="img" aria-label={`${copy.rsi_label} ${formatNumber(rsi, 1)}`}>
+          <div className="sector-bar" role="img" aria-label={barAria}>
             <span className="sector-bar-zone is-zone-under" />
             <span className="sector-bar-zone is-zone-mid" />
             <span className="sector-bar-zone is-zone-over" />
-            <span className="sector-bar-marker" style={{ left: `${Math.min(100, Math.max(0, rsi))}%` }} />
+            <span className="sector-bar-marker" style={{ left: `clamp(5.5px, ${bar}%, calc(100% - 5.5px))` }} />
+          </div>
+          <div className="sector-bar-axis" aria-hidden="true">
+            <span className="is-axis-under">← {copy.axis_under}</span>
+            <span className="is-axis-over">{copy.axis_over} →</span>
           </div>
         </>
       ) : (
         <div className="sector-rsi-value sector-rsi-missing">—</div>
       )}
-      {hasDev && (
-        <div className={`sector-dev ${devUp ? "is-up" : "is-down"}`}>
-          {(devUp ? "+" : "") + formatNumber(dev, 1)}
-          {locale === "kr" ? "% 200일선 대비" : "% vs 200-day"}
-        </div>
-      )}
+      {devVal !== null &&
+        (isFlat ? (
+          <div className="sector-dev is-flat">≈ 0.0% {copy.dev_flat}</div>
+        ) : (
+          <div className={`sector-dev ${devUp ? "is-up" : "is-down"}`}>
+            {devUp ? "▲" : "▼"} {(devUp ? "+" : "") + formatNumber(devVal, 1)}% {devUp ? copy.dev_above_p : copy.dev_below_p}
+          </div>
+        ))}
     </div>
   );
 }
@@ -177,10 +265,9 @@ export function SectorCheck({ locale }: SectorCheckProps) {
         <>
           <div className="sector-grid">
             {sectors.map((entry) => (
-              <SectorCard key={entry.symbol} entry={entry} locale={locale} />
+              <SectorCard key={entry.symbol} entry={entry} locale={locale} referenceAsOf={payload?.as_of ?? null} />
             ))}
           </div>
-          <p className="sector-note">{copy.criteria}</p>
           <p className="sector-note">{copy.note}</p>
         </>
       )}
