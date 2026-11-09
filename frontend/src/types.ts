@@ -233,6 +233,36 @@ export interface CompositePoint {
   categories: Record<string, { score: number | null; coverage: number }>;
 }
 
+export interface PricePoint {
+  date: string;
+  close: number;
+}
+
+export interface PriceHistory {
+  symbol: string;
+  name: string;
+  range: string;
+  available_from: string | null;
+  available_to: string | null;
+  points: PricePoint[];
+}
+
+export interface SectorEntry {
+  symbol: string;
+  name: string;
+  available: boolean;
+  rsi: number | null;
+  price: number | null;
+  ma200: number | null;
+  dev: number | null;
+  as_of: string | null;
+}
+
+export interface SectorsPayload {
+  as_of: string | null;
+  sectors: SectorEntry[];
+}
+
 export interface CompositeHistory {
   range: string;
   available_from: string | null;

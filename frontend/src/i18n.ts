@@ -152,6 +152,8 @@ const en = {
     total_return_proxy: "Total-return proxy",
     coverage_word: "coverage",
     confidence_word: "confidence",
+    price_close: "Close",
+    price_series: "Price",
   },
   // classification vocabulary (keys from the API)
   band_labels: {
@@ -654,6 +656,8 @@ const kr: LocaleText = {
     total_return_proxy: "총수익(배당 재투자) 대리지표",
     coverage_word: "커버리지",
     confidence_word: "신뢰도",
+    price_close: "종가",
+    price_series: "가격",
   },
   // classification vocabulary (keys from the API)
   band_labels: {

@@ -18,12 +18,21 @@ from app.indicators import (
     format_value,
     series_id_for,
 )
+from app.ingestion.sector import SECTOR_ETF, sector_series_id
 from app.models import CompositeScore, Observation
 from app.scoring.engine import indicators_for
 from app.scoring.explain import DATA_NOTES, DISCLAIMER
 from app.services.index_scores import score_source
 
 RANGE_YEARS = {"1y": 1, "3y": 3, "5y": 5, "10y": 10, "max": None}
+
+PRICE_MAX_POINTS = 20000
+
+# The ETF shown in the top price chart for each index view.
+PRICE_SERIES: dict[str, dict[str, str]] = {
+    "sp500": {"series": "spy", "symbol": "SPY", "name": "SPDR S&P 500 ETF Trust"},
+    "nasdaq": {"series": "qqq", "symbol": "QQQ", "name": "Invesco QQQ Trust"},
+}
 
 DATA_SOURCES = [
     {
@@ -192,6 +201,101 @@ def get_indicator_history(
         "available_to": latest_date.isoformat() if latest_date else None,
         "points": points,
     }
+
+
+def get_price_history(
+    session: Session,
+    settings: Settings,
+    index: str = "sp500",
+    range_key: str = "max",
+) -> dict[str, Any]:
+    """Daily closes of the ETF that stands in for the selected index view.
+
+    The top-of-page chart shows the quoted closing price (not the dividend-adjusted
+    series), so the newest point reads like the price on a broker screen.
+    """
+    spec = PRICE_SERIES.get(index) or PRICE_SERIES["sp500"]
+    series_id = spec["series"]
+    rows = (
+        session.execute(
+            select(Observation)
+            .where(Observation.indicator_id == series_id)
+            .order_by(Observation.period_date)
+        )
+        .scalars()
+        .all()
+    )
+    latest_date = rows[-1].period_date if rows else None
+    start = _filter_start(latest_date, range_key)
+    filtered = [row for row in rows if start is None or row.period_date >= start]
+    points = []
+    for row in filtered:
+        meta = row.meta or {}
+        close = meta.get("close")
+        points.append(
+            {
+                "date": row.period_date.isoformat(),
+                "close": float(close) if close is not None else float(row.value),
+            }
+        )
+    return {
+        "symbol": spec["symbol"],
+        "name": spec["name"],
+        "range": range_key,
+        "available_from": rows[0].period_date.isoformat() if rows else None,
+        "available_to": latest_date.isoformat() if latest_date else None,
+        "points": points[-PRICE_MAX_POINTS:],
+    }
+
+
+def get_sector_snapshot(session: Session) -> dict[str, Any]:
+    """Latest RSI(14) and 200-day reading for each sector ETF (bottom section).
+
+    The section is index-agnostic: one payload serves both the S&P 500 and the
+    NASDAQ view, so the JSON is a single static file.
+    """
+    entries: list[dict[str, Any]] = []
+    for definition in SECTOR_ETF:
+        symbol = definition["symbol"]
+        row = (
+            session.execute(
+                select(Observation)
+                .where(Observation.indicator_id == sector_series_id(symbol))
+                .order_by(desc(Observation.period_date))
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+        if row is None:
+            entries.append(
+                {
+                    "symbol": symbol,
+                    "name": definition["name"],
+                    "available": False,
+                    "rsi": None,
+                    "price": None,
+                    "ma200": None,
+                    "dev": None,
+                    "as_of": None,
+                }
+            )
+            continue
+        meta = row.meta or {}
+        entries.append(
+            {
+                "symbol": symbol,
+                "name": definition["name"],
+                "available": True,
+                "rsi": float(row.value),
+                "price": meta.get("price"),
+                "ma200": meta.get("ma200"),
+                "dev": meta.get("dev"),
+                "as_of": row.period_date.isoformat(),
+            }
+        )
+    newest = max((entry["as_of"] for entry in entries if entry["as_of"]), default=None)
+    return {"as_of": newest, "sectors": entries}
 
 
 def get_composite_history(

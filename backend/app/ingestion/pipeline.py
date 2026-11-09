@@ -26,6 +26,7 @@ from app.ingestion.derived import (
         rsi_observations,
     )
 from app.ingestion.fetch import HttpClient
+from app.ingestion.sector import fetch_sector_snapshot_series
 from app.ingestion.shiller import fetch_shiller
 from app.ingestion.treasury import fetch_treasury_10y
 from app.ingestion.worldbank import fetch_buffett
@@ -177,6 +178,12 @@ def run_refresh(
             series_results[indicator_id] = result
             price_frames[indicator_id] = frame
             results.append(_store_result(session, result))
+
+        # Sector ETF snapshots (the bottom sector section; one file shared by
+        # both index views). One failure only skips that one ETF.
+        for sector_result, _frame in fetch_sector_snapshot_series(settings, client):
+            series_results[sector_result.indicator_id] = sector_result
+            results.append(_store_result(session, sector_result))
 
         if settings.forward_pe_csv_url:
             try:

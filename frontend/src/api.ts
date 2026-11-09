@@ -3,7 +3,9 @@ import type {
   Dashboard,
   IndicatorHistory,
   Methodology,
+  PriceHistory,
   RangeKey,
+  SectorsPayload,
 } from "./types";
 
 const rawBase = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? "";
@@ -90,4 +92,17 @@ export function fetchMethodology(signal?: AbortSignal): Promise<Methodology> {
     staticMode ? "/data/methodology.json" : dataPath("/methodology"),
     signal,
   );
+}
+
+export function fetchPriceHistory(signal?: AbortSignal, index: IndexKey = "sp500"): Promise<PriceHistory> {
+  const url = staticMode
+    ? index === "nasdaq"
+      ? "/data/price-history.nasdaq.json"
+      : "/data/price-history.sp500.json"
+    : dataPath(`/price-history?index=${index}`);
+  return getJson<PriceHistory>(url, signal);
+}
+
+export function fetchSectors(signal?: AbortSignal): Promise<SectorsPayload> {
+  return getJson<SectorsPayload>(staticMode ? "/data/sectors.json" : dataPath("/sectors"), signal);
 }

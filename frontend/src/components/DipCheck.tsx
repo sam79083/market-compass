@@ -45,6 +45,18 @@ function Meter({ level, locale }: { level: number; locale: LocaleKey }) {
   );
 }
 
+/** Splits a criteria line like "30~40: 매도가 강하고…" into a bolded range and the explanation. */
+function RangeLine({ text }: { text: string }) {
+  const cut = text.indexOf(":");
+  if (cut <= 0) return <>{text}</>;
+  return (
+    <>
+      <span className="dip-criteria-range">{text.slice(0, cut)}</span>
+      {text.slice(cut)}
+    </>
+  );
+}
+
 function GaugeCard({
   gauge,
   indicator,
@@ -67,7 +79,24 @@ function GaugeCard({
         {gauge.state}
       </div>
       <div className="dip-headline">{gauge.headline}</div>
-      <p className="dip-detail">{gauge.detail}</p>
+      {gauge.criteria.length > 0 ? (
+        <div className="dip-criteria">
+          {gauge.criteria.map((criterion) => (
+            <div
+              key={criterion.key}
+              className={
+                criterion.key === gauge.currentKey
+                  ? "dip-criteria-item is-current"
+                  : "dip-criteria-item"
+              }
+            >
+              <RangeLine text={criterion.text} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="dip-detail">{gauge.detail}</p>
+      )}
       {gauge.context && <p className="dip-context">{gauge.context}</p>}
       <div className="dip-foot">
         {gauge.asOf && (

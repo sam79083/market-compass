@@ -12,6 +12,8 @@ from app.services.history import (
     get_health,
     get_indicator_history,
     get_methodology,
+    get_price_history,
+    get_sector_snapshot,
 )
 
 router = APIRouter(prefix="/api")
@@ -69,6 +71,21 @@ def composite_history(
     index: IndexQuery = "sp500",
 ):
     return get_composite_history(session, settings, range_key, index)
+
+
+@router.get("/price-history")
+def price_history(
+    session: SessionDep,
+    settings: SettingsDep,
+    index: IndexQuery = "sp500",
+    range_key: RangeQuery = "max",
+):
+    return get_price_history(session, settings, index, range_key)
+
+
+@router.get("/sectors")
+def sectors(session: SessionDep):
+    return get_sector_snapshot(session)
 
 
 @router.get("/methodology")

@@ -21,10 +21,21 @@ export interface Gauge {
   level: DipLevel;
   /** Why this state, in one sentence. */
   detail: string;
+  /**
+   * Every range this indicator uses, in display order (high to low on the scale).
+   * The entry whose key equals currentKey is the range the market is in right now.
+   */
+  criteria: Criterion[];
+  currentKey: string | null;
   /** Extra context line (history, units); may be empty. */
   context: string;
   asOf: string | null;
   available: boolean;
+}
+
+export interface Criterion {
+  key: string;
+  text: string;
 }
 
 interface Strings {
@@ -249,6 +260,31 @@ const num = (value: number, digits: number, locale: LocaleKey): string =>
     maximumFractionDigits: digits,
   });
 
+const VIX_KEYS = ["calm", "elevated", "high", "extreme"] as const;
+const RSI_KEYS = ["hot", "strong", "neutral", "weak", "oversold", "deep"] as const;
+const MA_KEYS = ["up", "testing", "pullback", "bear"] as const;
+const FG_KEYS = ["extremeFear", "fear", "neutral", "greed", "extremeGreed"] as const;
+
+function criteriaFor(id: DipId, s: Strings): Criterion[] {
+  const keys =
+    id === "vix"
+      ? VIX_KEYS
+      : id === "rsi"
+        ? RSI_KEYS
+        : id === "ma200_deviation"
+          ? MA_KEYS
+          : FG_KEYS;
+  const detail =
+    id === "vix"
+      ? s.vix.detail
+      : id === "rsi"
+        ? s.rsi.detail
+        : id === "ma200_deviation"
+          ? s.ma.detail
+          : s.fg.detail;
+  return keys.map((key) => ({ key, text: detail[key] }));
+}
+
 function unavailable(id: DipId, index: IndexKey, s: Strings): Gauge {
   return {
     id,
@@ -257,6 +293,8 @@ function unavailable(id: DipId, index: IndexKey, s: Strings): Gauge {
     state: s.noData,
     level: 0,
     detail: s.noDataDetail,
+    criteria: [],
+    currentKey: null,
     context: "",
     asOf: null,
     available: false,
@@ -323,6 +361,8 @@ export function buildGauges(
         state: s.vix[key],
         level,
         detail: s.vix.detail[key],
+        criteria: criteriaFor(id, s),
+        currentKey: key,
         context: pct !== null && pct !== undefined ? s.vixContext(Math.round(pct)) : "",
       };
     }
@@ -334,6 +374,8 @@ export function buildGauges(
         state: s.rsi[key],
         level,
         detail: s.rsi.detail[key],
+        criteria: criteriaFor(id, s),
+        currentKey: key,
         context: s.rsiContext,
       };
     }
@@ -351,6 +393,8 @@ export function buildGauges(
         state: s.ma[key],
         level,
         detail: s.ma.detail[key],
+        criteria: criteriaFor(id, s),
+        currentKey: key,
         context: `${priceLine}${s.ma.history}`,
       };
     }
@@ -361,6 +405,8 @@ export function buildGauges(
       state: s.fg[key],
       level,
       detail: s.fg.detail[key],
+      criteria: criteriaFor(id, s),
+      currentKey: key,
       context: s.fgContext,
     };
   });

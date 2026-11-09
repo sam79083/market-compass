@@ -5,7 +5,9 @@ import { AdSlot } from "./components/AdSlot";
 import { DipCheck } from "./components/DipCheck";
 import { DipGuide } from "./components/DipGuide";
 import { IndicatorModal } from "./components/IndicatorModal";
+import { PriceChart } from "./components/PriceChart";
 import { EmptyState, ErrorState, LoadingSkeleton } from "./components/States";
+import { SectorCheck } from "./components/SectorCheck";
 import { GUIDE_TEXT } from "./dipCheck";
 import { LOCALE_TEXT } from "./i18n";
 import type { LocaleKey } from "./i18n";
@@ -149,11 +151,13 @@ export default function App() {
           <LoadingSkeleton locale={locale} />
         ) : error ? (
           <ErrorState message={error} onRetry={loadDashboard} locale={locale} />
-        ) : dashboard && !dashboard.has_data ? (
+        ) :         dashboard && !dashboard.has_data ? (
           <EmptyState locale={locale} />
         ) : dashboard ? (
           <>
+            <PriceChart index={index} theme={theme} locale={locale} />
             <DipCheck dashboard={dashboard} index={index} locale={locale} onOpen={setSelected} />
+            <SectorCheck locale={locale} />
             <AdSlot />
           </>
         ) : null}

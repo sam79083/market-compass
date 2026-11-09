@@ -5,6 +5,7 @@ import type {
   Indicator,
   IndicatorHistory,
   IndicatorPoint,
+  PricePoint,
   ThemeMode,
 } from "./types";
 import type { LocaleKey } from "./i18n";
@@ -306,6 +307,77 @@ export function compositeChartOption(
         symbol: "circle",
         symbolSize: 7,
         itemStyle: { color: latestColor, borderColor: palette.panel, borderWidth: 2 },
+        lineStyle: { opacity: 0 },
+        silent: true,
+        z: 5,
+      },
+    ],
+  };
+}
+
+export function priceChartOption(
+  symbol: string,
+  points: PricePoint[],
+  theme: ThemeMode,
+  locale: LocaleKey = "en",
+): EChartsOption {
+  const palette = paletteFor(theme);
+  const labels = LOCALE_TEXT[locale].chart_labels;
+  const dates = points.map((point) => point.date);
+  const closes = points.map((point) => point.close);
+  const latest = points[points.length - 1];
+  const previous = points[points.length - 2];
+  const changed = !!(latest && previous);
+  const up = changed && latest.close >= previous.close;
+  const changeColor = up ? palette.teal : palette.red;
+  const lineColor = changed ? changeColor : palette.accent;
+
+  return {
+    animationDuration: 450,
+    grid: { left: 52, right: 14, top: 16, bottom: 26 },
+    tooltip: {
+      trigger: "axis" as const,
+      axisPointer: { type: "line" as const, lineStyle: { color: palette.accent, type: "dashed" as const } },
+      ...tooltipStyle(theme),
+      formatter: (params: unknown) => {
+        const list = params as Array<{ dataIndex: number }>;
+        const point = points[list[0]?.dataIndex ?? 0];
+        if (!point) return "";
+        const headers = `<div class="chart-tip-head">
+          <span>${escapeHtml(symbol)}</span>
+          <strong>${escapeHtml(formatNumber(point.close, 2))}</strong>
+        </div>`;
+        return `<div class="chart-tip">${headers}
+          <div class="chart-tip-sub">${escapeHtml(labels.price_close)} · ${escapeHtml(formatDate(point.date, locale))}</div>
+        </div>`;
+      },
+    },
+    xAxis: dateAxis(dates, palette, false),
+    yAxis: valueAxis(palette, {
+      axisLabel: {
+        ...axisLabel(palette),
+        formatter: (value: number) => formatNumber(value, 0),
+      },
+    }),
+    series: [
+      {
+        name: labels.price_series,
+        type: "line",
+        data: closes,
+        showSymbol: false,
+        smooth: 0.06,
+        lineStyle: { color: lineColor, width: 2 },
+        areaStyle: { color: areaGradient(lineColor, theme === "dark" ? 0.18 : 0.12) },
+        emphasis: { focus: "series" },
+      },
+      {
+        name: "Latest",
+        type: "line",
+        data: points.map((_, index) => (index === points.length - 1 ? latest.close : null)),
+        showSymbol: true,
+        symbol: "circle",
+        symbolSize: 7,
+        itemStyle: { color: lineColor, borderColor: palette.panel, borderWidth: 2 },
         lineStyle: { opacity: 0 },
         silent: true,
         z: 5,

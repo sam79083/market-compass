@@ -14,6 +14,8 @@ from app.services.history import (
     get_composite_history,
     get_indicator_history,
     get_methodology,
+    get_price_history,
+    get_sector_snapshot,
 )
 
 
@@ -54,6 +56,17 @@ def export_static(session: Session, settings: Settings, out_dir: Path) -> dict[s
         out / "composite-history.nasdaq.json",
         get_composite_history(session, settings, "max", "nasdaq"),
     )
+    # Daily ETF closes for the top-of-page price chart, one file per index view.
+    files["price-history.sp500.json"] = _write_json(
+        out / "price-history.sp500.json",
+        get_price_history(session, settings, "sp500"),
+    )
+    files["price-history.nasdaq.json"] = _write_json(
+        out / "price-history.nasdaq.json",
+        get_price_history(session, settings, "nasdaq"),
+    )
+    # Sector ETF snapshot for the bottom section; shared by both index views.
+    files["sectors.json"] = _write_json(out / "sectors.json", get_sector_snapshot(session))
     files["methodology.json"] = _write_json(
         out / "methodology.json",
         get_methodology(settings),

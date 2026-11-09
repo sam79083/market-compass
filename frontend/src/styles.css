@@ -2249,3 +2249,363 @@ button.dip-card:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---- Price chart (SPY / QQQ) at the top ---- */
+.price-symbol-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 2px 0 2px;
+}
+
+.price-symbol {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.price-name {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.price-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 4px 0 6px;
+}
+
+.price-last {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-change {
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-stats[data-up="true"] .price-change {
+  color: var(--green);
+}
+
+.price-sub {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-panel .panel-sub {
+  margin: 0 0 10px;
+}
+
+.price-panel .range-buttons {
+  flex: none;
+  margin-top: 2px;
+}
+
+.price-error {
+  margin: 4px 0 0;
+  color: var(--red);
+  font-size: 12px;
+}
+
+.price-panel .chart-skeleton {
+  height: 280px;
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .price-panel .panel-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .price-symbol {
+    font-size: 22px;
+  }
+
+  .price-last {
+    font-size: 19px;
+  }
+
+  .price-panel .range-buttons {
+    align-self: flex-start;
+  }
+}
+
+/* ---- Full criteria list on the dip-check cards ---- */
+.dip-criteria {
+  display: grid;
+  gap: 3px;
+  margin: 2px 0 0;
+  padding: 9px 11px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.dip-criteria-item {
+  position: relative;
+  padding-left: 13px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dip-criteria-item::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.dip-criteria-item.is-current {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.dip-criteria-item.is-current::before {
+  top: 5.5px;
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.dip-criteria-item.is-current .dip-criteria-range {
+  color: var(--accent);
+}
+
+.dip-criteria-range {
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .dip-criteria-item {
+    font-size: 11.5px;
+  }
+}
+
+/* ---- Sector ETF check (always at the bottom, independent of the index view) ---- */
+.sector-panel .as-of {
+  margin-top: 2px;
+}
+
+.sector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.sector-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-3);
+  padding: 13px 14px;
+}
+
+.sector-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sector-symbol {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.sector-name {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sector-tag {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.sector-tag-under {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 35%, transparent);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
+.sector-tag-over {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 35%, transparent);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+}
+
+.sector-tag-right {
+  color: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 30%, transparent);
+  background: color-mix(in srgb, var(--amber) 8%, transparent);
+}
+
+.sector-rsi-num {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sector-rsi-label {
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+
+.sector-rsi-value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sector-rsi-missing {
+  color: var(--faint);
+}
+
+.sector-bar {
+  position: relative;
+  display: flex;
+  height: 6px;
+  border-radius: 999px;
+  overflow: visible;
+}
+
+.sector-bar-zone {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.sector-bar-zone.is-zone-under {
+  width: 30%;
+  background: color-mix(in srgb, var(--green) 45%, transparent);
+}
+
+.sector-bar-zone.is-zone-mid {
+  width: 40%;
+  background: var(--border);
+}
+
+.sector-bar-zone.is-zone-over {
+  width: 30%;
+  background: color-mix(in srgb, var(--red) 45%, transparent);
+}
+
+.sector-bar-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.sector-dev {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sector-dev.is-up {
+  color: var(--green);
+}
+
+.sector-dev.is-down {
+  color: var(--red);
+}
+
+.sector-skeleton {
+  height: 118px;
+  border-radius: 12px;
+  background:
+    linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%),
+    var(--panel-3);
+  background-size: 200% 100%;
+  animation: sector-shimmer 1.4s ease infinite;
+}
+
+:root[data-theme="light"] .sector-skeleton {
+  background:
+    linear-gradient(100deg, transparent 30%, rgba(42, 52, 60, 0.06) 50%, transparent 70%),
+    var(--panel-3);
+}
+
+@keyframes sector-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.sector-note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.sector-note:first-of-type {
+  margin-top: 14px;
+}
+
+.sector-error {
+  margin: 12px 0 0;
+  color: var(--red);
+  font-size: 12.5px;
+}
+
+@media (max-width: 1080px) {
+  .sector-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .sector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .sector-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
