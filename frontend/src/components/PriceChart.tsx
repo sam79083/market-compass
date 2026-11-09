@@ -18,12 +18,12 @@ const TEXT: Record<LocaleKey, { eyebrow: string; asOf: string; note: string }> =
   en: {
     eyebrow: "Market price",
     asOf: "As of",
-    note: "Daily closing prices in USD.",
+    note: "Daily closing prices in USD. Price return, dividends not included.",
   },
   kr: {
     eyebrow: "시장 가격",
     asOf: "기준",
-    note: "미국 시장 종가 기준 (USD).",
+    note: "미국 시장 종가 기준 (USD). 배당금 미반영, 가격수익률 기준.",
   },
 };
 
@@ -77,7 +77,7 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const changePct = change !== null && previous ? (change / previous.close) * 100 : null;
   const up = change !== null ? change >= 0 : true;
 
-  const yearWindow = available ? available.points.slice(-260) : [];
+  const yearWindow = available ? available.points.slice(-252) : [];
   const yearlyChange =
     yearWindow.length > 1
       ? ((yearWindow[yearWindow.length - 1].close - yearWindow[0].close) / yearWindow[0].close) * 100
