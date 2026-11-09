@@ -53,7 +53,7 @@ def load_csv_feed(
     frame["value"] = pd.to_numeric(frame["value"], errors="coerce")
     frame = frame.dropna(subset=["period_date", "value"])
 
-    if indicator_id == "forward_pe":
+    if indicator_id in {"forward_pe", "nasdaq_pe"}:
         frame = frame[frame["value"] > 0]
     if indicator_id == "fear_greed":
         frame = frame[(frame["value"] >= 0) & (frame["value"] <= 100)]

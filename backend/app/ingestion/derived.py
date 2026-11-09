@@ -127,6 +127,66 @@ def compute_erp(
     return merged, resolved_method
 
 
+def compute_nasdaq_erp(pe: pd.DataFrame, treasury_10y: pd.DataFrame) -> pd.DataFrame:
+    """NASDAQ-100 equity risk premium: trailing earnings yield (100 / P/E) minus the 10Y yield.
+
+    Each P/E snapshot is paired with the latest Treasury yield on or before its date.
+    Returns columns period_date, effective_date, value, earnings_yield, treasury_yield, pe.
+    """
+    empty = pd.DataFrame(
+        columns=["period_date", "effective_date", "value", "earnings_yield", "treasury_yield", "pe"]
+    )
+    if pe is None or pe.empty or treasury_10y is None or treasury_10y.empty:
+        return empty
+    left = pe[["period_date", "effective_date", "value"]].rename(columns={"value": "pe"}).copy()
+    left["pe"] = pd.to_numeric(left["pe"], errors="coerce")
+    left = left[left["pe"] > 0].copy()
+    left["effective_date"] = pd.to_datetime(left["effective_date"])
+    left["period_date"] = pd.to_datetime(left["period_date"])
+    left = left.sort_values("effective_date")
+    right = treasury_10y[["period_date", "value"]].rename(
+        columns={"period_date": "treasury_date", "value": "treasury_yield"}
+    )
+    right["treasury_date"] = pd.to_datetime(right["treasury_date"])
+    right = right.sort_values("treasury_date")
+    merged = pd.merge_asof(
+        left,
+        right,
+        left_on="effective_date",
+        right_on="treasury_date",
+        direction="backward",
+        tolerance=pd.Timedelta(days=10),
+    ).dropna(subset=["treasury_yield", "pe"])
+    if merged.empty:
+        return empty
+    merged["earnings_yield"] = 100.0 / merged["pe"]
+    merged["value"] = merged["earnings_yield"] - merged["treasury_yield"]
+    return merged[
+        ["period_date", "effective_date", "value", "earnings_yield", "treasury_yield", "pe"]
+    ]
+
+
+def nasdaq_erp_observations(erp_frame: pd.DataFrame) -> pd.DataFrame:
+    rows = [
+        {
+            "period_date": row.period_date.date(),
+            "effective_date": row.effective_date.date(),
+            "value": float(row.value),
+            "is_estimate": False,
+            "source": "NASDAQ-100 trailing earnings yield - 10Y Treasury",
+            "meta": {
+                "earnings_yield": float(row.earnings_yield),
+                "treasury_yield": float(row.treasury_yield),
+                "pe": float(row.pe),
+                "method": "trailing_proxy",
+                "earnings_effective_date": row.effective_date.date().isoformat(),
+            },
+        }
+        for row in erp_frame.itertuples()
+    ]
+    return make_frame(rows)
+
+
 def rsi_observations(price_frame: pd.DataFrame, source: str) -> pd.DataFrame:
     working = price_frame[["date", "close"]].copy().sort_values("date")
     working["value"] = compute_rsi(working["close"])

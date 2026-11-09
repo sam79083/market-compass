@@ -47,13 +47,17 @@ The dashboard has two views. Each reads its own stored series, so the numbers di
 | Fear & Greed | CNN (market-wide) | same series, shown in both |
 | Market cap / GDP | World Bank (whole U.S. market) | same series, shown in both |
 | Constituent breadth | current S&P 500 members | current NASDAQ-100 members (`backend/app/data/nasdaq100_constituents.csv`, or `NASDAQ_CONSTITUENTS_URL`) |
-| CAPE, forward P/E, ERP | available | **unavailable** (S&P 500-only sources) |
+| Equity risk premium | Shiller earnings yield - 10Y | NASDAQ-100 trailing earnings yield (daily QQQ P/E snapshot, `data/nasdaq_pe.csv`) - 10Y |
+| CAPE, forward P/E | available | **unavailable** (S&P 500-only sources) |
 
 Indicators with no NASDAQ source are reported as unavailable rather than reusing S&P 500
-numbers. With CAPE, forward P/E and ERP missing, NASDAQ coverage is below the 60% minimum,
-so the NASDAQ composite score is withheld ("Insufficient data") while its other panels
-still show. The NASDAQ-100 list is reconstituted by Nasdaq every December; refresh the CSV
-then (breadth skips any symbol Yahoo can't price).
+numbers. No free source publishes NASDAQ-100 earnings *history*, so the NASDAQ equity risk
+premium starts on the first day `scripts/fetch_nasdaq_pe.py` ran and adds one point per
+trading day. It is shown immediately, but it is scored only after `minimum_observations.erp`
+(504 daily points, about two years, in `backend/config/weights.json`) exist. Until then NASDAQ
+coverage stays below the 60% minimum, so the NASDAQ composite is withheld ("Insufficient
+data") while the other panels show. The NASDAQ-100 list is reconstituted by Nasdaq every
+December; refresh the CSV then (breadth skips any symbol Yahoo can't price).
 
 `export-static` writes `dashboard.sp500.json`, `dashboard.nasdaq.json`,
 `composite-history.nasdaq.json` and `indicators/nasdaq/*.json` next to the S&P 500 files.

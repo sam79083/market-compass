@@ -644,13 +644,22 @@ def _nasdaq_view() -> dict[str, IndicatorDef]:
             "series is shown in the S&P 500 and NASDAQ views.",
         ),
         "erp": dict(
-            has_series=False,
-            description="An equity risk premium needs NASDAQ earnings, which are not available.",
-            methodology="Not computed for the NASDAQ view.",
-            limitations="The S&P 500 earnings yield is not substituted for NASDAQ.",
-            unavailable_reason=(
-                "The equity risk premium is built from S&P 500 earnings and is not repeated "
-                "in the NASDAQ view."
+            obs_id="nasdaq_erp",
+            name="Equity Risk Premium (NASDAQ-100 proxy)",
+            description=(
+                "The NASDAQ-100 trailing earnings yield minus the 10-year Treasury yield."
+            ),
+            source_name="NASDAQ-100 trailing P/E (daily snapshots) + U.S. Treasury 10-year yield",
+            methodology=(
+                "Trailing earnings yield (100 / the NASDAQ-100 trailing P/E, read daily from "
+                "Yahoo Finance's QQQ figure) minus the 10-year U.S. Treasury yield. Both legs "
+                "are nominal. The P/E is never forward-looking and never taken from the S&P 500."
+            ),
+            limitations=(
+                "No free source publishes NASDAQ-100 earnings history, so this series starts on "
+                "the first day the snapshot job ran and grows by one observation per trading "
+                "day. Its score is withheld until the history is long enough for a meaningful "
+                "percentile. ETF-reported P/Es are approximate and are not revised."
             ),
         ),
         "fear_greed": dict(

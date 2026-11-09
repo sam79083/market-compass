@@ -153,6 +153,9 @@ class Settings(BaseSettings):
     forward_pe_csv_url: str | None = None
     forward_pe_earnings_basis: str = "operating"
     fear_greed_csv_url: str | None = None
+    # Daily NASDAQ-100 trailing P/E snapshots (date,value[,source]) written by
+    # scripts/fetch_nasdaq_pe.py. Feeds the NASDAQ equity risk premium.
+    nasdaq_pe_csv_url: str | None = None
     allow_unofficial_price_feed: bool = True
     erp_method: str = "auto"
 

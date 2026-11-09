@@ -110,7 +110,11 @@ def seeded(tmp_path):
             )
         # Market cap / GDP is whole-market and shared by both views; NASDAQ-100 breadth is its own
         # series and deliberately differs from the S&P 500 value above.
-        for series_id, value in {"buffett": 190.0, "nasdaq_breadth_200dma": 47.0}.items():
+        for series_id, value in {
+            "buffett": 190.0,
+            "nasdaq_breadth_200dma": 47.0,
+            "nasdaq_erp": 0.8,
+        }.items():
             session.add(
                 Observation(
                     indicator_id=series_id,
@@ -158,8 +162,8 @@ def test_nasdaq_does_not_borrow_sp500_only_indicators(seeded):
         nq = _by_id(build_dashboard(session, settings, "nasdaq"))
         sp = _by_id(build_dashboard(session, settings, "sp500"))
 
-    # Earnings-based indicators have no NASDAQ source yet, so they stay unavailable.
-    for indicator_id in ("cape", "forward_pe", "erp"):
+    # CAPE and forward P/E have no NASDAQ source, so they stay unavailable.
+    for indicator_id in ("cape", "forward_pe"):
         assert sp[indicator_id]["latest"] is not None  # S&P 500 does have these
         assert nq[indicator_id]["latest"] is None
         assert nq[indicator_id]["status"] == "unavailable"
@@ -168,6 +172,10 @@ def test_nasdaq_does_not_borrow_sp500_only_indicators(seeded):
     # Breadth reads the NASDAQ-100 series, never the S&P 500 one.
     assert nq["breadth_200dma"]["latest"]["value"] == pytest.approx(47.0)
     assert sp["breadth_200dma"]["latest"]["value"] == pytest.approx(61.0)
+
+    # The NASDAQ ERP reads its own series, never the S&P 500 value (1.5).
+    assert nq["erp"]["latest"]["value"] == pytest.approx(0.8)
+    assert sp["erp"]["latest"]["value"] == pytest.approx(1.5)
 
 
 def test_market_cap_to_gdp_is_shared_by_both_views(seeded):
