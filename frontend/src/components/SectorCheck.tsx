@@ -28,6 +28,10 @@ const TEXT: Record<
     dev_flat: string;
     unavailable: string;
     stale_label: string;
+    price_label: string;
+    ma200_label: string;
+    group_empty: string;
+    group_nodata: string;
     hints: Record<HintKey, string>;
   }
 > = {
@@ -53,6 +57,10 @@ const TEXT: Record<
     dev_flat: "in line with 200-day",
     unavailable: "No series in feed",
     stale_label: "Stale data",
+    price_label: "Price",
+    ma200_label: "200-day",
+    group_empty: "None right now",
+    group_nodata: "No data",
     hints: {
       under_uptrend: "A dip inside an uptrend — watchlist candidate",
       under_downtrend: "Oversold inside a downtrend — bounce signal, trend weak",
@@ -87,6 +95,10 @@ const TEXT: Record<
     dev_flat: "200일선과 동일",
     unavailable: "시계열 미수집",
     stale_label: "지난 데이터",
+    price_label: "현재가",
+    ma200_label: "200일선",
+    group_empty: "현재 해당 없음",
+    group_nodata: "데이터 없음",
     hints: {
       under_uptrend: "상승 추세 속 단기 눌림 — 관심 후보",
       under_downtrend: "약세 속 과매도 — 반등 신호, 추세는 주의",
@@ -161,6 +173,8 @@ function SectorCard({ entry, locale, referenceAsOf }: { entry: SectorEntry; loca
   const dev = entry.dev;
   const rsiVal: number | null = typeof rsi === "number" && Number.isFinite(rsi) ? rsi : null;
   const devVal: number | null = typeof dev === "number" && Number.isFinite(dev) ? dev : null;
+  const priceVal: number | null = typeof entry.price === "number" && Number.isFinite(entry.price) ? entry.price : null;
+  const ma200Val: number | null = typeof entry.ma200 === "number" && Number.isFinite(entry.ma200) ? entry.ma200 : null;
   const isFlat = devVal !== null && Math.abs(devVal) < 0.05;
   const devUp = (devVal ?? 0) >= 0;
   const tag: TagKey | null = rsiVal !== null ? tagFromRsi(rsiVal) : null;
@@ -217,6 +231,18 @@ function SectorCard({ entry, locale, referenceAsOf }: { entry: SectorEntry; loca
             {devUp ? "▲" : "▼"} {(devUp ? "+" : "") + formatNumber(devVal, 1)}% {devUp ? copy.dev_above_p : copy.dev_below_p}
           </div>
         ))}
+      {priceVal !== null && (
+        <div className="sector-price">
+          <span>
+            {copy.price_label} <strong>${formatNumber(priceVal, 2)}</strong>
+          </span>
+          {ma200Val !== null && (
+            <span>
+              {copy.ma200_label} ${formatNumber(ma200Val, 2)}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -247,6 +273,20 @@ export function SectorCheck({ locale }: SectorCheckProps) {
 
   const sectors = payload?.sectors ?? [];
 
+  // Three buckets by the RSI(14) tag, most extreme first inside each bucket.
+  // ETFs without a usable RSI go to a fourth bucket that only renders if needed.
+  const buckets: Record<TagKey | "nodata", SectorEntry[]> = { under: [], right: [], over: [], nodata: [] };
+  for (const entry of sectors) {
+    const value = entry.rsi;
+    if (typeof value === "number" && Number.isFinite(value)) buckets[tagFromRsi(value)].push(entry);
+    else buckets.nodata.push(entry);
+  }
+  const rsiOf = (entry: SectorEntry) => entry.rsi ?? 50;
+  buckets.under.sort((a, b) => rsiOf(a) - rsiOf(b));
+  buckets.right.sort((a, b) => rsiOf(a) - rsiOf(b));
+  buckets.over.sort((a, b) => rsiOf(b) - rsiOf(a));
+  const groupOrder: Array<TagKey | "nodata"> = ["under", "right", "over", "nodata"];
+
   return (
     <section className="panel sector-panel" id="sector-check">
       <div className="panel-head">
@@ -271,11 +311,29 @@ export function SectorCheck({ locale }: SectorCheckProps) {
         <p className="sector-error">{error}</p>
       ) : (
         <>
-          <div className="sector-grid">
-            {sectors.map((entry) => (
-              <SectorCard key={entry.symbol} entry={entry} locale={locale} referenceAsOf={payload?.as_of ?? null} />
-            ))}
-          </div>
+          {groupOrder.map((key) => {
+            const items = buckets[key];
+            if (key === "nodata" && items.length === 0) return null;
+            const title = key === "nodata" ? copy.group_nodata : copy[key];
+            return (
+              <div key={key} className={`sector-group is-${key}`}>
+                <h2 className="sector-group-title">
+                  <span className="sector-group-dot" aria-hidden="true" />
+                  {title}
+                  <span className="sector-group-count">{items.length}</span>
+                </h2>
+                {items.length === 0 ? (
+                  <p className="sector-group-empty">{copy.group_empty}</p>
+                ) : (
+                  <div className="sector-grid">
+                    {items.map((entry) => (
+                      <SectorCard key={entry.symbol} entry={entry} locale={locale} referenceAsOf={payload?.as_of ?? null} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <p className="sector-note">{copy.note}</p>
         </>
       )}
