@@ -2354,6 +2354,13 @@ button.dip-card:focus-visible {
   background: var(--panel-2);
 }
 
+.dip-criteria-hint {
+  margin: 0 0 2px;
+  color: var(--faint);
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+}
+
 .dip-criteria-item {
   position: relative;
   padding-left: 13px;

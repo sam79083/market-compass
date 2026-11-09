@@ -12,13 +12,14 @@ interface DipCheckProps {
   onOpen: (indicator: Indicator) => void;
 }
 
-const HEADING: Record<LocaleKey, { eyebrow: string; title: string; sub: (name: string) => string; asOf: string; open: string }> = {
+const HEADING: Record<LocaleKey, { eyebrow: string; title: string; sub: (name: string) => string; asOf: string; open: string; dipFirst: string }> = {
   en: {
     eyebrow: "Dip check",
     title: "Is this a dip?",
     sub: (name) => `Four readings of how stressed the ${name} is right now, in plain language.`,
     asOf: "As of",
     open: "Open chart",
+    dipFirst: "More dip-like toward the top",
   },
   kr: {
     eyebrow: "하락 구간 점검",
@@ -26,6 +27,7 @@ const HEADING: Record<LocaleKey, { eyebrow: string; title: string; sub: (name: s
     sub: (name) => `${name}이 지금 얼마나 불안한지 네 가지 지표를 쉬운 말로 보여줍니다.`,
     asOf: "기준",
     open: "차트 보기",
+    dipFirst: "위로 갈수록 저점권에 가까운 순서입니다",
   },
 };
 
@@ -81,6 +83,7 @@ function GaugeCard({
       <div className="dip-headline">{gauge.headline}</div>
       {gauge.criteria.length > 0 ? (
         <div className="dip-criteria">
+          <p className="dip-criteria-hint">{copy.dipFirst}</p>
           {gauge.criteria.map((criterion) => (
             <div
               key={criterion.key}

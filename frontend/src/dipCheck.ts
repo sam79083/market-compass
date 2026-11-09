@@ -128,19 +128,19 @@ const EN: Strings = {
     greed: "Greed",
     extremeGreed: "Extreme greed",
     detail: {
-      extremeFear: "24 or less: investors are very scared.",
-      fear: "25 to 44: cautious, selling is stronger than buying.",
-      neutral: "45 to 55: balanced.",
+      extremeFear: "24 or less: investors are very scared. A contrarian dip zone.",
+      fear: "25 to 44: cautious, selling is stronger than buying. Fear is building.",
+      neutral: "45 to 55: balanced, no pressure either way.",
       greed: "56 to 75: buyers are confident.",
-      extremeGreed: "76 or more: euphoric. Not a dip.",
+      extremeGreed: "76 or more: euphoric. Expectations outrun prices, not a dip.",
     },
   },
   vixHeadline: (name, value) => `${name} is at ${value}`,
   vixContext: (pct) => `Higher than ${pct}% of days in the past 20 years.`,
   rsiHeadline: (value) => `RSI is ${value}`,
   rsiContext: "A reading under 30 is usually called oversold.",
-  fgHeadline: (value) => `${value} out of 100`,
-  fgContext: "0 means extreme fear, 100 means extreme greed.",
+  fgHeadline: (value) => `${value} / 100`,
+  fgContext: "Lower numbers mean more fear — a contrarian setup, not a low score. 100 means euphoric greed.",
 };
 
 const KR: Strings = {
@@ -205,19 +205,19 @@ const KR: Strings = {
     greed: "탐욕",
     extremeGreed: "극단적 탐욕",
     detail: {
-      extremeFear: "24 이하: 투자자들이 매우 겁먹은 상태입니다.",
-      fear: "25~44: 조심스럽고 매도가 매수보다 강합니다.",
+      extremeFear: "24 이하: 투자자들이 매우 겁먹은 상태입니다. 역발상 관점에서는 저점권에 가까운 구간입니다.",
+      fear: "25~44: 조심스럽고 매도가 매수보다 강합니다. 공포가 본격적으로 쌓이는 구간입니다.",
       neutral: "45~55: 균형 상태입니다.",
       greed: "56~75: 매수자들이 자신감을 보입니다.",
-      extremeGreed: "76 이상: 들뜬 상태입니다. 하락 구간이 아닙니다.",
+      extremeGreed: "76 이상: 들뜬 상태입니다. 기대가 가격을 앞서는 과열 구간이라 저점권이 아닙니다.",
     },
   },
   vixHeadline: (name, value) => `${name} ${value}`,
   vixContext: (pct) => `최근 20년 중 ${pct}%의 날보다 높은 수준입니다.`,
   rsiHeadline: (value) => `RSI ${value}`,
   rsiContext: "30 미만이면 보통 과매도라고 부릅니다.",
-  fgHeadline: (value) => `100점 만점에 ${value}점`,
-  fgContext: "0은 극단적 공포, 100은 극단적 탐욕입니다.",
+  fgHeadline: (value) => `${value} / 100`,
+  fgContext: "0으로 갈수록 공포, 100으로 갈수록 탐욕이 쌓이는 지표입니다. 낮을수록 역발상 관점의 저점권에 가깝다는 뜻이며, 점수가 아니라 공포의 강도를 나타냅니다.",
 };
 
 const STRINGS: Record<LocaleKey, Strings> = { en: EN, kr: KR };
@@ -260,9 +260,9 @@ const num = (value: number, digits: number, locale: LocaleKey): string =>
     maximumFractionDigits: digits,
   });
 
-const VIX_KEYS = ["calm", "elevated", "high", "extreme"] as const;
-const RSI_KEYS = ["hot", "strong", "neutral", "weak", "oversold", "deep"] as const;
-const MA_KEYS = ["up", "testing", "pullback", "bear"] as const;
+const VIX_KEYS = ["extreme", "high", "elevated", "calm"] as const;
+const RSI_KEYS = ["deep", "oversold", "weak", "neutral", "strong", "hot"] as const;
+const MA_KEYS = ["bear", "pullback", "testing", "up"] as const;
 const FG_KEYS = ["extremeFear", "fear", "neutral", "greed", "extremeGreed"] as const;
 
 function criteriaFor(id: DipId, s: Strings): Criterion[] {
