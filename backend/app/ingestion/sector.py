@@ -18,9 +18,15 @@ logger = logging.getLogger(__name__)
 SNAPSHOT_WINDOW_DAYS = 500
 
 # One ETF per GICS sector of the S&P 500, plus ITA for the aerospace and
-# defense slice. Subsector ETFs that duplicate a listed slice (XAR, PPA,
-# IYT, ... ) are deliberately excluded so no two cards cover the same
-# exposure.
+# defense slice. Defense is covered by ITA alone; other aerospace/defense
+# ETFs (XAR, PPA) are deliberately excluded.
+#
+# Beyond the sectors, a handful of subsector, theme and macro ETFs are tracked
+# on purpose even though some overlap a sector (SOXX/IGV/CIBR sit inside XLK,
+# XBI inside XLV, URA/ICLN partly inside XLE/XLU). They answer a different
+# question than the parent sector, e.g. hardware vs software inside tech.
+# TLT and GLD are trend references only: RSI/200-day work the same way on
+# them, but "undervalued/overvalued" is a momentum tag, not a valuation.
 SECTOR_ETF: list[dict[str, str]] = [
     {"symbol": "XLE", "name": "Energy"},
     {"symbol": "XLB", "name": "Materials"},
@@ -34,6 +40,14 @@ SECTOR_ETF: list[dict[str, str]] = [
     {"symbol": "XLV", "name": "Health Care"},
     {"symbol": "XLRE", "name": "Real Estate"},
     {"symbol": "XLU", "name": "Utilities"},
+    {"symbol": "SOXX", "name": "Semiconductors"},
+    {"symbol": "IGV", "name": "Software"},
+    {"symbol": "CIBR", "name": "Cybersecurity"},
+    {"symbol": "XBI", "name": "Biotech"},
+    {"symbol": "URA", "name": "Uranium & Nuclear"},
+    {"symbol": "ICLN", "name": "Clean Energy"},
+    {"symbol": "TLT", "name": "Long-Term Treasuries"},
+    {"symbol": "GLD", "name": "Gold"},
 ]
 
 

@@ -35,7 +35,7 @@ const TEXT: Record<
     eyebrow: "Sector check",
     title: "The sectors, in one glance",
     sub: (
-      "Twelve ETFs, each covering a different slice of the market (plus defense). " +
+      "Twenty ETFs: the eleven sectors, defense, and a few subsector, theme and macro reads (semiconductors, software, cybersecurity, biotech, nuclear, clean energy, Treasuries, gold). " +
       "Cheap or hot is judged from RSI(14), a 2-3 week measure. The 200-day distance shows the trend. " +
       "This section always shows these sectors, whichever index view you choose."
     ),
@@ -69,7 +69,7 @@ const TEXT: Record<
     eyebrow: "부문 점검",
     title: "부문 ETF, 오늘은 어느 쪽인가요?",
     sub: (
-      "시장을 서로 겹치지 않게 조각 내는 ETF 12개입니다(방산은 ITA 하나만). " +
+      "11개 섹터와 방산(ITA)에, 반도체·소프트웨어·사이버보안·바이오·원전·클린에너지 같은 세부 업종과 국채·금까지 총 20개 ETF입니다. " +
       "저평가·과열 판단은 2~3주 흐름을 재는 RSI(14)로 하고, 200일 평균과의 거리는 추세 방향을 보여줍니다. " +
       "S&P 500을 고르든 나스닥을 고르든 이 부문은 항상 아래에 표시됩니다."
     ),
@@ -114,6 +114,14 @@ const KR_NAME: Record<string, string> = {
   XLV: "헬스케어",
   XLRE: "리츠·부동산",
   XLU: "유틸리티",
+  SOXX: "반도체",
+  IGV: "소프트웨어",
+  CIBR: "사이버보안",
+  XBI: "바이오테크",
+  URA: "원전·우라늄",
+  ICLN: "클린에너지",
+  TLT: "미국 장기국채",
+  GLD: "금",
 };
 
 type TagKey = "under" | "right" | "over";
@@ -255,7 +263,7 @@ export function SectorCheck({ locale }: SectorCheckProps) {
       </div>
       {loading ? (
         <div className="sector-grid">
-          {Array.from({ length: 12 }, (_item, index) => (
+          {Array.from({ length: 20 },(_item, index) => (
             <div key={index} className="sector-skeleton" />
           ))}
         </div>
