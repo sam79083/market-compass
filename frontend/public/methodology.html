@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="The Market Compass methodology: weights, percentile scoring, point-in-time lags, confidence rules, validation, and known limitations."
+      content="How Market Compass labels the four readings: VIX or VXN, RSI, the 200-day trend, and Fear &amp; Greed."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/pages.css" />
@@ -24,201 +24,112 @@
     </header>
 
     <main>
-      <span class="badge">Methodology · weights v1.0.0</span>
-      <h1>How the score is built.</h1>
+      <span class="badge">Methodology</span>
+      <h1>How the readings are labeled.</h1>
       <p class="lede">
-        Every number on the dashboard comes from a documented rule. This page describes the
-        composite, the ten indicators, the point-in-time lags, the confidence gates, and the ways
-        the result can be wrong.
+        Every label on the page comes from a fixed rule listed here. There is no composite score
+        and no weighting between readings.
       </p>
 
       <div class="note">
-        The composite is a relative-attractiveness description, not a forecast. It does not tell you
-        when to buy or sell, and it does not account for your time horizon, taxes, or risk capacity.
+        These readings describe current market conditions. They are not a forecast, and they do
+        not tell you when to buy or sell or account for your time horizon, taxes, or risk
+        tolerance.
       </div>
 
-      <h2>1. The composite</h2>
+      <h2>1. The four readings</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Reading</th>
+              <th>What it is</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Panic level</td>
+              <td>VIX for the S&amp;P 500, VXN for the NASDAQ-100: the market’s expected 30-day volatility.</td>
+              <td>Cboe</td>
+            </tr>
+            <tr>
+              <td>Oversold check</td>
+              <td>RSI, 14 days, Wilder’s smoothing, on the index’s daily closes.</td>
+              <td>Calculated from Yahoo Finance closes</td>
+            </tr>
+            <tr>
+              <td>200-day trend</td>
+              <td>How far the latest close is above or below its 200-trading-day simple moving average, in percent.</td>
+              <td>Calculated from Yahoo Finance closes</td>
+            </tr>
+            <tr>
+              <td>Fear &amp; Greed</td>
+              <td>CNN’s 0 to 100 index of seven market measures, 0 being extreme fear.</td>
+              <td>CNN Business</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>2. Labels and dots</h2>
       <p>
-        Four category scores are combined with fixed weights. Each category is itself a
-        coverage-weighted average of its available indicators. Missing indicators are excluded and
-        the remaining weights are renormalized, so a missing input lowers coverage rather than
-        creating a fake neutral reading.
+        Each reading falls into a labeled range. The dots show how much that range looks like a
+        dip: no dots for none, one for mild, two for clear, three for extreme.
       </p>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Category</th>
-              <th>Overall weight</th>
-              <th>What it measures</th>
+              <th>Reading</th>
+              <th>Ranges and labels</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Fundamental valuation</td>
-              <td>0.50</td>
-              <td>Long-term valuation relative to earnings.</td>
+              <td>VIX / VXN</td>
+              <td>Below 20 Calm (0) · 20 to 30 Elevated (1) · 30 to 40 High fear (2) · 40 and above Extreme panic (3)</td>
             </tr>
             <tr>
-              <td>Relative attractiveness</td>
-              <td>0.20</td>
-              <td>Compensation offered by equities versus Treasuries.</td>
+              <td>RSI (14)</td>
+              <td>70 and above Overbought (0) · 60 to 70 Strong (0) · 40 to 60 Neutral (0) · 30 to 40 Getting oversold (1) · 20 to 30 Oversold (2) · below 20 Deeply oversold (3)</td>
             </tr>
             <tr>
-              <td>Sentiment &amp; momentum</td>
-              <td>0.20</td>
-              <td>Short-term fear, volatility, momentum, and trend.</td>
+              <td>200-day trend</td>
+              <td>More than 2% above Uptrend (0) · within 2% Testing the line (1) · 2% to 10% below Pullback (2) · more than 10% below Bear territory (3)</td>
             </tr>
             <tr>
-              <td>Market breadth</td>
-              <td>0.10</td>
-              <td>Participation and concentration inside the index.</td>
+              <td>Fear &amp; Greed</td>
+              <td>76 to 100 Extreme greed (0) · 56 to 75 Greed (0) · 45 to 55 Neutral (0) · 25 to 44 Fear (1) · 0 to 24 Extreme fear (3)</td>
             </tr>
           </tbody>
         </table>
       </div>
       <p>
-        A composite score is published only when at least <strong>two categories</strong> are
-        available and weighted coverage is at least <strong>60%</strong>. Otherwise the dashboard
-        shows “Insufficient data.”
+        These cutoffs are common round numbers, chosen for readability. They are not statistical
+        guarantees. The “below this line about 1 day in 5” line on the 200-day card is a measured
+        figure from daily closes since 2006 (about 22% of days for both the S&amp;P 500 and the
+        NASDAQ Composite); the “higher than X% of days” line on the VIX card is the current
+        reading’s percentile within its own 20-year history.
       </p>
 
-      <h2>2. Indicator weights and scoring direction</h2>
+      <h2>3. Data freshness</h2>
       <p>
-        A percentile score answers: “Where does today’s reading sit within this indicator’s own
-        rolling history?” A higher score means the current reading is more favorable for long-term
-        buyers under the stated direction. Percentile windows default to 20 years, with shorter
-        windows flagged when history is limited.
-      </p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Indicator</th>
-              <th>Category</th>
-              <th>Weight</th>
-              <th>Direction</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Shiller CAPE</td><td>Fundamental</td><td>0.60</td><td>Inverse percentile (higher CAPE → lower score)</td></tr>
-            <tr><td>Forward P/E</td><td>Fundamental</td><td>0.40</td><td>Inverse percentile (higher P/E → lower score)</td></tr>
-            <tr><td>Buffett Indicator</td><td>Fundamental</td><td>0.00</td><td>Supplementary evidence; no composite vote</td></tr>
-            <tr><td>Equity risk premium (proxy)</td><td>Relative</td><td>1.00</td><td>Percentile (higher ERP → higher score)</td></tr>
-            <tr><td>CNN Fear &amp; Greed</td><td>Sentiment</td><td>0.30</td><td>Inverse level (score = 100 − index)</td></tr>
-            <tr><td>Cboe VIX</td><td>Sentiment</td><td>0.25</td><td>Inverse percentile (higher VIX → higher score)</td></tr>
-            <tr><td>S&amp;P 500 RSI (14)</td><td>Sentiment</td><td>0.20</td><td>Inverse percentile (lower RSI → higher score)</td></tr>
-            <tr><td>S&amp;P 500 vs 200-day average</td><td>Sentiment</td><td>0.25</td><td>Percentile (higher deviation → higher score)</td></tr>
-            <tr><td>Constituents above 200-day average</td><td>Breadth</td><td>0.50</td><td>Percentile (higher breadth → higher score)</td></tr>
-            <tr><td>Equal-weight vs cap-weight S&amp;P 500</td><td>Breadth</td><td>0.50</td><td>Percentile of 252-day relative change</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="small muted">
-        The 200-day deviation and equal-weight breadth are trend-oriented: higher readings receive
-        higher scores. They describe conditions, not cheapness. The Buffett Indicator is displayed
-        for context but carries zero weight because of its annual frequency and long publication
-        lag.
+        A scheduled GitHub Actions workflow refreshes the data on weekday evenings (U.S. market
+        days) and publishes static JSON files. Each card shows the date of its latest reading. If a
+        feed fails, the card shows “No data”; another metric is never substituted.
       </p>
 
-      <h2>3. Point-in-time data</h2>
-      <p>
-        A backtest is only honest if it uses data that was actually available at the time. Each
-        observation has a period date and an effective date. The effective date adds a conservative
-        publication lag; a score is never allowed to use a future revision. The newest preliminary
-        CAPE month is excluded until its lag has elapsed.
-      </p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Indicator</th>
-              <th>Availability lag</th>
-              <th>Staleness limit</th>
-              <th>Minimum observations</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Shiller CAPE</td><td>30 days</td><td>75 days</td><td>110</td></tr>
-            <tr><td>Forward P/E</td><td>45 days</td><td>120 days</td><td>60</td></tr>
-            <tr><td>Buffett Indicator</td><td>270 days</td><td>500 days</td><td>10</td></tr>
-            <tr><td>Equity risk premium</td><td>0 days</td><td>200 days</td><td>756</td></tr>
-            <tr><td>CNN Fear &amp; Greed</td><td>0 days</td><td>10 days</td><td>60</td></tr>
-            <tr><td>VIX</td><td>0 days</td><td>10 days</td><td>756</td></tr>
-            <tr><td>RSI (14)</td><td>0 days</td><td>10 days</td><td>756</td></tr>
-            <tr><td>200-day deviation</td><td>0 days</td><td>10 days</td><td>756</td></tr>
-            <tr><td>Breadth above 200-day</td><td>0 days</td><td>15 days</td><td>252</td></tr>
-            <tr><td>Equal-weight relative</td><td>0 days</td><td>15 days</td><td>756</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h2>4. Score bands</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Score</th><th>Label</th><th>Interpretation</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>0–20</td><td>Very Overvalued</td><td>Historically expensive or stretched conditions.</td></tr>
-            <tr><td>20–40</td><td>Overvalued</td><td>Less favorable than the long-run middle.</td></tr>
-            <tr><td>40–60</td><td>Neutral</td><td>Mixed or middling conditions.</td></tr>
-            <tr><td>60–80</td><td>Undervalued</td><td>More favorable than the long-run middle.</td></tr>
-            <tr><td>80–100</td><td>Very Undervalued</td><td>Historically cheap or fearful conditions.</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="small muted">
-        Bands are descriptive. A “Very Overvalued” reading can persist, and an “Undervalued” reading
-        can be followed by further declines.
-      </p>
-
-      <h2>5. Coverage and confidence</h2>
+      <h2>4. Ways the result can be wrong</h2>
       <ul>
-        <li><strong>Coverage</strong> is the weighted share of configured indicators that are available.</li>
-        <li><strong>High confidence</strong> requires coverage of at least 90% and no data-quality flags.</li>
-        <li><strong>Medium confidence</strong> requires coverage of at least 70%.</li>
-        <li><strong>Low confidence</strong> covers everything else, including any composite that fails the minimum gates.</li>
-      </ul>
-      <p>
-        Data-quality flags are not cosmetic. They include unavailable indicators, proxy inputs,
-        survivorship bias, short percentile windows, and direct-scale components. The dashboard
-        lists them next to the score.
-      </p>
-
-      <h2>6. Validation</h2>
-      <p>
-        The project computes forward returns after historical scores and publishes the results
-        instead of promising predictive power. The validation output covers 3-month, 1-year,
-        3-year, and 5-year horizons for price and total return, both nominal and real. It reports
-        the number of observations, mean and median returns, the share of positive outcomes, and
-        Spearman rank correlation between the score and subsequent returns.
-      </p>
-      <p>
-        Validation is a diagnostic, not a guarantee. Overlapping windows reduce the effective
-        sample size, the data has survivorship and revision issues, and a single market history is
-        not a laboratory. Read the JSON directly:
-        <a href="/data/validation.json">/data/validation.json</a>.
-      </p>
-
-      <h2>7. Known limitations</h2>
-      <ul>
-        <li>CAPE uses current-vintage history; historical revisions are not captured.</li>
-        <li>Forward P/E and CNN Fear &amp; Greed require licensed/authorized feeds and may be unavailable.</li>
-        <li>The ERP is a trailing earnings-yield proxy when forward earnings are unavailable.</li>
-        <li>Breadth uses the current constituent list for the whole history, creating survivorship bias.</li>
-        <li>The equal-weight relative series starts with RSP’s 2003 inception; shorter windows are flagged.</li>
-        <li>Yahoo Finance’s chart interface is unofficial; review its terms before commercial use.</li>
-        <li>Percentile windows are rolling and can change as old observations enter or leave.</li>
-        <li>The composite is not risk-adjusted and does not model taxes, fees, or individual goals.</li>
+        <li>The readings overlap. They usually rise and fall together, so agreement is weaker
+          evidence than it looks.</li>
+        <li>A high-stress reading can persist or worsen. None of these measures can identify a
+          market bottom.</li>
+        <li>Some feeds are unofficial and can be delayed, revised, or briefly unavailable.</li>
+        <li>The 200-day line separates a normal pullback from a deep decline only in hindsight.</li>
       </ul>
 
-      <h2>8. Reproducibility</h2>
-      <p>
-        The weights file, scoring code, and validation output are in the public repository. Each
-        snapshot includes a short weights hash so you can confirm which configuration produced it.
-        The current configuration version is <code>1.0.0</code>.
-      </p>
       <p class="small muted">
         Source repository:
         <a href="https://github.com/sam79083/market-compass">github.com/sam79083/market-compass</a>.

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Frequently asked questions about Market Compass: the score, data sources, confidence, point-in-time history, ads, and limitations."
+      content="Short answers about Market Compass, a plain-language dip check for the U.S. stock market."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/pages.css" />
@@ -25,105 +25,71 @@
 
     <main>
       <span class="badge">Frequently asked</span>
-      <h1>Questions about the compass.</h1>
+      <h1>Questions about the dip check.</h1>
       <p class="lede">
-        Short answers to the things readers ask most often. The full rules are on the
+        Short answers to the things readers ask most often. The thresholds are on the
         <a href="/methodology">methodology page</a>.
       </p>
 
       <h2>What is Market Compass?</h2>
       <p>
-        A free, static dashboard that combines public U.S. equity valuation, sentiment, trend, and
-        breadth indicators into a 0–100 relative-attractiveness score. It also publishes the
-        underlying history, weights, data-quality flags, and validation output.
+        A free, static page that shows four public readings of market stress for the S&amp;P 500 and
+        the NASDAQ: panic level (VIX or VXN), an oversold check (RSI), the 200-day trend, and the
+        CNN Fear &amp; Greed index, each described in plain words.
       </p>
 
       <h2>Is this investment advice?</h2>
       <p>
-        No. It is an informational research tool. It does not know your goals, time horizon, taxes,
-        or risk tolerance, and it is not a recommendation to buy or sell any security. See the
+        No. It is an informational tool. It does not know your goals, time horizon, taxes, or risk
+        tolerance, and it is not a recommendation to buy or sell any security. See the
         <a href="/terms">terms and disclaimer</a>.
       </p>
 
-      <h2>What does the 0–100 score mean?</h2>
+      <h2>Does it tell me when to buy?</h2>
       <p>
-        Higher means conditions have historically been more favorable for long-term buyers; lower
-        means more expensive or more stretched. The score is a percentile-like summary, not a
-        probability and not a price target. Read the <a href="/methodology">bands and weights</a>.
+        No. It describes how much current conditions look like a dip. Stress readings can stay
+        high, or get worse, after a first drop, and none of these measures can find the bottom.
+        Many investors buy in stages instead of at a single point.
       </p>
 
-      <h2>Why does the market often look “Very Overvalued”?</h2>
+      <h2>What do the dots mean?</h2>
       <p>
-        Valuation measures such as CAPE are slow-moving and have spent long stretches above their
-        long-run averages. A low score can persist for years. The score describes the current
-        reading relative to history; it does not claim the market must fall next month.
+        One dot means a mild reading, two a clear one, and three an extreme one. No dots means the
+        reading does not look like a dip. The dots describe the reading, not a prediction.
+      </p>
+
+      <h2>Why do all four often say the same thing?</h2>
+      <p>
+        Fear, oversold prices, and a falling index tend to happen together, and the Fear &amp;
+        Greed index even includes volatility and momentum among its inputs. When all four agree,
+        treat it as one strong message rather than four independent confirmations.
+      </p>
+
+      <h2>Why is the 200-day line included?</h2>
+      <p>
+        It helps separate a normal pullback inside an uptrend from a deeper decline. Measured on
+        daily closes since 2006, both indexes have been below their 200-day average about 1 day in
+        5. A pullback of 2% to 10% below it is common; a drop of more than 10% below it is the
+        kind of decline seen in bear markets.
       </p>
 
       <h2>How often is the data updated?</h2>
       <p>
         A scheduled GitHub Actions workflow runs on weekday evenings (U.S. market days) and
-        publishes new static JSON snapshots. Some inputs are monthly or annual and carry publication
-        lags, so not every indicator changes every day. The dashboard shows the as-of date and
-        freshness for each indicator.
+        publishes new static JSON snapshots. Each card shows the date of its latest reading.
       </p>
 
       <h2>Where does the data come from?</h2>
       <p>
-        Shiller CAPE and earnings (shillerdata.com), Cboe VIX, U.S. Treasury yields, World Bank
-        market-cap/GDP, Yahoo Finance’s public chart interface for S&amp;P 500 and ETF prices, and a
-        public S&amp;P 500 constituent dataset. The <a href="/methodology">methodology</a> lists the
-        lags and limitations.
+        Cboe (VIX), Cboe via Yahoo Finance (VXN), Yahoo Finance’s public chart interface for index
+        closes used in RSI and the 200-day trend, and CNN for Fear &amp; Greed. Some feeds are
+        unofficial and can be delayed.
       </p>
 
-      <h2>Why are Forward P/E and CNN Fear &amp; Greed sometimes unavailable?</h2>
+      <h2>Why is a reading sometimes missing?</h2>
       <p>
-        Both require licensed or authorized feeds that are not bundled with the project. The
-        dashboard does not substitute a different metric and relabel it. It shows the indicator as
-        unavailable, lowers coverage, and may lower confidence. A separate VIX/RSI sentiment proxy
-        is labeled explicitly.
-      </p>
-
-      <h2>What does “confidence” mean?</h2>
-      <p>
-        Confidence reflects coverage and data quality, not the direction of the score. High
-        confidence requires at least 90% coverage and no quality flags; medium requires at least
-        70%. A high-confidence score can still be wrong about the future.
-      </p>
-
-      <h2>Does the history use hindsight?</h2>
-      <p>
-        No. Each observation has an effective date that includes a conservative publication lag. A
-        score for a given date uses only observations that would have been available by then. The
-        newest preliminary CAPE month is excluded until its lag has elapsed.
-      </p>
-
-      <h2>Why does breadth have survivorship bias?</h2>
-      <p>
-        The breadth series uses the current S&amp;P 500 constituent list for the entire history,
-        because a free point-in-time membership history is not bundled. That makes the historical
-        breadth reading somewhat flattering. The dashboard flags this explicitly.
-      </p>
-
-      <h2>Why are there ads?</h2>
-      <p>
-        Hosting and domain costs are real. Ads, when enabled, help cover them. They are separated
-        from the analysis and do not influence the methodology, rankings, or data. There are no
-        sponsored scores or paid placements. See the <a href="/privacy">privacy policy</a> for
-        advertising and consent details.
-      </p>
-
-      <h2>Can I reuse the code or data?</h2>
-      <p>
-        The source repository is public:
-        <a href="https://github.com/sam79083/market-compass">github.com/sam79083/market-compass</a>.
-        Review the licenses and terms of the underlying data providers before redistributing their
-        data. The project’s own code is intended for inspection and learning.
-      </p>
-
-      <h2>How do I report an error?</h2>
-      <p>
-        Email <a href="mailto:[YOUR CONTACT EMAIL]">[YOUR CONTACT EMAIL]</a> with the date,
-        indicator, and what looks wrong. Corrections to data-source parsing are especially welcome.
+        If a feed fails, the page shows “No data” for that card. It does not substitute a
+        different metric.
       </p>
     </main>
 

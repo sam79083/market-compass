@@ -2093,3 +2093,159 @@ main {
     flex-direction: column;
   }
 }
+
+/* ---- Dip check: four plain-language gauges ---- */
+.dip-panel h1 {
+  margin: 4px 0 6px;
+}
+
+.dip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-3);
+  padding: 16px 18px;
+}
+
+button.dip-card {
+  cursor: pointer;
+}
+
+button.dip-card:hover,
+button.dip-card:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.dip-card.is-empty {
+  opacity: 0.7;
+}
+
+.dip-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dip-title {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.dip-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  background: transparent;
+}
+
+.dip-dot.is-on {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.dip-meter-word {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.dip-state {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.dip-state:not([data-level="0"]) {
+  color: var(--accent);
+}
+
+.dip-headline {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dip-detail,
+.dip-context {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dip-context,
+.dip-foot {
+  color: var(--muted);
+}
+
+.dip-foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 11px;
+}
+
+.dip-disclaimer {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dip-guide-body {
+  display: grid;
+  gap: 14px;
+  padding: 4px 2px 8px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.dip-guide-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.dip-guide-list dt {
+  font-weight: 600;
+}
+
+.dip-guide-list dd {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+
+.dip-guide-caveats {
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 720px) {
+  .dip-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
