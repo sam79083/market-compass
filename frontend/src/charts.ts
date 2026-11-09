@@ -6,6 +6,7 @@ import type {
   IndicatorHistory,
   IndicatorPoint,
   PricePoint,
+  SectorPoint,
   ThemeMode,
 } from "./types";
 import type { LocaleKey } from "./i18n";
@@ -381,6 +382,117 @@ export function priceChartOption(
         lineStyle: { opacity: 0 },
         silent: true,
         z: 5,
+      },
+    ],
+  };
+}
+
+/** Two stacked panels for one sector ETF: close with its 200-day average, and RSI(14) with 30/70 lines. */
+export function sectorChartOption(
+  symbol: string,
+  points: SectorPoint[],
+  theme: ThemeMode,
+  locale: LocaleKey = "en",
+): EChartsOption {
+  const palette = paletteFor(theme);
+  const labels = LOCALE_TEXT[locale].chart_labels;
+  const dates = points.map((point) => point.date);
+  const closes = points.map((point) => point.close);
+  const averages = points.map((point) => point.ma200);
+  const rsis = points.map((point) => point.rsi);
+  // Show each month once (on its first trading day) so labels never repeat.
+  const monthLabel = (value: string, index: number) =>
+    index === 0 || dates[index - 1]?.slice(0, 7) !== value.slice(0, 7) ? value.slice(2, 7) : "";
+
+  return {
+    animationDuration: 450,
+    axisPointer: { link: [{ xAxisIndex: "all" }] },
+    grid: [
+      { left: 52, right: 14, top: 14, height: "52%" },
+      { left: 52, right: 14, top: "72%", bottom: 28 },
+    ],
+    tooltip: {
+      trigger: "axis" as const,
+      axisPointer: { type: "line" as const, lineStyle: { color: palette.accent, type: "dashed" as const } },
+      ...tooltipStyle(theme),
+      formatter: (params: unknown) => {
+        const list = params as Array<{ dataIndex: number }>;
+        const point = points[list[0]?.dataIndex ?? 0];
+        if (!point) return "";
+        const average = point.ma200 !== null && point.ma200 !== undefined ? formatNumber(point.ma200, 2) : "—";
+        return `<div class="chart-tip">
+          <div class="chart-tip-head"><span>${escapeHtml(symbol)}</span><strong>${escapeHtml(formatNumber(point.close, 2))}</strong></div>
+          ${tooltipRow(labels.ma200, average, palette.amber)}
+          ${tooltipRow("RSI(14)", formatNumber(point.rsi, 1), palette.blue)}
+          <div class="chart-tip-sub">${escapeHtml(formatDate(point.date, locale))}</div>
+        </div>`;
+      },
+    },
+    xAxis: [
+      {
+        ...dateAxis(dates, palette, true),
+        gridIndex: 0,
+        axisLabel: { show: false },
+      },
+      {
+        ...dateAxis(dates, palette, true),
+        gridIndex: 1,
+        axisLabel: { ...axisLabel(palette), hideOverlap: true, formatter: monthLabel },
+      },
+    ],
+    yAxis: [
+      valueAxis(palette, {
+        gridIndex: 0,
+        axisLabel: { ...axisLabel(palette), formatter: (value: number) => formatNumber(value, 0) },
+      }),
+      valueAxis(palette, {
+        gridIndex: 1,
+        scale: false,
+        min: 0,
+        max: 100,
+        interval: 50,
+        axisLabel: { ...axisLabel(palette), formatter: (value: number) => formatNumber(value, 0) },
+      }),
+    ],
+    series: [
+      {
+        name: labels.price_series,
+        type: "line",
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        data: closes,
+        showSymbol: false,
+        smooth: 0.06,
+        lineStyle: { color: palette.accent, width: 2 },
+        areaStyle: { color: areaGradient(palette.accent, theme === "dark" ? 0.16 : 0.1) },
+      },
+      {
+        name: labels.ma200,
+        type: "line",
+        xAxisIndex: 0,
+        yAxisIndex: 0,
+        data: averages,
+        showSymbol: false,
+        connectNulls: false,
+        lineStyle: { color: palette.amber, width: 1.5, type: "dashed" as const },
+      },
+      {
+        name: "RSI(14)",
+        type: "line",
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        data: rsis,
+        showSymbol: false,
+        lineStyle: { color: palette.blue, width: 1.6 },
+        markLine: {
+          silent: true,
+          symbol: "none",
+          label: { show: true, position: "insideEndTop" as const, color: palette.muted, fontSize: 10 },
+          data: [
+            { yAxis: 30, lineStyle: { color: palette.teal, type: "dashed" as const, width: 1 } },
+            { yAxis: 70, lineStyle: { color: palette.red, type: "dashed" as const, width: 1 } },
+          ],
+        },
       },
     ],
   };

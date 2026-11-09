@@ -263,6 +263,21 @@ export interface SectorsPayload {
   sectors: SectorEntry[];
 }
 
+export interface SectorPoint {
+  date: string;
+  close: number;
+  ma200: number | null;
+  rsi: number;
+}
+
+export interface SectorHistory {
+  symbol: string;
+  name: string;
+  available_from: string | null;
+  available_to: string | null;
+  points: SectorPoint[];
+}
+
 export interface CompositeHistory {
   range: string;
   available_from: string | null;

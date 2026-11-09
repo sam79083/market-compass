@@ -5,6 +5,7 @@ import type {
   Methodology,
   PriceHistory,
   RangeKey,
+  SectorHistory,
   SectorsPayload,
 } from "./types";
 
@@ -105,4 +106,12 @@ export function fetchPriceHistory(signal?: AbortSignal, index: IndexKey = "sp500
 
 export function fetchSectors(signal?: AbortSignal): Promise<SectorsPayload> {
   return getJson<SectorsPayload>(staticMode ? "/data/sectors.json" : dataPath("/sectors"), signal);
+}
+
+export function fetchSectorHistory(symbol: string, signal?: AbortSignal): Promise<SectorHistory> {
+  const safe = encodeURIComponent(symbol);
+  return getJson<SectorHistory>(
+    staticMode ? `/data/sectors/${safe}.json` : dataPath(`/sectors/${safe}`),
+    signal,
+  );
 }

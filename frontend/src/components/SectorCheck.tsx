@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { fetchSectors } from "../api";
 import type { LocaleKey } from "../i18n";
-import type { SectorEntry, SectorsPayload } from "../types";
+import type { SectorEntry, SectorsPayload, ThemeMode } from "../types";
 import { formatDate, formatNumber } from "../utils";
+import { SectorModal } from "./SectorModal";
 
 interface SectorCheckProps {
   locale: LocaleKey;
+  theme: ThemeMode;
 }
 
 const TEXT: Record<
@@ -32,6 +34,7 @@ const TEXT: Record<
     ma200_label: string;
     group_empty: string;
     group_nodata: string;
+    view_chart: string;
     hints: Record<HintKey, string>;
   }
 > = {
@@ -61,6 +64,7 @@ const TEXT: Record<
     ma200_label: "200-day",
     group_empty: "None right now",
     group_nodata: "No data",
+    view_chart: "View chart ›",
     hints: {
       under_uptrend: "A dip inside an uptrend — watchlist candidate",
       under_downtrend: "Oversold inside a downtrend — bounce signal, trend weak",
@@ -99,6 +103,7 @@ const TEXT: Record<
     ma200_label: "200일선",
     group_empty: "현재 해당 없음",
     group_nodata: "데이터 없음",
+    view_chart: "차트 보기 ›",
     hints: {
       under_uptrend: "상승 추세 속 단기 눌림 — 관심 후보",
       under_downtrend: "약세 속 과매도 — 반등 신호, 추세는 주의",
@@ -167,7 +172,17 @@ function tagFromRsi(rsi: number): TagKey {
   return "right";
 }
 
-function SectorCard({ entry, locale, referenceAsOf }: { entry: SectorEntry; locale: LocaleKey; referenceAsOf: string | null }) {
+function SectorCard({
+  entry,
+  locale,
+  referenceAsOf,
+  onSelect,
+}: {
+  entry: SectorEntry;
+  locale: LocaleKey;
+  referenceAsOf: string | null;
+  onSelect: (entry: SectorEntry) => void;
+}) {
   const copy = TEXT[locale];
   const rsi = entry.rsi;
   const dev = entry.dev;
@@ -186,7 +201,23 @@ function SectorCard({ entry, locale, referenceAsOf }: { entry: SectorEntry; loca
   const barAria = rsiVal !== null ? (hint ? `${copy.rsi_label} ${formatNumber(rsiVal, 1)}. ${hint}` : `${copy.rsi_label} ${formatNumber(rsiVal, 1)}`) : copy.noData;
 
   return (
-    <div className={`sector-card${unavailable ? " is-unavailable" : ""}`}>
+    <div
+      className={`sector-card${unavailable ? " is-unavailable" : " is-clickable"}`}
+      role={unavailable ? undefined : "button"}
+      tabIndex={unavailable ? undefined : 0}
+      aria-label={unavailable ? undefined : `${entry.symbol} ${copy.view_chart}`}
+      onClick={unavailable ? undefined : () => onSelect(entry)}
+      onKeyDown={
+        unavailable
+          ? undefined
+          : (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSelect(entry);
+              }
+            }
+      }
+    >
       <div className="sector-card-head">
         <span className="sector-symbol">{entry.symbol}</span>
         <span className="sector-name">{locale === "kr" ? KR_NAME[entry.symbol] ?? entry.name : entry.name}</span>
@@ -243,11 +274,13 @@ function SectorCard({ entry, locale, referenceAsOf }: { entry: SectorEntry; loca
           )}
         </div>
       )}
+      {!unavailable && <span className="sector-view-chart">{copy.view_chart}</span>}
     </div>
   );
 }
 
-export function SectorCheck({ locale }: SectorCheckProps) {
+export function SectorCheck({ locale, theme }: SectorCheckProps) {
+  const [selected, setSelected] = useState<SectorEntry | null>(null);
   const [payload, setPayload] = useState<SectorsPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -327,7 +360,13 @@ export function SectorCheck({ locale }: SectorCheckProps) {
                 ) : (
                   <div className="sector-grid">
                     {items.map((entry) => (
-                      <SectorCard key={entry.symbol} entry={entry} locale={locale} referenceAsOf={payload?.as_of ?? null} />
+                      <SectorCard
+                        key={entry.symbol}
+                        entry={entry}
+                        locale={locale}
+                        referenceAsOf={payload?.as_of ?? null}
+                        onSelect={setSelected}
+                      />
                     ))}
                   </div>
                 )}
@@ -335,6 +374,15 @@ export function SectorCheck({ locale }: SectorCheckProps) {
             );
           })}
           <p className="sector-note">{copy.note}</p>
+          {selected && (
+            <SectorModal
+              symbol={selected.symbol}
+              displayName={locale === "kr" ? KR_NAME[selected.symbol] ?? selected.name : selected.name}
+              theme={theme}
+              locale={locale}
+              onClose={() => setSelected(null)}
+            />
+          )}
         </>
       )}
     </section>
