@@ -2345,14 +2345,41 @@ button.dip-card:focus-visible {
   user-select: none;
 }
 
+.price-selection-dim {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.32);
+  pointer-events: none;
+}
+
+:root[data-theme="light"] .price-selection-dim {
+  background: rgba(255, 255, 255, 0.45);
+}
+
 .price-selection {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: color-mix(in srgb, var(--amber) 16%, transparent);
-  border-left: 1px solid var(--amber);
-  border-right: 1px solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 22%, transparent);
+  border-left: 2px solid var(--amber);
+  border-right: 2px solid var(--amber);
   pointer-events: none;
+}
+
+.price-selection-label {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--amber);
+  color: #141414;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .price-window {

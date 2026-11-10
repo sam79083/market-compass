@@ -49,7 +49,7 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const [history, setHistory] = useState<PriceHistory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selection, setSelection] = useState<{ left: number; width: number } | null>(null);
+  const [selection, setSelection] = useState<{ left: number; width: number; i0: number; i1: number } | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const downXRef = useRef<number | null>(null);
   const pointsRef = useRef<PricePoint[]>([]);
@@ -132,15 +132,21 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
       const rect = wrap.getBoundingClientRect();
       const x = event.clientX - rect.left;
       if (x < 0 || x > rect.width) return;
+      const i = toLocalIndex(x, rect);
       downXRef.current = x;
-      setSelection({ left: x, width: 0 });
+      setSelection({ left: x, width: 0, i0: i, i1: i });
     };
     const handleMove = (event: PointerEvent) => {
       const start = downXRef.current;
       if (start === null) return;
       const rect = wrap.getBoundingClientRect();
       const current = Math.min(Math.max(event.clientX - rect.left, 0), rect.width);
-      setSelection({ left: Math.min(start, current), width: Math.abs(current - start) });
+      setSelection({
+        left: Math.min(start, current),
+        width: Math.abs(current - start),
+        i0: toLocalIndex(Math.min(start, current), rect),
+        i1: toLocalIndex(Math.max(start, current), rect),
+      });
     };
     const handleUp = (event: PointerEvent) => {
       const start = downXRef.current;
@@ -226,10 +232,23 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
             ariaLabel={`${available?.symbol ?? ""} ${locale === "kr" ? "가격 차트" : "price chart"}`}
           />
           {selection && (
-            <div
-              className="price-selection"
-              style={{ left: selection.left, width: selection.width }}
-            />
+            <>
+              <div className="price-selection-dim" style={{ left: 0, width: selection.left }} />
+              <div
+                className="price-selection-dim"
+                style={{ left: selection.left + selection.width, right: 0 }}
+              />
+              <div
+                className="price-selection"
+                style={{ left: selection.left, width: selection.width }}
+              >
+                {selection.width > 130 && (
+                  <span className="price-selection-label">
+                    {formatDate(points[selection.i0]?.date ?? null, locale)} – {formatDate(points[selection.i1]?.date ?? null, locale)}
+                  </span>
+                )}
+              </div>
+            </>
           )}
         </div>
       ) : (
