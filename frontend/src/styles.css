@@ -2588,22 +2588,60 @@ button.dip-card:focus-visible {
 
 .sector-rsi-ref {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin: 0;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--panel-2);
   font-variant-numeric: tabular-nums;
 }
 
-.sector-rsi-ref-value {
-  color: var(--muted);
-  font-size: 11px;
+.sector-rsi-ref-left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sector-rsi-ref-label {
+  color: var(--faint);
+  font-size: 9.5px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.sector-rsi-ref-value {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sector-rsi-ref-pill {
+  align-self: center;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 9.5px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.sector-rsi-ref-pill.is-low {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 35%, transparent);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
+.sector-rsi-ref-pill.is-high {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 35%, transparent);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
 }
 
 .sector-rsi-ref-scale {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 8.5px;
   line-height: 1.4;
   text-align: right;
 }

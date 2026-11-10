@@ -65,7 +65,7 @@ const TEXT: Record<
     momentum_low: "oversold",
     momentum_plain: "neutral",
     momentum_high: "overbought",
-    rsi_scale: "below 30 oversold · above 70 overbought · for reference",
+    rsi_scale: "below 30 oversold · above 70 overbought",
     unavailable: "No series in feed",
     stale_label: "Stale data",
     price_label: "Price",
@@ -108,7 +108,7 @@ const TEXT: Record<
     momentum_low: "과매도",
     momentum_plain: "중립",
     momentum_high: "과매수",
-    rsi_scale: "30 아래 과매도 · 70 위 과매수 · 참고",
+    rsi_scale: "30 아래 과매도 · 70 위 과매수",
     unavailable: "시계열 미수집",
     stale_label: "지난 데이터",
     price_label: "현재가",
@@ -237,7 +237,6 @@ function SectorCard({
   const devAria = devVal !== null ? `${copy.dev_label} ${(devUp ? "+" : "") + formatNumber(devVal, 1)}%` : copy.noData;
   const mood = rsiMood(rsiVal);
   const moodWord = mood === "low" ? copy.momentum_low : mood === "high" ? copy.momentum_high : copy.momentum_plain;
-  const rsiRef = rsiVal !== null ? { value: `${copy.rsi_label} ${formatNumber(rsiVal, 1)} · ${moodWord}`, scale: copy.rsi_scale } : null;
 
   return (
     <div
@@ -305,10 +304,14 @@ function SectorCard({
           )}
         </div>
       )}
-      {rsiRef && (
+      {rsiVal !== null && (
         <p className="sector-rsi-ref">
-          <span className="sector-rsi-ref-value">{rsiRef.value}</span>
-          <span className="sector-rsi-ref-scale">{rsiRef.scale}</span>
+          <span className="sector-rsi-ref-left">
+            <span className="sector-rsi-ref-label">{copy.rsi_label}</span>
+            <span className="sector-rsi-ref-value">{formatNumber(rsiVal, 1)}</span>
+            <span className={`sector-rsi-ref-pill is-${mood}`}>{moodWord}</span>
+          </span>
+          <span className="sector-rsi-ref-scale">{copy.rsi_scale}</span>
         </p>
       )}
       {!unavailable && <span className="sector-view-chart">{copy.view_chart}</span>}
