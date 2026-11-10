@@ -316,17 +316,11 @@ export function compositeChartOption(
   };
 }
 
-export interface PriceZoom {
-  start: number;
-  end: number;
-}
-
 export function priceChartOption(
   symbol: string,
   points: PricePoint[],
   theme: ThemeMode,
   locale: LocaleKey = "en",
-  zoom?: PriceZoom,
 ): EChartsOption {
   const palette = paletteFor(theme);
   const labels = LOCALE_TEXT[locale].chart_labels;
@@ -334,12 +328,16 @@ export function priceChartOption(
   const closes = points.map((point) => point.close);
   const latest = points[points.length - 1];
   const previous = points[points.length - 2];
-  const zoomStart = Math.max(0, Math.min(zoom?.start ?? Math.max(0, points.length - 252), points.length - 1));
-  const zoomEnd = Math.max(zoomStart, Math.min(zoom?.end ?? points.length - 1, points.length - 1));
   const changed = !!(latest && previous);
   const up = changed && latest.close >= previous.close;
   const changeColor = up ? palette.teal : palette.red;
   const lineColor = changed ? changeColor : palette.accent;
+  const spanDays =
+    dates.length > 1
+      ? (new Date(`${dates[dates.length - 1]}T00:00:00Z`).getTime() -
+          new Date(`${dates[0]}T00:00:00Z`).getTime()) /
+        86400000
+      : 0;
 
   return {
     animationDuration: 450,
@@ -361,7 +359,14 @@ export function priceChartOption(
         </div>`;
       },
     },
-    xAxis: { ...dateAxis(dates, palette, false), min: zoomStart, max: zoomEnd },
+    xAxis: {
+      ...dateAxis(dates, palette, true),
+      axisLabel: {
+        ...axisLabel(palette),
+        hideOverlap: true,
+        formatter: (value: string) => (spanDays > 500 ? value.slice(2, 7) : value.slice(5)),
+      },
+    },
     yAxis: valueAxis(palette, {
       axisLabel: {
         ...axisLabel(palette),

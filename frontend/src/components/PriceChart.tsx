@@ -49,8 +49,6 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const [history, setHistory] = useState<PriceHistory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const customWindowRef = useRef(customWindow);
-  customWindowRef.current = customWindow;
   const [selection, setSelection] = useState<{ left: number; width: number } | null>(null);
   const [zoomTick, setZoomTick] = useState(0);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -111,13 +109,14 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
 
   const xToIndex = (relativeX: number) => {
     const wrap = wrapRef.current;
-    const total = fullPoints.length;
+    const total = points.length;
     if (!wrap || total < 2) return 0;
     const rect = wrap.getBoundingClientRect();
     const plotLeft = 52;
     const plotRight = Math.max(plotLeft + 1, rect.width - 14);
     const ratio = (relativeX - plotLeft) / (plotRight - plotLeft);
-    return Math.min(total - 1, Math.max(0, Math.round(ratio * (total - 1))));
+    const local = Math.min(total - 1, Math.max(0, Math.round(ratio * (total - 1))));
+    return activeWindow.start + local;
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -146,7 +145,7 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
     if (start === null) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const end = event.clientX - rect.left;
-    if (Math.abs(end - start) < 8) return;
+    if (Math.abs(end - start) < 6) return;
     const i0 = xToIndex(Math.min(start, end));
     const i1 = xToIndex(Math.max(start, end));
     if (i0 >= i1) return;
@@ -156,17 +155,8 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   };
 
   const option = useMemo(
-    () =>
-      available && fullPoints.length > 1
-        ? priceChartOption(
-            available.symbol,
-            fullPoints,
-            theme,
-            locale,
-            customWindowRef.current ?? zoomForRange((RANGES.find((item) => item.key === range) ?? RANGES[3]).days, fullPoints.length),
-          )
-        : null,
-    [available, fullPoints, theme, locale, range, zoomTick],
+    () => (available && points.length > 1 ? priceChartOption(available.symbol, points, theme, locale) : null),
+    [available, points, theme, locale, zoomTick],
   );
 
   return (
@@ -223,10 +213,10 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
         <div
           className="price-chart-wrap"
           ref={wrapRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={finishSelection}
-          onPointerCancel={finishSelection}
+          onPointerDownCapture={handlePointerDown}
+          onPointerMoveCapture={handlePointerMove}
+          onPointerUpCapture={finishSelection}
+          onPointerCancelCapture={finishSelection}
         >
           <Chart
             option={option}
