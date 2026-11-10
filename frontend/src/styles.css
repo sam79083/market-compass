@@ -2338,7 +2338,41 @@ button.dip-card:focus-visible {
     font-size: 19px;
   }
 
-  .price-panel .range-buttons {
+.price-chart-wrap {
+  position: relative;
+  cursor: crosshair;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.price-selection {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+  border-left: 1px solid var(--amber);
+  border-right: 1px solid var(--amber);
+  pointer-events: none;
+}
+
+.price-window {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-window-hint {
+  color: var(--faint);
+  font-size: 10px;
+}
+
+.price-panel .range-buttons {
     align-self: flex-start;
   }
 }

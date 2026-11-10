@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchPriceHistory } from "../api";
 import type { IndexKey } from "../api";
 import { priceChartOption } from "../charts";
@@ -51,6 +51,10 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const [error, setError] = useState<string | null>(null);
   const customWindowRef = useRef(customWindow);
   customWindowRef.current = customWindow;
+  const [selection, setSelection] = useState<{ left: number; width: number } | null>(null);
+  const [zoomTick, setZoomTick] = useState(0);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const downXRef = useRef<number | null>(null);
   const copy = TEXT[locale];
 
   useEffect(() => {
@@ -105,10 +109,51 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const dayChange = dayLatest && dayPrev ? dayLatest.close - dayPrev.close : null;
   const dayChangePct = dayChange !== null && dayPrev ? (dayChange / dayPrev.close) * 100 : null;
 
-  const handleDataZoom = useCallback((start: number, end: number) => {
-    setCustomWindow({ start, end });
+  const xToIndex = (relativeX: number) => {
+    const wrap = wrapRef.current;
+    const total = fullPoints.length;
+    if (!wrap || total < 2) return 0;
+    const rect = wrap.getBoundingClientRect();
+    const plotLeft = 52;
+    const plotRight = Math.max(plotLeft + 1, rect.width - 14);
+    const ratio = (relativeX - plotLeft) / (plotRight - plotLeft);
+    return Math.min(total - 1, Math.max(0, Math.round(ratio * (total - 1))));
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!option || event.button !== 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    downXRef.current = x;
+    setSelection({ left: x, width: 0 });
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (downXRef.current === null) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const current = event.clientX - rect.left;
+    setSelection({
+      left: Math.min(downXRef.current, current),
+      width: Math.abs(current - downXRef.current),
+    });
+  };
+
+  const finishSelection = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = downXRef.current;
+    downXRef.current = null;
+    setSelection(null);
+    if (start === null) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const end = event.clientX - rect.left;
+    if (Math.abs(end - start) < 8) return;
+    const i0 = xToIndex(Math.min(start, end));
+    const i1 = xToIndex(Math.max(start, end));
+    if (i0 >= i1) return;
+    setCustomWindow({ start: i0, end: i1 });
     setRange(null);
-  }, []);
+    setZoomTick((tick) => tick + 1);
+  };
 
   const option = useMemo(
     () =>
@@ -121,7 +166,7 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
             customWindowRef.current ?? zoomForRange((RANGES.find((item) => item.key === range) ?? RANGES[3]).days, fullPoints.length),
           )
         : null,
-    [available, fullPoints, theme, locale, range],
+    [available, fullPoints, theme, locale, range, zoomTick],
   );
 
   return (
@@ -175,15 +220,38 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
       {error && !loading ? (
         <div className="chart-empty">{error}</div>
       ) : option ? (
-        <Chart
-          option={option}
-          height={280}
-          pointCount={fullPoints.length}
-          onDataZoom={handleDataZoom}
-          ariaLabel={`${available?.symbol ?? ""} ${locale === "kr" ? "가격 차트" : "price chart"}`}
-        />
+        <div
+          className="price-chart-wrap"
+          ref={wrapRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={finishSelection}
+          onPointerCancel={finishSelection}
+        >
+          <Chart
+            option={option}
+            height={280}
+            ariaLabel={`${available?.symbol ?? ""} ${locale === "kr" ? "가격 차트" : "price chart"}`}
+          />
+          {selection && (
+            <div
+              className="price-selection"
+              style={{ left: selection.left, width: selection.width }}
+            />
+          )}
+        </div>
       ) : (
         <div className="chart-skeleton chart-skeleton-large" />
+      )}
+      {available && points.length > 1 && (
+        <p className="price-window">
+          <span>
+            {formatDate(points[0].date, locale)} – {formatDate(latest?.date ?? null, locale)}
+          </span>
+          <span className="price-window-hint">
+            {locale === "kr" ? "차트에서 드래그하면 해당 구간으로 확대됩니다" : "Drag on the chart to zoom into a period"}
+          </span>
+        </p>
       )}
     </section>
   );

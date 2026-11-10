@@ -343,36 +343,7 @@ export function priceChartOption(
 
   return {
     animationDuration: 450,
-    grid: { left: 52, right: 14, top: 16, bottom: 34 },
-    dataZoom: [
-      {
-        type: "slider",
-        xAxisIndex: 0,
-        startValue: zoomStart,
-        endValue: zoomEnd,
-        height: 15,
-        bottom: 5,
-        borderColor: "transparent",
-        backgroundColor: theme === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(36, 49, 59, 0.06)",
-        fillerColor: hexToRgba(palette.accent, 0.22),
-        handleStyle: { color: palette.accent, borderColor: palette.panel, borderWidth: 1.5 },
-        moveHandleStyle: { color: palette.accent, opacity: 0.65 },
-        dataBackground: {
-          lineStyle: { color: palette.axis, width: 1 },
-          areaStyle: { color: palette.grid, opacity: 1 },
-        },
-        selectedDataBackground: {
-          lineStyle: { color: palette.accent, width: 1 },
-          areaStyle: { color: hexToRgba(palette.accent, 0.18), opacity: 1 },
-        },
-        textStyle: { color: palette.muted, fontSize: 8.5 },
-        labelFormatter: (value: number) => {
-          const day = dates[Math.round(value)];
-          return day ? formatDate(day, locale) : "";
-        },
-        brushSelect: true,
-      },
-    ],
+    grid: { left: 52, right: 14, top: 16, bottom: 26 },
     tooltip: {
       trigger: "axis" as const,
       axisPointer: { type: "line" as const, lineStyle: { color: palette.accent, type: "dashed" as const } },
@@ -390,7 +361,7 @@ export function priceChartOption(
         </div>`;
       },
     },
-    xAxis: dateAxis(dates, palette, false),
+    xAxis: { ...dateAxis(dates, palette, false), min: zoomStart, max: zoomEnd },
     yAxis: valueAxis(palette, {
       axisLabel: {
         ...axisLabel(palette),
