@@ -366,6 +366,10 @@ export function priceChartOption(
           areaStyle: { color: hexToRgba(palette.accent, 0.18), opacity: 1 },
         },
         textStyle: { color: palette.muted, fontSize: 8.5 },
+        labelFormatter: (value: number) => {
+          const day = dates[Math.round(value)];
+          return day ? formatDate(day, locale) : "";
+        },
         brushSelect: true,
       },
     ],
