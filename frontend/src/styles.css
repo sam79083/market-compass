@@ -2474,6 +2474,18 @@ button.dip-card:focus-visible {
   background: color-mix(in srgb, var(--red) 10%, transparent);
 }
 
+.sector-tag-extreme-under {
+  color: var(--panel);
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.sector-tag-extreme-over {
+  color: var(--panel);
+  border-color: var(--red);
+  background: var(--red);
+}
+
 .sector-tag-right {
   color: var(--amber);
   border-color: color-mix(in srgb, var(--amber) 30%, transparent);
@@ -2563,22 +2575,37 @@ button.dip-card:focus-visible {
 }
 
 .sector-dev-bar .is-zone-under {
-  width: 25%;
+  width: 37.5%;
 }
 
 .sector-dev-bar .is-zone-mid {
-  width: 50%;
-}
-
-.sector-dev-bar .is-zone-over {
   width: 25%;
 }
 
+.sector-dev-bar .is-zone-over {
+  width: 37.5%;
+}
+
 .sector-rsi-ref {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   margin: 0;
-  color: var(--faint);
-  font-size: 10.5px;
   font-variant-numeric: tabular-nums;
+}
+
+.sector-rsi-ref-value {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sector-rsi-ref-scale {
+  color: var(--faint);
+  font-size: 9px;
+  line-height: 1.4;
+  text-align: right;
 }
 
 .sector-card.is-clickable {

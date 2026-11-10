@@ -22,6 +22,8 @@ const TEXT: Record<
     under: string;
     right: string;
     over: string;
+    extreme_under: string;
+    extreme_over: string;
     note: string;
     axis_under: string;
     axis_over: string;
@@ -29,7 +31,7 @@ const TEXT: Record<
     momentum_low: string;
     momentum_plain: string;
     momentum_high: string;
-    rsi_ref: string;
+    rsi_scale: string;
     unavailable: string;
     stale_label: string;
     price_label: string;
@@ -45,7 +47,7 @@ const TEXT: Record<
     title: "The sectors, in one glance",
     sub: (
       "Twenty ETFs: the eleven sectors, defense, and a few subsector, theme and macro reads (semiconductors, software, cybersecurity, biotech, nuclear, clean energy, Treasuries, gold). " +
-      "Cheap or hot is judged from the 200-day distance (±10%). RSI(14) is a short-term momentum guide only. " +
+      "Cheap or hot is judged from the 200-day distance (±5%, ±15% or more marked extreme). RSI(14) is a short-term momentum guide only. " +
       "This section always shows these sectors, whichever index view you choose."
     ),
     asOf: "As of",
@@ -54,14 +56,16 @@ const TEXT: Record<
     under: "Undervalued",
     right: "Fairly valued",
     over: "Overvalued",
-    note: "Tags follow the 200-day distance: below -10% undervalued, above +10% overvalued, between fairly valued — a medium-term trend read, not earnings-based valuation. RSI(14) is a 2-3 week momentum read shown for reference and does not affect the tag; it can disagree with it. The caption on each card reconciles the two. Tags are a point-in-time snapshot and can change daily.",
+    extreme_under: "Extremely undervalued",
+    extreme_over: "Extremely overvalued",
+    note: "Tags follow the 200-day distance: below -5% undervalued, above +5% overvalued, between fairly valued — a medium-term trend read, not earnings-based valuation. Beyond ±15% it is flagged as extreme. RSI(14) is a 2-3 week momentum read shown for reference and does not affect the tag; it can disagree with it. The caption on each card reconciles the two. Tags are a point-in-time snapshot and can change daily.",
     axis_under: "Undervalued",
     axis_over: "Overvalued",
     dev_label: "vs 200-day",
-    momentum_low: "oversold (<30)",
-    momentum_plain: "neutral (30–70)",
-    momentum_high: "overbought (>70)",
-    rsi_ref: "for reference",
+    momentum_low: "oversold",
+    momentum_plain: "neutral",
+    momentum_high: "overbought",
+    rsi_scale: "below 30 oversold · above 70 overbought · for reference",
     unavailable: "No series in feed",
     stale_label: "Stale data",
     price_label: "Price",
@@ -71,13 +75,13 @@ const TEXT: Record<
     view_chart: "View chart ›",
     hints: {
       under_low: "Below the 200-day, short-term oversold — rebound potential",
-      under_plain: "Below the 200-day, quiet short-term",
+      under_plain: "Below the 200-day, neutral short-term",
       under_high: "Below the 200-day, but short-term momentum is strong",
       right_low: "Near the 200-day, short-term oversold",
-      right_plain: "Near the 200-day, quiet short-term",
+      right_plain: "Near the 200-day, neutral short-term",
       right_high: "Near the 200-day, short-term overheated",
       over_low: "Above the 200-day, short-term pulling back",
-      over_plain: "Above the 200-day, quiet short-term",
+      over_plain: "Above the 200-day, neutral short-term",
       over_high: "Above the 200-day, short-term overheated — pullback risk",
     },
   },
@@ -86,7 +90,7 @@ const TEXT: Record<
     title: "부문 ETF, 오늘은 어느 쪽인가요?",
     sub: (
       "11개 섹터와 방산(ITA)에, 반도체·소프트웨어·사이버보안·바이오·원전·클린에너지 같은 세부 업종과 국채·금까지 총 20개 ETF입니다. " +
-      "저평가·과열 판단은 200일 평균과의 거리(±10%)로 하고, RSI(14)는 단기 모멘텀 참고 지표입니다. " +
+      "저평가·과열 판단은 200일 평균과의 거리(±5%, ±15% 이상은 극단 표시)로 하고, RSI(14)는 단기 모멘텀 참고 지표입니다. " +
       "S&P 500을 고르든 나스닥을 고르든 이 부문은 항상 아래에 표시됩니다."
     ),
     asOf: "기준",
@@ -95,14 +99,16 @@ const TEXT: Record<
     under: "저평가",
     right: "적정",
     over: "과열",
-    note: "태그는 200일선 대비 기준 — -10% 아래 저평가 · +10% 위 과열 · 그 사이 적정. 중기 추세의 시각이라 실적 기반 밸류에이션과는 다릅니다. RSI(14)는 최근 2~3주 매매 강도를 보는 참고 지표로, 태그에는 반영되지 않으며 방향이 어긋날 수도 있습니다. 각 카드 속 문구가 두 신호를 함께 읽어줍니다. 태그는 오늘의 스냅샷으로 매일 바뀔 수 있습니다.",
+    extreme_under: "극단적 저평가",
+    extreme_over: "극단적 과열",
+    note: "태그는 200일선 대비 기준 — -5% 아래 저평가 · +5% 위 과열 · 그 사이 적정. 중기 추세의 시각이라 실적 기반 밸류에이션과는 다릅니다. ±15%를 넘으면 극단으로 표시합니다. RSI(14)는 최근 2~3주 매매 강도를 보는 참고 지표로, 태그에는 반영되지 않으며 방향이 어긋날 수도 있습니다. 각 카드 속 문구가 두 신호를 함께 읽어줍니다. 태그는 오늘의 스냅샷으로 매일 바뀔 수 있습니다.",
     axis_under: "저평가",
     axis_over: "과열",
     dev_label: "200일선 대비",
-    momentum_low: "과매도 (<30)",
-    momentum_plain: "중립 (30–70)",
-    momentum_high: "과매수 (>70)",
-    rsi_ref: "참고",
+    momentum_low: "과매도",
+    momentum_plain: "중립",
+    momentum_high: "과매수",
+    rsi_scale: "30 아래 과매도 · 70 위 과매수 · 참고",
     unavailable: "시계열 미수집",
     stale_label: "지난 데이터",
     price_label: "현재가",
@@ -112,13 +118,13 @@ const TEXT: Record<
     view_chart: "차트 보기 ›",
     hints: {
       under_low: "200일선 아래 · 단기 과매도 — 반등 탄력 가능성",
-      under_plain: "200일선 아래 · 단기는 평온",
+      under_plain: "200일선 아래 · 단기는 중립",
       under_high: "200일선 아래지만 단기 수급은 강함",
       right_low: "200일선 부근 · 단기 과매도",
-      right_plain: "200일선 부근 · 단기는 평온",
+      right_plain: "200일선 부근 · 단기는 중립",
       right_high: "200일선 부근 · 단기 과열",
       over_low: "200일선 위 · 단기 조정 중",
-      over_plain: "200일선 위 · 단기는 평온",
+      over_plain: "200일선 위 · 단기는 중립",
       over_high: "200일선 위 · 단기 과열 — 조정 가능성",
     },
   },
@@ -183,8 +189,8 @@ function rsiMood(rsi: number | null): RsiMood {
 }
 
 function tagFromDev(dev: number): TagKey {
-  if (dev < -10) return "under";
-  if (dev > 10) return "over";
+  if (dev < -5) return "under";
+  if (dev > 5) return "over";
   return "right";
 }
 
@@ -216,7 +222,11 @@ function SectorCard({
   const isFlat = devVal !== null && Math.abs(devVal) < 0.05;
   const devUp = (devVal ?? 0) >= 0;
   const tag: TagKey | null = devVal !== null ? tagFromDev(devVal) : null;
-  const tagText = tag ? copy[tag] : copy.noData;
+  const extreme = devVal !== null && Math.abs(devVal) >= 15;
+  const tagText = tag
+    ? copy[extreme ? (tag === "over" ? "extreme_over" : "extreme_under") : tag]
+    : copy.noData;
+  const tagClass = tag ? (extreme ? `sector-tag-extreme-${tag}` : `sector-tag-${tag}`) : "sector-tag-none";
   const hint = tag ? copy.hints[hintKeyFor(tag, rsiMood(rsiVal))] : null;
   const unavailable = entry.available === false;
   const stale = !unavailable && entry.as_of != null && referenceAsOf != null && entry.as_of !== referenceAsOf;
@@ -227,7 +237,7 @@ function SectorCard({
   const devAria = devVal !== null ? `${copy.dev_label} ${(devUp ? "+" : "") + formatNumber(devVal, 1)}%` : copy.noData;
   const mood = rsiMood(rsiVal);
   const moodWord = mood === "low" ? copy.momentum_low : mood === "high" ? copy.momentum_high : copy.momentum_plain;
-  const rsiRef = rsiVal !== null ? `${copy.rsi_label} ${formatNumber(rsiVal, 1)} · ${moodWord} · ${copy.rsi_ref}` : null;
+  const rsiRef = rsiVal !== null ? { value: `${copy.rsi_label} ${formatNumber(rsiVal, 1)} · ${moodWord}`, scale: copy.rsi_scale } : null;
 
   return (
     <div
@@ -261,7 +271,7 @@ function SectorCard({
           </p>
         )
       )}
-      <span className={`sector-tag sector-tag-${tag ?? "none"}`}>{tagText}</span>
+      <span className={`sector-tag ${tagClass}`}>{tagText}</span>
       {hint && <p className="sector-hint">{hint}</p>}
       {devVal !== null && bar !== null ? (
         <>
@@ -295,7 +305,12 @@ function SectorCard({
           )}
         </div>
       )}
-      {rsiRef && <p className="sector-rsi-ref">{rsiRef}</p>}
+      {rsiRef && (
+        <p className="sector-rsi-ref">
+          <span className="sector-rsi-ref-value">{rsiRef.value}</span>
+          <span className="sector-rsi-ref-scale">{rsiRef.scale}</span>
+        </p>
+      )}
       {!unavailable && <span className="sector-view-chart">{copy.view_chart}</span>}
     </div>
   );
@@ -328,7 +343,7 @@ export function SectorCheck({ locale, theme }: SectorCheckProps) {
 
   const sectors = payload?.sectors ?? [];
 
-  // Three buckets by the 200-day deviation tag, most extreme first inside each bucket.
+  // Three buckets by the 200-day deviation tag, sorted ascending by dev (most undervalued first).
   // ETFs without a usable deviation reading go to a fourth bucket that only renders if needed.
   const buckets: Record<TagKey | "nodata", SectorEntry[]> = { under: [], right: [], over: [], nodata: [] };
   for (const entry of sectors) {
@@ -338,8 +353,8 @@ export function SectorCheck({ locale, theme }: SectorCheckProps) {
   }
   const devOf = (entry: SectorEntry) => entry.dev ?? 0;
   buckets.under.sort((a, b) => devOf(a) - devOf(b));
-  buckets.right.sort((a, b) => Math.abs(devOf(a)) - Math.abs(devOf(b)));
-  buckets.over.sort((a, b) => devOf(b) - devOf(a));
+  buckets.right.sort((a, b) => devOf(a) - devOf(b));
+  buckets.over.sort((a, b) => devOf(a) - devOf(b));
   const groupOrder: Array<TagKey | "nodata"> = ["under", "right", "over", "nodata"];
 
   return (
