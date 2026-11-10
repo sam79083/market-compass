@@ -2543,22 +2543,42 @@ button.dip-card:focus-visible {
   box-shadow: 0 0 0 1px var(--border-strong);
 }
 
-.sector-dev {
-  color: var(--muted);
-  font-size: 11px;
+.sector-dev-value {
+  font-size: 16px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
-.sector-dev.is-up {
+.sector-dev-value.is-up {
   color: var(--green);
 }
 
-.sector-dev.is-down {
+.sector-dev-value.is-down {
   color: var(--red);
 }
 
-.sector-dev.is-flat {
+.sector-dev-value.is-flat {
   color: var(--muted);
+}
+
+.sector-dev-bar .is-zone-under {
+  width: 37.5%;
+}
+
+.sector-dev-bar .is-zone-mid {
+  width: 25%;
+}
+
+.sector-dev-bar .is-zone-over {
+  width: 37.5%;
+}
+
+.sector-rsi-ref {
+  margin: 0;
+  color: var(--faint);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .sector-card.is-clickable {

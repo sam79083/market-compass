@@ -25,9 +25,11 @@ const TEXT: Record<
     note: string;
     axis_under: string;
     axis_over: string;
-    dev_above_p: string;
-    dev_below_p: string;
-    dev_flat: string;
+    dev_label: string;
+    momentum_low: string;
+    momentum_plain: string;
+    momentum_high: string;
+    rsi_ref: string;
     unavailable: string;
     stale_label: string;
     price_label: string;
@@ -47,17 +49,19 @@ const TEXT: Record<
       "This section always shows these sectors, whichever index view you choose."
     ),
     asOf: "As of",
-    rsi_label: "RSI(14) · momentum",
+    rsi_label: "RSI(14)",
     noData: "No data",
     under: "Undervalued",
     right: "Fairly valued",
     over: "Overvalued",
-    note: "Tags follow the 200-day distance: below -5% undervalued, above +5% overvalued, between fairly valued — a medium-term trend read, not earnings-based valuation. RSI(14) is a 2-3 week momentum guide shown for context and does not affect the tag; it can disagree with it. The caption on each card reconciles the two. Tags are a point-in-time snapshot and can change daily.",
-    axis_under: "Weak",
-    axis_over: "Strong",
-    dev_above_p: "above 200-day",
-    dev_below_p: "below 200-day",
-    dev_flat: "in line with 200-day",
+    note: "Tags follow the 200-day distance: below -5% undervalued, above +5% overvalued, between fairly valued — a medium-term trend read, not earnings-based valuation. RSI(14) is a 2-3 week momentum read shown for reference and does not affect the tag; it can disagree with it. The caption on each card reconciles the two. Tags are a point-in-time snapshot and can change daily.",
+    axis_under: "Undervalued",
+    axis_over: "Overvalued",
+    dev_label: "vs 200-day",
+    momentum_low: "oversold",
+    momentum_plain: "quiet",
+    momentum_high: "overbought",
+    rsi_ref: "for reference",
     unavailable: "No series in feed",
     stale_label: "Stale data",
     price_label: "Price",
@@ -86,17 +90,19 @@ const TEXT: Record<
       "S&P 500을 고르든 나스닥을 고르든 이 부문은 항상 아래에 표시됩니다."
     ),
     asOf: "기준",
-    rsi_label: "RSI(14) · 모멘텀",
+    rsi_label: "RSI(14)",
     noData: "데이터 없음",
     under: "저평가",
     right: "적정",
     over: "과열",
-    note: "태그는 200일선 대비 기준 — -5% 아래 저평가 · +5% 위 과열 · 그 사이 적정. 중기 추세의 시각이라 실적 기반 밸류에이션과는 다릅니다. RSI(14)는 최근 2~3주 매매 강도를 보는 모멘텀 참고 지표로, 태그에는 반영되지 않으며 방향이 어긋날 수도 있습니다. 각 카드 속 문구가 두 신호를 함께 읽어줍니다. 태그는 오늘의 스냅샷으로 매일 바뀔 수 있습니다.",
-    axis_under: "약세",
-    axis_over: "강세",
-    dev_above_p: "200일선 위",
-    dev_below_p: "200일선 아래",
-    dev_flat: "200일선과 동일",
+    note: "태그는 200일선 대비 기준 — -5% 아래 저평가 · +5% 위 과열 · 그 사이 적정. 중기 추세의 시각이라 실적 기반 밸류에이션과는 다릅니다. RSI(14)는 최근 2~3주 매매 강도를 보는 참고 지표로, 태그에는 반영되지 않으며 방향이 어긋날 수도 있습니다. 각 카드 속 문구가 두 신호를 함께 읽어줍니다. 태그는 오늘의 스냅샷으로 매일 바뀔 수 있습니다.",
+    axis_under: "저평가",
+    axis_over: "과열",
+    dev_label: "200일선 대비",
+    momentum_low: "과매도",
+    momentum_plain: "평온",
+    momentum_high: "과매수",
+    rsi_ref: "참고",
     unavailable: "시계열 미수집",
     stale_label: "지난 데이터",
     price_label: "현재가",
@@ -182,6 +188,13 @@ function tagFromDev(dev: number): TagKey {
   return "right";
 }
 
+const DEV_DOMAIN = 20;
+
+function devPosition(dev: number): number {
+  const clamped = Math.min(DEV_DOMAIN, Math.max(-DEV_DOMAIN, dev));
+  return ((clamped + DEV_DOMAIN) / (2 * DEV_DOMAIN)) * 100;
+}
+
 function SectorCard({
   entry,
   locale,
@@ -207,8 +220,14 @@ function SectorCard({
   const hint = tag ? copy.hints[hintKeyFor(tag, rsiMood(rsiVal))] : null;
   const unavailable = entry.available === false;
   const stale = !unavailable && entry.as_of != null && referenceAsOf != null && entry.as_of !== referenceAsOf;
-  const bar = rsiVal !== null ? Math.min(100, Math.max(0, rsiVal)) : null;
-  const barAria = rsiVal !== null ? `${copy.rsi_label} ${formatNumber(rsiVal, 1)}` : copy.noData;
+  const bar = devVal !== null ? devPosition(devVal) : null;
+  const devValue = isFlat || devVal === null
+    ? "≈ 0.0%"
+    : `${devUp ? "▲" : "▼"} ${(devUp ? "+" : "") + formatNumber(devVal, 1)}%`;
+  const devAria = devVal !== null ? `${copy.dev_label} ${(devUp ? "+" : "") + formatNumber(devVal, 1)}%` : copy.noData;
+  const mood = rsiMood(rsiVal);
+  const moodWord = mood === "low" ? copy.momentum_low : mood === "high" ? copy.momentum_high : copy.momentum_plain;
+  const rsiRef = rsiVal !== null ? `${copy.rsi_label} ${formatNumber(rsiVal, 1)} · ${moodWord} · ${copy.rsi_ref}` : null;
 
   return (
     <div
@@ -244,13 +263,13 @@ function SectorCard({
       )}
       <span className={`sector-tag sector-tag-${tag ?? "none"}`}>{tagText}</span>
       {hint && <p className="sector-hint">{hint}</p>}
-      {rsiVal !== null && bar !== null ? (
+      {devVal !== null && bar !== null ? (
         <>
           <div className="sector-rsi-num">
-            <span className="sector-rsi-label">{copy.rsi_label}</span>
-            <span className="sector-rsi-value">{formatNumber(rsiVal, 1)}</span>
+            <span className="sector-rsi-label">{copy.dev_label}</span>
+            <span className={`sector-dev-value ${isFlat ? "is-flat" : devUp ? "is-up" : "is-down"}`}>{devValue}</span>
           </div>
-          <div className="sector-bar" role="img" aria-label={barAria}>
+          <div className="sector-bar sector-dev-bar" role="img" aria-label={devAria}>
             <span className="sector-bar-zone is-zone-under" />
             <span className="sector-bar-zone is-zone-mid" />
             <span className="sector-bar-zone is-zone-over" />
@@ -264,14 +283,6 @@ function SectorCard({
       ) : (
         <div className="sector-rsi-value sector-rsi-missing">—</div>
       )}
-      {devVal !== null &&
-        (isFlat ? (
-          <div className="sector-dev is-flat">≈ 0.0% {copy.dev_flat}</div>
-        ) : (
-          <div className={`sector-dev ${devUp ? "is-up" : "is-down"}`}>
-            {devUp ? "▲" : "▼"} {(devUp ? "+" : "") + formatNumber(devVal, 1)}% {devUp ? copy.dev_above_p : copy.dev_below_p}
-          </div>
-        ))}
       {priceVal !== null && (
         <div className="sector-price">
           <span>
@@ -284,6 +295,7 @@ function SectorCard({
           )}
         </div>
       )}
+      {rsiRef && <p className="sector-rsi-ref">{rsiRef}</p>}
       {!unavailable && <span className="sector-view-chart">{copy.view_chart}</span>}
     </div>
   );
