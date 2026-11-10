@@ -2563,15 +2563,15 @@ button.dip-card:focus-visible {
 }
 
 .sector-dev-bar .is-zone-under {
-  width: 37.5%;
-}
-
-.sector-dev-bar .is-zone-mid {
   width: 25%;
 }
 
+.sector-dev-bar .is-zone-mid {
+  width: 50%;
+}
+
 .sector-dev-bar .is-zone-over {
-  width: 37.5%;
+  width: 25%;
 }
 
 .sector-rsi-ref {

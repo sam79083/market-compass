@@ -45,7 +45,7 @@ const TEXT: Record<
     title: "The sectors, in one glance",
     sub: (
       "Twenty ETFs: the eleven sectors, defense, and a few subsector, theme and macro reads (semiconductors, software, cybersecurity, biotech, nuclear, clean energy, Treasuries, gold). " +
-      "Cheap or hot is judged from the 200-day distance (±5%). RSI(14) is a short-term momentum guide only. " +
+      "Cheap or hot is judged from the 200-day distance (±10%). RSI(14) is a short-term momentum guide only. " +
       "This section always shows these sectors, whichever index view you choose."
     ),
     asOf: "As of",
@@ -54,13 +54,13 @@ const TEXT: Record<
     under: "Undervalued",
     right: "Fairly valued",
     over: "Overvalued",
-    note: "Tags follow the 200-day distance: below -5% undervalued, above +5% overvalued, between fairly valued — a medium-term trend read, not earnings-based valuation. RSI(14) is a 2-3 week momentum read shown for reference and does not affect the tag; it can disagree with it. The caption on each card reconciles the two. Tags are a point-in-time snapshot and can change daily.",
+    note: "Tags follow the 200-day distance: below -10% undervalued, above +10% overvalued, between fairly valued — a medium-term trend read, not earnings-based valuation. RSI(14) is a 2-3 week momentum read shown for reference and does not affect the tag; it can disagree with it. The caption on each card reconciles the two. Tags are a point-in-time snapshot and can change daily.",
     axis_under: "Undervalued",
     axis_over: "Overvalued",
     dev_label: "vs 200-day",
-    momentum_low: "oversold",
-    momentum_plain: "quiet",
-    momentum_high: "overbought",
+    momentum_low: "oversold (<30)",
+    momentum_plain: "neutral (30–70)",
+    momentum_high: "overbought (>70)",
     rsi_ref: "for reference",
     unavailable: "No series in feed",
     stale_label: "Stale data",
@@ -86,7 +86,7 @@ const TEXT: Record<
     title: "부문 ETF, 오늘은 어느 쪽인가요?",
     sub: (
       "11개 섹터와 방산(ITA)에, 반도체·소프트웨어·사이버보안·바이오·원전·클린에너지 같은 세부 업종과 국채·금까지 총 20개 ETF입니다. " +
-      "저평가·과열 판단은 200일 평균과의 거리(±5%)로 하고, RSI(14)는 단기 모멘텀 참고 지표입니다. " +
+      "저평가·과열 판단은 200일 평균과의 거리(±10%)로 하고, RSI(14)는 단기 모멘텀 참고 지표입니다. " +
       "S&P 500을 고르든 나스닥을 고르든 이 부문은 항상 아래에 표시됩니다."
     ),
     asOf: "기준",
@@ -95,13 +95,13 @@ const TEXT: Record<
     under: "저평가",
     right: "적정",
     over: "과열",
-    note: "태그는 200일선 대비 기준 — -5% 아래 저평가 · +5% 위 과열 · 그 사이 적정. 중기 추세의 시각이라 실적 기반 밸류에이션과는 다릅니다. RSI(14)는 최근 2~3주 매매 강도를 보는 참고 지표로, 태그에는 반영되지 않으며 방향이 어긋날 수도 있습니다. 각 카드 속 문구가 두 신호를 함께 읽어줍니다. 태그는 오늘의 스냅샷으로 매일 바뀔 수 있습니다.",
+    note: "태그는 200일선 대비 기준 — -10% 아래 저평가 · +10% 위 과열 · 그 사이 적정. 중기 추세의 시각이라 실적 기반 밸류에이션과는 다릅니다. RSI(14)는 최근 2~3주 매매 강도를 보는 참고 지표로, 태그에는 반영되지 않으며 방향이 어긋날 수도 있습니다. 각 카드 속 문구가 두 신호를 함께 읽어줍니다. 태그는 오늘의 스냅샷으로 매일 바뀔 수 있습니다.",
     axis_under: "저평가",
     axis_over: "과열",
     dev_label: "200일선 대비",
-    momentum_low: "과매도",
-    momentum_plain: "평온",
-    momentum_high: "과매수",
+    momentum_low: "과매도 (<30)",
+    momentum_plain: "중립 (30–70)",
+    momentum_high: "과매수 (>70)",
     rsi_ref: "참고",
     unavailable: "시계열 미수집",
     stale_label: "지난 데이터",
@@ -183,8 +183,8 @@ function rsiMood(rsi: number | null): RsiMood {
 }
 
 function tagFromDev(dev: number): TagKey {
-  if (dev < -5) return "under";
-  if (dev > 5) return "over";
+  if (dev < -10) return "under";
+  if (dev > 10) return "over";
   return "right";
 }
 
