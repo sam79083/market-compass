@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchPriceHistory } from "../api";
 import type { IndexKey } from "../api";
 import { priceChartOption } from "../charts";
@@ -29,23 +29,35 @@ const TEXT: Record<LocaleKey, { eyebrow: string; asOf: string; note: string }> =
 
 const RANGES: Array<{ key: string; label: string; days: number | null }> = [
   { key: "1m", label: "1M", days: 22 },
+  { key: "3m", label: "3M", days: 63 },
   { key: "6m", label: "6M", days: 130 },
   { key: "1y", label: "1Y", days: 252 },
+  { key: "3y", label: "3Y", days: 756 },
   { key: "5y", label: "5Y", days: 1263 },
   { key: "max", label: "Max", days: null },
 ];
 
+function zoomForRange(days: number | null, length: number): { start: number; end: number } {
+  const end = Math.max(0, length - 1);
+  if (days == null) return { start: 0, end };
+  return { start: Math.max(0, length - days), end };
+}
+
 export function PriceChart({ index, theme, locale }: PriceChartProps) {
-  const [range, setRange] = useState<string>("1y");
+  const [range, setRange] = useState<string | null>("1y");
+  const [customWindow, setCustomWindow] = useState<{ start: number; end: number } | null>(null);
   const [history, setHistory] = useState<PriceHistory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const customWindowRef = useRef(customWindow);
+  customWindowRef.current = customWindow;
   const copy = TEXT[locale];
 
   useEffect(() => {
     const controller = new AbortController();
     setHistory(null);
     setRange("1y");
+    setCustomWindow(null);
     setLoading(true);
     setError(null);
     fetchPriceHistory(controller.signal, index)
@@ -64,28 +76,52 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
 
   const available = !loading && !error && history && history.points.length > 0 ? history : null;
 
-  const points = useMemo(() => {
-    if (!available) return [];
-    const spec = RANGES.find((item) => item.key === range) ?? RANGES[2];
-    if (spec.days === null) return available.points;
-    return available.points.slice(-spec.days);
-  }, [available, range]);
+  const fullPoints = useMemo(() => available?.points ?? [], [available]);
+
+  const activeWindow = useMemo(() => {
+    if (customWindow) return customWindow;
+    const spec = RANGES.find((item) => item.key === range) ?? RANGES[3];
+    return zoomForRange(spec.days, fullPoints.length);
+  }, [customWindow, range, fullPoints.length]);
+
+  const points = useMemo(
+    () => fullPoints.slice(activeWindow.start, activeWindow.end + 1),
+    [fullPoints, activeWindow],
+  );
 
   const latest = points.length > 0 ? points[points.length - 1] : null;
   const windowFirst = points.length > 1 ? points[0] : null;
   const change = latest && windowFirst ? latest.close - windowFirst.close : null;
   const changePct = change !== null && windowFirst ? (change / windowFirst.close) * 100 : null;
   const up = change !== null ? change >= 0 : true;
-  const rangeLabel = (RANGES.find((item) => item.key === range) ?? RANGES[2]).label;
+  const rangeLabel = range
+    ? (RANGES.find((item) => item.key === range)?.label ?? RANGES[3].label)
+    : locale === "kr"
+      ? "구간"
+      : "Custom";
 
-  const allPoints = available?.points ?? [];
-  const dayPrev = allPoints.length > 1 ? allPoints[allPoints.length - 2] : null;
-  const dayChange = latest && dayPrev ? latest.close - dayPrev.close : null;
+  const dayPrev = fullPoints.length > 1 ? fullPoints[fullPoints.length - 2] : null;
+  const dayLatest = fullPoints.length > 1 ? fullPoints[fullPoints.length - 1] : null;
+  const dayChange = dayLatest && dayPrev ? dayLatest.close - dayPrev.close : null;
   const dayChangePct = dayChange !== null && dayPrev ? (dayChange / dayPrev.close) * 100 : null;
 
+  const handleDataZoom = useCallback((start: number, end: number) => {
+    setCustomWindow({ start, end });
+    setRange(null);
+  }, []);
+
   const option = useMemo(
-    () => (available && points.length > 1 ? priceChartOption(available.symbol, points, theme, locale) : null),
-    [available, points, theme, locale],
+    () =>
+      available && fullPoints.length > 1
+        ? priceChartOption(
+            available.symbol,
+            fullPoints,
+            theme,
+            locale,
+            customWindowRef.current ?? zoomForRange((RANGES.find((item) => item.key === range) ?? RANGES[3]).days, fullPoints.length),
+          )
+        : null,
+    [available, fullPoints, theme, locale, range],
   );
 
   return (
@@ -126,7 +162,10 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
             <button
               key={item.key}
               className={range === item.key ? "range-button is-active" : "range-button"}
-              onClick={() => setRange(item.key)}
+              onClick={() => {
+                setRange(item.key);
+                setCustomWindow(null);
+              }}
             >
               {item.key === "max" ? LOCALE_TEXT[locale].max_range : item.label}
             </button>
@@ -139,6 +178,8 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
         <Chart
           option={option}
           height={280}
+          pointCount={fullPoints.length}
+          onDataZoom={handleDataZoom}
           ariaLabel={`${available?.symbol ?? ""} ${locale === "kr" ? "가격 차트" : "price chart"}`}
         />
       ) : (
