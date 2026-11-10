@@ -72,16 +72,16 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   }, [available, range]);
 
   const latest = points.length > 0 ? points[points.length - 1] : null;
-  const previous = points.length > 1 ? points[points.length - 2] : null;
-  const change = latest && previous ? latest.close - previous.close : null;
-  const changePct = change !== null && previous ? (change / previous.close) * 100 : null;
+  const windowFirst = points.length > 1 ? points[0] : null;
+  const change = latest && windowFirst ? latest.close - windowFirst.close : null;
+  const changePct = change !== null && windowFirst ? (change / windowFirst.close) * 100 : null;
   const up = change !== null ? change >= 0 : true;
+  const rangeLabel = (RANGES.find((item) => item.key === range) ?? RANGES[2]).label;
 
-  const yearWindow = available ? available.points.slice(-252) : [];
-  const yearlyChange =
-    yearWindow.length > 1
-      ? ((yearWindow[yearWindow.length - 1].close - yearWindow[0].close) / yearWindow[0].close) * 100
-      : null;
+  const allPoints = available?.points ?? [];
+  const dayPrev = allPoints.length > 1 ? allPoints[allPoints.length - 2] : null;
+  const dayChange = latest && dayPrev ? latest.close - dayPrev.close : null;
+  const dayChangePct = dayChange !== null && dayPrev ? (dayChange / dayPrev.close) * 100 : null;
 
   const option = useMemo(
     () => (available && points.length > 1 ? priceChartOption(available.symbol, points, theme, locale) : null),
@@ -101,16 +101,17 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
             <div className="price-stats" data-up={up}>
               {latest && <span className="price-last">${formatNumber(latest.close, 2)}</span>}
               {change !== null && changePct !== null && (
-                <span className="price-change">
-                  {up ? "+" : ""}
+                <span className="price-change" title={locale === "kr" ? "차트에 표시된 기간의 변동률" : "Change over the selected period"}>
+                  {rangeLabel} {up ? "+" : ""}
                   {formatNumber(changePct, 2)}% ({up ? "+" : ""}
                   {formatNumber(change, 2)})
                 </span>
               )}
-              {yearlyChange !== null && (
-                <span className="price-sub">
-                  1Y {yearlyChange >= 0 ? "+" : ""}
-                  {formatNumber(yearlyChange, 1)}%
+              {dayChange !== null && dayChangePct !== null && (
+                <span className="price-sub" title={locale === "kr" ? "전일 대비 변동률" : "Change vs previous trading day"}>
+                  1D {dayChangePct >= 0 ? "+" : ""}
+                  {formatNumber(dayChangePct, 2)}% ({dayChange >= 0 ? "+" : ""}
+                  {formatNumber(dayChange, 2)})
                 </span>
               )}
             </div>
