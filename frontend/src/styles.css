@@ -2324,20 +2324,6 @@ button.dip-card:focus-visible {
   margin-top: 4px;
 }
 
-@media (max-width: 720px) {
-  .price-panel .panel-head {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .price-symbol {
-    font-size: 22px;
-  }
-
-  .price-last {
-    font-size: 19px;
-  }
-
 .price-chart-wrap {
   position: relative;
   cursor: crosshair;
@@ -2401,7 +2387,21 @@ button.dip-card:focus-visible {
   font-size: 10px;
 }
 
-.price-panel .range-buttons {
+@media (max-width: 720px) {
+  .price-panel .panel-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .price-symbol {
+    font-size: 22px;
+  }
+
+  .price-last {
+    font-size: 19px;
+  }
+
+  .price-panel .range-buttons {
     align-self: flex-start;
   }
 }
