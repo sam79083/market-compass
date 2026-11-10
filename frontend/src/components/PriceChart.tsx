@@ -4,7 +4,7 @@ import type { IndexKey } from "../api";
 import { priceChartOption } from "../charts";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
-import type { PriceHistory, ThemeMode } from "../types";
+import type { PriceHistory, PricePoint, ThemeMode } from "../types";
 import { formatDate, formatNumber } from "../utils";
 import { Chart } from "./Chart";
 
@@ -50,9 +50,10 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ left: number; width: number } | null>(null);
-  const [zoomTick, setZoomTick] = useState(0);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const downXRef = useRef<number | null>(null);
+  const pointsRef = useRef<PricePoint[]>([]);
+  const windowStartRef = useRef(0);
   const copy = TEXT[locale];
 
   useEffect(() => {
@@ -90,6 +91,8 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
     () => fullPoints.slice(activeWindow.start, activeWindow.end + 1),
     [fullPoints, activeWindow],
   );
+  pointsRef.current = points;
+  windowStartRef.current = activeWindow.start;
 
   const latest = points.length > 0 ? points[points.length - 1] : null;
   const windowFirst = points.length > 1 ? points[0] : null;
@@ -107,57 +110,63 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const dayChange = dayLatest && dayPrev ? dayLatest.close - dayPrev.close : null;
   const dayChangePct = dayChange !== null && dayPrev ? (dayChange / dayPrev.close) * 100 : null;
 
-  const xToIndex = (relativeX: number) => {
-    const wrap = wrapRef.current;
-    const total = points.length;
-    if (!wrap || total < 2) return 0;
-    const rect = wrap.getBoundingClientRect();
-    const plotLeft = 52;
-    const plotRight = Math.max(plotLeft + 1, rect.width - 14);
-    const ratio = (relativeX - plotLeft) / (plotRight - plotLeft);
-    const local = Math.min(total - 1, Math.max(0, Math.round(ratio * (total - 1))));
-    return activeWindow.start + local;
-  };
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!option || event.button !== 0) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    downXRef.current = x;
-    setSelection({ left: x, width: 0 });
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (downXRef.current === null) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const current = event.clientX - rect.left;
-    setSelection({
-      left: Math.min(downXRef.current, current),
-      width: Math.abs(current - downXRef.current),
-    });
-  };
-
-  const finishSelection = (event: React.PointerEvent<HTMLDivElement>) => {
-    const start = downXRef.current;
-    downXRef.current = null;
-    setSelection(null);
-    if (start === null) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const end = event.clientX - rect.left;
-    if (Math.abs(end - start) < 6) return;
-    const i0 = xToIndex(Math.min(start, end));
-    const i1 = xToIndex(Math.max(start, end));
-    if (i0 >= i1) return;
-    setCustomWindow({ start: i0, end: i1 });
-    setRange(null);
-    setZoomTick((tick) => tick + 1);
-  };
-
   const option = useMemo(
     () => (available && points.length > 1 ? priceChartOption(available.symbol, points, theme, locale) : null),
-    [available, points, theme, locale, zoomTick],
+    [available, points, theme, locale],
   );
+
+  const hasOption = option !== null;
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || !hasOption) return;
+    const toLocalIndex = (relativeX: number, rect: DOMRect) => {
+      const pts = pointsRef.current;
+      if (pts.length < 2) return 0;
+      const plotLeft = 52;
+      const plotRight = Math.max(plotLeft + 1, rect.width - 14);
+      const ratio = (relativeX - plotLeft) / (plotRight - plotLeft);
+      return Math.min(pts.length - 1, Math.max(0, Math.round(ratio * (pts.length - 1))));
+    };
+    const handleDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      const rect = wrap.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      if (x < 0 || x > rect.width) return;
+      downXRef.current = x;
+      setSelection({ left: x, width: 0 });
+    };
+    const handleMove = (event: PointerEvent) => {
+      const start = downXRef.current;
+      if (start === null) return;
+      const rect = wrap.getBoundingClientRect();
+      const current = Math.min(Math.max(event.clientX - rect.left, 0), rect.width);
+      setSelection({ left: Math.min(start, current), width: Math.abs(current - start) });
+    };
+    const handleUp = (event: PointerEvent) => {
+      const start = downXRef.current;
+      downXRef.current = null;
+      setSelection(null);
+      if (start === null) return;
+      const rect = wrap.getBoundingClientRect();
+      const end = Math.min(Math.max(event.clientX - rect.left, 0), rect.width);
+      if (Math.abs(end - start) < 6) return;
+      const i0 = toLocalIndex(Math.min(start, end), rect) + windowStartRef.current;
+      const i1 = toLocalIndex(Math.max(start, end), rect) + windowStartRef.current;
+      if (i0 >= i1) return;
+      setCustomWindow({ start: i0, end: i1 });
+      setRange(null);
+    };
+    wrap.addEventListener("pointerdown", handleDown, true);
+    window.addEventListener("pointermove", handleMove, true);
+    window.addEventListener("pointerup", handleUp, true);
+    window.addEventListener("pointercancel", handleUp, true);
+    return () => {
+      wrap.removeEventListener("pointerdown", handleDown, true);
+      window.removeEventListener("pointermove", handleMove, true);
+      window.removeEventListener("pointerup", handleUp, true);
+      window.removeEventListener("pointercancel", handleUp, true);
+    };
+  }, [hasOption]);
 
   return (
     <section className="panel price-panel" id="price-chart" aria-busy={loading}>
@@ -210,14 +219,7 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
       {error && !loading ? (
         <div className="chart-empty">{error}</div>
       ) : option ? (
-        <div
-          className="price-chart-wrap"
-          ref={wrapRef}
-          onPointerDownCapture={handlePointerDown}
-          onPointerMoveCapture={handlePointerMove}
-          onPointerUpCapture={finishSelection}
-          onPointerCancelCapture={finishSelection}
-        >
+        <div className="price-chart-wrap" ref={wrapRef}>
           <Chart
             option={option}
             height={280}
