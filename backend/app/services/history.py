@@ -28,6 +28,11 @@ RANGE_YEARS = {"1y": 1, "3y": 3, "5y": 5, "10y": 10, "max": None}
 
 PRICE_MAX_POINTS = 20000
 
+# Sector ETF chart history: at most ~2 years of trading days. Ingestion keeps
+# SNAPSHOT_WINDOW_DAYS rows, but cap here too so the API and the static export
+# agree even if the stored window ever grows.
+SECTOR_HISTORY_MAX_POINTS = 504
+
 # The ETF shown in the top price chart for each index view.
 PRICE_SERIES: dict[str, dict[str, str]] = {
     "sp500": {"series": "spy", "symbol": "SPY", "name": "SPDR S&P 500 ETF Trust"},
@@ -303,8 +308,9 @@ def get_sector_history(session: Session, symbol: str) -> dict[str, Any] | None:
 
     Returns None for a symbol that is not in SECTOR_ETF. A known symbol with no
     stored observations returns an empty points list so callers can show a
-    "no data" state. The window is whatever the ingestion keeps
-    (SNAPSHOT_WINDOW_DAYS, about two years of trading days).
+    "no data" state. Stored observations are capped by ingestion
+    (SNAPSHOT_WINDOW_DAYS) and trimmed again to the last SECTOR_HISTORY_MAX_POINTS
+    (~2 years) before returning.
     """
     wanted = symbol.upper()
     definition = next((item for item in SECTOR_ETF if item["symbol"] == wanted), None)
@@ -333,6 +339,7 @@ def get_sector_history(session: Session, symbol: str) -> dict[str, Any] | None:
                 "rsi": float(row.value),
             }
         )
+    points = points[-SECTOR_HISTORY_MAX_POINTS:]
     return {
         "symbol": wanted,
         "name": definition["name"],
