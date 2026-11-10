@@ -239,23 +239,7 @@ function SectorCard({
   const moodWord = mood === "low" ? copy.momentum_low : mood === "high" ? copy.momentum_high : copy.momentum_plain;
 
   return (
-    <div
-      className={`sector-card${unavailable ? " is-unavailable" : " is-clickable"}`}
-      role={unavailable ? undefined : "button"}
-      tabIndex={unavailable ? undefined : 0}
-      aria-label={unavailable ? undefined : `${entry.symbol} ${copy.view_chart}`}
-      onClick={unavailable ? undefined : () => onSelect(entry)}
-      onKeyDown={
-        unavailable
-          ? undefined
-          : (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onSelect(entry);
-              }
-            }
-      }
-    >
+    <div className={`sector-card${unavailable ? " is-unavailable" : ""}`}>
       <div className="sector-card-head">
         <span className="sector-symbol">{entry.symbol}</span>
         <span className="sector-name">{locale === "kr" ? KR_NAME[entry.symbol] ?? entry.name : entry.name}</span>
@@ -314,7 +298,16 @@ function SectorCard({
           <span className="sector-rsi-ref-scale">{copy.rsi_scale}</span>
         </p>
       )}
-      {!unavailable && <span className="sector-view-chart">{copy.view_chart}</span>}
+      {!unavailable && (
+        <button
+          type="button"
+          className="sector-view-chart"
+          onClick={() => onSelect(entry)}
+          aria-label={`${entry.symbol} ${copy.view_chart}`}
+        >
+          {copy.view_chart}
+        </button>
+      )}
     </div>
   );
 }
