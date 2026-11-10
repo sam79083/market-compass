@@ -5,7 +5,7 @@ Output columns: date,value,release_date (matches backend/app/ingestion/csv_feed.
 Do NOT add a `ticker` column: csv_feed keeps only rows whose ticker == "forward_pe".
 
 Usage (from repo root):
-    pip install requests pypdf
+    pip install -r scripts/requirements.txt
     python scripts/fetch_forward_pe.py --out data/forward_pe.csv                   # last 21 days
     python scripts/fetch_forward_pe.py --out data/forward_pe.csv --since 2019-01-01  # backfill
 """

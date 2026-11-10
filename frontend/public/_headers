@@ -4,3 +4,9 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  # Full policy in report-only mode: check the browser console for violations
+  # (especially with AdSense enabled) before promoting it to Content-Security-Policy.
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://*.google.com https://*.googletagservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://*.google.com https://*.doubleclick.net https://*.googlesyndication.com; frame-src https://*.google.com https://*.doubleclick.net https://*.googlesyndication.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'

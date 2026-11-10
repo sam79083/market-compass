@@ -23,7 +23,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     init_db(engine)
     session_factory = make_session_factory(engine)
 
+    is_production = resolved.environment.lower() == "production"
     app = FastAPI(
+        # Interactive docs are only exposed outside production.
+        docs_url=None if is_production else "/docs",
+        redoc_url=None if is_production else "/redoc",
+        openapi_url=None if is_production else "/openapi.json",
         title=resolved.app_name,
         description=(
             "Historical relative-attractiveness dashboard for U.S. equities. "
@@ -63,12 +68,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/")
     def root():
-        return {
+        payload = {
             "name": resolved.app_name,
-            "docs": "/docs",
             "health": "/api/health",
             "dashboard": "/api/dashboard",
         }
+        if not is_production:
+            payload["docs"] = "/docs"
+        return payload
 
     return app
 

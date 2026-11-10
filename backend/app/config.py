@@ -213,7 +213,6 @@ class Settings(BaseSettings):
     request_timeout_seconds: float = 45.0
     request_retries: int = 3
     user_agent: str = "MarketValuationDashboard/1.0 (research use)"
-    refresh_token: str | None = None
     validation_output_path: str = str(BACKEND_ROOT / "app" / "data" / "validation.json")
 
     @field_validator("database_url")

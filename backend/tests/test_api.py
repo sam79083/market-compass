@@ -237,3 +237,26 @@ def test_methodology_and_health(client):
     validation = client.get("/api/validation")
     assert validation.status_code == 200
     assert validation.json() == {"validation": None}
+
+
+def _bare_client(tmp_path, environment):
+    settings = Settings(
+        database_url=f"sqlite:///{(tmp_path / 'env.db').as_posix()}",
+        weights_path=str(DEFAULT_WEIGHTS_PATH),
+        validation_output_path=str(tmp_path / "validation.json"),
+        environment=environment,
+    )
+    return TestClient(create_app(settings))
+
+
+def test_interactive_docs_hidden_in_production(tmp_path):
+    client = _bare_client(tmp_path, "production")
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        assert client.get(path).status_code == 404
+    assert "docs" not in client.get("/").json()
+
+
+def test_interactive_docs_available_in_development(tmp_path):
+    client = _bare_client(tmp_path, "development")
+    assert client.get("/docs").status_code == 200
+    assert client.get("/").json()["docs"] == "/docs"

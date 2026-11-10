@@ -8,7 +8,7 @@ workflow step that calls it is continue-on-error. Replace it with a licensed fee
 (FEAR_GREED_CSV_URL secret) if you rely on this index.
 
 Usage (from repo root):
-    pip install requests
+    pip install -r scripts/requirements.txt
     python scripts/fetch_fear_greed.py --out data/fear_greed.csv
     python scripts/fetch_fear_greed.py --out data/fear_greed.csv --since 2020-07-14
 """

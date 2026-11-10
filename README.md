@@ -18,7 +18,7 @@ number was produced. It is a research and education tool, not investment advice.
 | Fundamental valuation | Forward P/E (optional) | 0.4 | FactSet Earnings Insight (weekly) |
 | Fundamental valuation | Market cap / GDP (supplementary) | 0.0 | World Bank |
 | Relative attractiveness | Equity risk premium | 1.0 | Shiller earnings yield − 10Y Treasury |
-| Sentiment & momentum | Fear & Greed (optional) | 0.3 | Licensed CSV feed |
+| Sentiment & momentum | Fear & Greed (optional) | 0.3 | CNN Business Fear & Greed Index (unofficial endpoint, or a CSV feed you supply) |
 | Sentiment & momentum | VIX | 0.25 | Cboe |
 | Sentiment & momentum | RSI (14-day) | 0.2 | S&P 500 prices |
 | Sentiment & momentum | 200-day moving-average deviation | 0.25 | S&P 500 prices |
@@ -414,9 +414,37 @@ supabase/migrations/0001_init.sql
 render.yaml
 ```
 
+## License
+
+The source code is released under the [MIT License](LICENSE). The license does
+not extend to market data (see below).
+
+## Data sources and terms
+
+The repository publishes snapshots derived from third-party providers. Each
+provider has its own terms, which apply to the data, not to this project's code.
+Review them before any public or commercial deployment, in particular before
+enabling advertising.
+
+| Data | Provider | Note |
+| --- | --- | --- |
+| Prices (S&P 500, NASDAQ-100, sector ETFs) | Yahoo Finance | Unofficial chart endpoint, not a licensed feed. Set `ALLOW_UNOFFICIAL_PRICE_FEED=false` to disable. |
+| Fear & Greed | CNN Business | Unofficial endpoint. Set `FEAR_GREED_CSV_URL` to use a feed you are licensed for. |
+| Forward P/E | FactSet Earnings Insight | Parsed from the public weekly PDF. Set `FORWARD_PE_CSV_URL` to use a licensed feed. |
+| CAPE, earnings | Robert Shiller (shillerdata.com) | Credit the source wherever the data is shown. |
+| VIX | Cboe | Public history file. |
+| Treasury yields | U.S. Treasury | Public domain. |
+| Market cap / GDP | World Bank | CC BY 4.0, attribution required. |
+
+Only use `FORWARD_PE_CSV_URL` and `FEAR_GREED_CSV_URL` with real data you are
+entitled to use. Never point them at placeholder or demo files: the dashboard
+cannot tell a sample series from a real one and would display it as fact.
+
 ## Disclaimer
 
 Market Compass is provided for research and educational purposes only. It does
 not constitute investment advice, an offer, or a solicitation. Valuation metrics
 can remain extreme for long periods, and historical relationships may not persist.
-Always do your own research.
+Always do your own research. Rules on publishing investment-related content
+differ by country; check the requirements that apply where you operate and where
+your visitors are.
