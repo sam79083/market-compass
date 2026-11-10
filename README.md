@@ -348,9 +348,15 @@ not need to be deployed. The refresh workflow is host-agnostic: it only updates
 ### If you add ads
 
 - The repository includes crawlable `/about`, `/methodology`, `/faq`, `/privacy`,
-  and `/terms` pages, plus an optional ad slot below the indicator grid. The slot
-  is hidden unless both `VITE_ADSENSE_CLIENT` and `VITE_ADSENSE_SLOT` are set as
-  build variables. See `frontend/.env.example`.
+  and `/terms` pages, plus two optional in-flow ad slots: one between the dip check
+  and the sector check, one below the sector check. They take their own space and
+  never overlay content. Slots are hidden unless `VITE_ADSENSE_CLIENT` and an ad
+  unit ID are set as build variables: `VITE_ADSENSE_SLOT_MID` and
+  `VITE_ADSENSE_SLOT_BOTTOM`, or `VITE_ADSENSE_SLOT` to reuse one unit for both.
+  See `frontend/.env.example`.
+- In the AdSense console, turn off Auto ads (or at least the anchor and vignette
+  formats) for this site. They are placed by Google, not by this code, and can
+  cover content.
 - Replace the bracketed placeholders in `frontend/public/privacy.html` and
   `frontend/public/terms.html` (contact email, last-updated date, jurisdiction)
   and have the policy reviewed for your jurisdiction.

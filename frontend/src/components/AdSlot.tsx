@@ -1,8 +1,17 @@
 import { useEffect, useRef } from "react";
 
-const client = (import.meta.env.VITE_ADSENSE_CLIENT as string | undefined)?.trim() ?? "";
-const slot = (import.meta.env.VITE_ADSENSE_SLOT as string | undefined)?.trim() ?? "";
-const configured = /^ca-pub-\d+$/.test(client) && /^\d+$/.test(slot);
+const clean = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+
+const client = clean(import.meta.env.VITE_ADSENSE_CLIENT);
+// Each placement can use its own ad unit; VITE_ADSENSE_SLOT is the shared fallback.
+const fallbackSlot = clean(import.meta.env.VITE_ADSENSE_SLOT);
+const slots = {
+  mid: clean(import.meta.env.VITE_ADSENSE_SLOT_MID) || fallbackSlot,
+  bottom: clean(import.meta.env.VITE_ADSENSE_SLOT_BOTTOM) || fallbackSlot,
+};
+
+export type AdPlacement = keyof typeof slots;
+
 const SCRIPT_ID = "market-compass-adsense";
 
 function ensureAdSenseScript(publisherId: string) {
@@ -15,8 +24,14 @@ function ensureAdSenseScript(publisherId: string) {
   document.head.appendChild(script);
 }
 
-export function AdSlot() {
+/**
+ * An in-flow ad block. It sits between page sections and takes its own space,
+ * so it never overlays content. It renders nothing until AdSense is configured.
+ */
+export function AdSlot({ placement = "bottom" }: { placement?: AdPlacement }) {
   const pushed = useRef(false);
+  const slot = slots[placement];
+  const configured = /^ca-pub-\d+$/.test(client) && /^\d+$/.test(slot);
 
   useEffect(() => {
     if (!configured || pushed.current) return;
@@ -28,12 +43,12 @@ export function AdSlot() {
     } catch {
       // The AdSense script will process the slot when it finishes loading.
     }
-  }, []);
+  }, [configured]);
 
   if (!configured) return null;
 
   return (
-    <aside className="ad-slot" aria-label="Advertisement">
+    <aside className={`ad-slot ad-slot--${placement}`} aria-label="Advertisement">
       <span className="ad-label">Advertisement</span>
       <ins
         className="adsbygoogle"
