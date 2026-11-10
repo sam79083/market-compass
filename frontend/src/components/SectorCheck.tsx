@@ -31,7 +31,7 @@ const TEXT: Record<
     momentum_low: string;
     momentum_plain: string;
     momentum_high: string;
-    rsi_scale: string;
+    momentum_label: string;
     unavailable: string;
     stale_label: string;
     price_label: string;
@@ -62,10 +62,10 @@ const TEXT: Record<
     axis_under: "Undervalued",
     axis_over: "Overvalued",
     dev_label: "vs 200-day",
-    momentum_low: "oversold",
+    momentum_low: "bearish",
     momentum_plain: "neutral",
-    momentum_high: "overbought",
-    rsi_scale: "below 30 oversold · above 70 overbought",
+    momentum_high: "bullish",
+    momentum_label: "Short-term momentum",
     unavailable: "No series in feed",
     stale_label: "Stale data",
     price_label: "Price",
@@ -74,10 +74,10 @@ const TEXT: Record<
     group_nodata: "No data",
     view_chart: "View chart ›",
     hints: {
-      under_low: "Below the 200-day, short-term oversold — rebound potential",
+      under_low: "Below the 200-day, short-term bearish momentum — rebound potential",
       under_plain: "Below the 200-day, neutral short-term",
       under_high: "Below the 200-day, but short-term momentum is strong",
-      right_low: "Near the 200-day, short-term oversold",
+      right_low: "Near the 200-day, short-term bearish momentum",
       right_plain: "Near the 200-day, neutral short-term",
       right_high: "Near the 200-day, short-term overheated",
       over_low: "Above the 200-day, short-term pulling back",
@@ -105,10 +105,10 @@ const TEXT: Record<
     axis_under: "저평가",
     axis_over: "과열",
     dev_label: "200일선 대비",
-    momentum_low: "과매도",
+    momentum_low: "약세",
     momentum_plain: "중립",
-    momentum_high: "과매수",
-    rsi_scale: "30 아래 과매도 · 70 위 과매수",
+    momentum_high: "강세",
+    momentum_label: "단기 모멘텀",
     unavailable: "시계열 미수집",
     stale_label: "지난 데이터",
     price_label: "현재가",
@@ -117,10 +117,10 @@ const TEXT: Record<
     group_nodata: "데이터 없음",
     view_chart: "차트 보기 ›",
     hints: {
-      under_low: "200일선 아래 · 단기 과매도 — 반등 탄력 가능성",
+      under_low: "200일선 아래 · 단기 약세 모멘텀 — 반등 탄력 가능성",
       under_plain: "200일선 아래 · 단기는 중립",
       under_high: "200일선 아래지만 단기 수급은 강함",
-      right_low: "200일선 부근 · 단기 과매도",
+      right_low: "200일선 부근 · 단기 약세 모멘텀",
       right_plain: "200일선 부근 · 단기는 중립",
       right_high: "200일선 부근 · 단기 과열",
       over_low: "200일선 위 · 단기 조정 중",
@@ -293,9 +293,8 @@ function SectorCard({
           <span className="sector-rsi-ref-left">
             <span className="sector-rsi-ref-label">{copy.rsi_label}</span>
             <span className="sector-rsi-ref-value">{formatNumber(rsiVal, 1)}</span>
-            <span className={`sector-rsi-ref-pill is-${mood}`}>{moodWord}</span>
           </span>
-          <span className="sector-rsi-ref-scale">{copy.rsi_scale}</span>
+          <span className={`sector-rsi-ref-pill is-${mood}`}>{`${copy.momentum_label} : ${moodWord}`}</span>
         </p>
       )}
       {!unavailable && (

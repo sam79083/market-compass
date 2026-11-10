@@ -2618,10 +2618,10 @@ button.dip-card:focus-visible {
 }
 
 .sector-rsi-ref-pill {
-  align-self: center;
+  flex-shrink: 0;
   border-radius: 999px;
-  padding: 1px 7px;
-  font-size: 9.5px;
+  padding: 2px 9px;
+  font-size: 10px;
   font-weight: 600;
   border: 1px solid var(--border);
   color: var(--muted);
@@ -2639,13 +2639,7 @@ button.dip-card:focus-visible {
   background: color-mix(in srgb, var(--red) 10%, transparent);
 }
 
-.sector-rsi-ref-scale {
-  color: var(--muted);
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1.4;
-  text-align: right;
-}
+
 
 .sector-view-chart {
   margin-top: auto;
