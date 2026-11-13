@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://market-compass.cloud8dashboard.workers.dev/sitemap.xml
