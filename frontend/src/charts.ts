@@ -12,6 +12,7 @@ import type {
 import type { LocaleKey } from "./i18n";
 import { LOCALE_TEXT } from "./i18n";
 import { chartPalettes } from "./theme";
+import type { MarketEvent } from "./events";
 import { eventDescription, eventLabel, eventsInRange } from "./events";
 import {
   bandForScore,
@@ -45,6 +46,68 @@ function tooltipStyle(theme: ThemeMode) {
     textStyle: { color: palette.text, fontSize: 12 },
     extraCssText: `box-shadow: 0 18px 40px ${palette.tooltipShadow}; border-radius: 10px;`,
   };
+}
+
+/** Dashed incident lines with site-font month-year labels, shared by every price-scale chart. */
+function eventMarkLineFor(events: MarketEvent[], palette: ReturnType<typeof paletteFor>, locale: LocaleKey) {
+  if (events.length === 0) return undefined;
+  return {
+    silent: true,
+    symbol: "none" as const,
+    label: {
+      show: true,
+      position: "insideEndTop" as const,
+      distance: 2,
+      color: palette.muted,
+      fontSize: 8,
+      fontFamily: "Inter, Segoe UI, sans-serif",
+    },
+    lineStyle: { color: palette.muted, type: "dashed" as const, width: 1, opacity: 0.6 },
+    data: events.map((event) => ({
+      xAxis: event.date,
+      label: { formatter: formatAxisMonth(event.date, locale) },
+    })),
+  };
+}
+
+function spanDaysOf(dates: string[]): number {
+  if (dates.length <= 1) return 0;
+  return (
+    (new Date(`${dates[dates.length - 1]}T00:00:00Z`).getTime() -
+      new Date(`${dates[0]}T00:00:00Z`).getTime()) /
+    86400000
+  );
+}
+
+function visibleEventsFor(dates: string[]): MarketEvent[] {
+  return dates.length > 1 ? eventsInRange(dates[0], dates[dates.length - 1]) : [];
+}
+
+/** So the dashed incident line is easy to hit at any zoom level. */
+function eventToleranceDaysFor(spanDays: number): number {
+  return Math.min(150, Math.max(10, Math.round(spanDays / 60)));
+}
+
+function nearestEventOn(events: MarketEvent[], toleranceDays: number, date: string): MarketEvent | undefined {
+  const target = new Date(`${date}T00:00:00Z`).getTime();
+  let best: MarketEvent | undefined;
+  let bestDiff = Infinity;
+  for (const event of events) {
+    const diff = Math.abs(new Date(`${event.date}T00:00:00Z`).getTime() - target) / 86400000;
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = event;
+    }
+  }
+  return best !== undefined && bestDiff <= toleranceDays ? best : undefined;
+}
+
+function eventTooltipHtml(event: MarketEvent, locale: LocaleKey): string {
+  return `<div class="chart-tip-event"><div class="chart-tip-event-tag">${escapeHtml(
+    locale === "kr" ? "역사적인 사건" : "historical event",
+  )}</div><div class="chart-tip-event-name">${escapeHtml(eventLabel(event, locale))}</div><div class="chart-tip-event-desc">${escapeHtml(
+    eventDescription(event, locale),
+  )}</div></div>`;
 }
 
 function areaGradient(color: string, alpha: number) {
@@ -335,49 +398,10 @@ export function priceChartOption(
   const up = changed && latest.close >= previous.close;
   const changeColor = up ? palette.teal : palette.red;
   const lineColor = changed ? changeColor : palette.accent;
-  const spanDays =
-    dates.length > 1
-      ? (new Date(`${dates[dates.length - 1]}T00:00:00Z`).getTime() -
-          new Date(`${dates[0]}T00:00:00Z`).getTime()) /
-        86400000
-      : 0;
-  const events = dates.length > 1 ? eventsInRange(dates[0], dates[dates.length - 1]) : [];
-  // Hover tolerance grows with the visible span: ~10 days in short ranges, ~150 in Max,
-  // which keeps the dashed line easy to hit at any zoom level.
-  const eventToleranceDays = Math.min(150, Math.max(10, Math.round(spanDays / 60)));
-  // Dashed lines only; the event text shows inside the shared axis tooltip.
-  const eventMarkLine = events.length
-    ? {
-        silent: true,
-        symbol: "none" as const,
-        label: {
-          show: true,
-          position: "insideEndTop" as const,
-          distance: 2,
-          color: palette.muted,
-          fontSize: 8,
-          fontFamily: "Inter, Segoe UI, sans-serif",
-        },
-        lineStyle: { color: palette.muted, type: "dashed" as const, width: 1, opacity: 0.6 },
-        data: events.map((event) => ({
-          xAxis: event.date,
-          label: { formatter: formatAxisMonth(event.date, locale) },
-        })),
-      }
-    : undefined;
-  const nearestEventOn = (date: string) => {
-    const target = new Date(`${date}T00:00:00Z`).getTime();
-    let best: (typeof events)[number] | undefined;
-    let bestDiff = Infinity;
-    for (const event of events) {
-      const diff = Math.abs(new Date(`${event.date}T00:00:00Z`).getTime() - target) / 86400000;
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        best = event;
-      }
-    }
-    return best !== undefined && bestDiff <= eventToleranceDays ? best : undefined;
-  };
+  const spanDays = spanDaysOf(dates);
+  const events = visibleEventsFor(dates);
+  const eventToleranceDays = eventToleranceDaysFor(spanDays);
+  const eventMarkLine = eventMarkLineFor(events, palette, locale);
   const firstDate = dates[0] ?? "";
   const lastDate = dates[dates.length - 1] ?? "";
   const areaRanges = activeRanges.filter(
@@ -412,16 +436,8 @@ export function priceChartOption(
           <span>${escapeHtml(symbol)}</span>
           <strong>${escapeHtml(formatNumber(point.close, 2))}</strong>
         </div>`;
-        const event = nearestEventOn(point.date);
-        const eventBlock = event
-          ? `<div class="chart-tip-event">
-              <div class="chart-tip-event-tag">${escapeHtml(
-                locale === "kr" ? "역사적인 사건" : "historical event",
-              )}</div>
-              <div class="chart-tip-event-name">${escapeHtml(eventLabel(event, locale))}</div>
-              <div class="chart-tip-event-desc">${escapeHtml(eventDescription(event, locale))}</div>
-            </div>`
-          : "";
+        const event = nearestEventOn(events, eventToleranceDays, point.date);
+        const eventBlock = event ? eventTooltipHtml(event, locale) : "";
         return `<div class="chart-tip">${headers}
           <div class="chart-tip-sub">${escapeHtml(labels.price_close)} · ${escapeHtml(formatDate(point.date, locale))}</div>
           ${eventBlock}
@@ -484,6 +500,10 @@ export function sectorChartOption(
   const closes = points.map((point) => point.close);
   const averages = points.map((point) => point.ma200);
   const rsis = points.map((point) => point.rsi);
+  const spanDays = spanDaysOf(dates);
+  const events = visibleEventsFor(dates);
+  const eventToleranceDays = eventToleranceDaysFor(spanDays);
+  const eventMarkLine = eventMarkLineFor(events, palette, locale);
   // Show each month once (on its first trading day) so labels never repeat.
   const monthLabel = (value: string, index: number) =>
     index === 0 || dates[index - 1]?.slice(0, 7) !== value.slice(0, 7) ? formatAxisMonth(value, locale) : "";
@@ -504,11 +524,13 @@ export function sectorChartOption(
         const point = points[list[0]?.dataIndex ?? 0];
         if (!point) return "";
         const average = point.ma200 !== null && point.ma200 !== undefined ? formatNumber(point.ma200, 2) : "—";
+        const event = nearestEventOn(events, eventToleranceDays, point.date);
         return `<div class="chart-tip">
           <div class="chart-tip-head"><span>${escapeHtml(symbol)}</span><strong>${escapeHtml(formatNumber(point.close, 2))}</strong></div>
           ${tooltipRow(labels.ma200, average, palette.amber)}
           ${tooltipRow("RSI(14)", formatNumber(point.rsi, 1), palette.blue)}
           <div class="chart-tip-sub">${escapeHtml(formatDate(point.date, locale))}</div>
+          ${event ? eventTooltipHtml(event, locale) : ""}
         </div>`;
       },
     },
@@ -549,6 +571,7 @@ export function sectorChartOption(
         smooth: 0.06,
         lineStyle: { color: palette.accent, width: 2 },
         areaStyle: { color: areaGradient(palette.accent, theme === "dark" ? 0.16 : 0.1) },
+        markLine: eventMarkLine,
       },
       {
         name: labels.ma200,
@@ -575,6 +598,7 @@ export function sectorChartOption(
           data: [
             { yAxis: 30, lineStyle: { color: palette.teal, type: "dashed" as const, width: 1 } },
             { yAxis: 70, lineStyle: { color: palette.red, type: "dashed" as const, width: 1 } },
+            ...((eventMarkLine?.data ?? []).map((item) => ({ xAxis: item.xAxis, label: { show: false } }))),
           ],
         },
       },
@@ -592,6 +616,10 @@ export function indicatorChartOption(
   const labels = LOCALE_TEXT[locale].chart_labels;
   const points = history.points;
   const dates = points.map((point) => point.date);
+  const spanDays = spanDaysOf(dates);
+  const events = visibleEventsFor(dates);
+  const eventToleranceDays = eventToleranceDaysFor(spanDays);
+  const eventMarkLine = eventMarkLineFor(events, palette, locale);
   const isMulti = indicator.chart_kind === "ma200" || indicator.chart_kind === "relative";
   const primaryColor = categoryColor(indicator.category);
 
@@ -606,6 +634,10 @@ export function indicatorChartOption(
         const list = params as Array<{ dataIndex: number }>;
         const point = points[list[0]?.dataIndex ?? 0];
         if (!point) return "";
+        const eventBlock = (() => {
+          const event = nearestEventOn(events, eventToleranceDays, point.date);
+          return event ? eventTooltipHtml(event, locale) : "";
+        })();
         const header = `<div class="chart-tip-head"><span>${escapeHtml(
           formatDate(point.date, locale),
         )}</span><strong>${escapeHtml(point.display)}</strong></div>`;
@@ -620,6 +652,7 @@ export function indicatorChartOption(
             <div class="chart-tip-sub">${escapeHtml(history.indicator.short_name)} · ${escapeHtml(
               point.effective_date,
             )}${point.is_estimate ? ` · ${escapeHtml(labels.preliminary)}` : ""}</div>
+            ${eventBlock}
           </div>`;
         }
         if (indicator.chart_kind === "relative") {
@@ -631,6 +664,7 @@ export function indicatorChartOption(
               ${tooltipRow(labels.change_252, `${formatNumber(point.rel_252d, 2)}%`, palette.muted)}
             </div>
             <div class="chart-tip-sub">${escapeHtml(labels.total_return_proxy)} · ${escapeHtml(point.effective_date)}</div>
+            ${eventBlock}
           </div>`;
         }
         return `<div class="chart-tip">${header}
@@ -650,6 +684,7 @@ export function indicatorChartOption(
                 )}${tooltipRow(labels.method, point.method === "forward" ? labels.forward : labels.trailing, palette.muted)}</div>`
               : ""
           }
+          ${eventBlock}
         </div>`;
       },
     },
@@ -681,6 +716,7 @@ export function indicatorChartOption(
           smooth: 0.12,
           lineStyle: { color: palette.accent, width: 2 },
           areaStyle: { color: areaGradient(palette.accent, theme === "dark" ? 0.14 : 0.1) },
+          markLine: eventMarkLine,
         },
         {
           name: labels.ma200,
@@ -714,6 +750,7 @@ export function indicatorChartOption(
           showSymbol: false,
           smooth: 0.12,
           lineStyle: { color: palette.teal, width: 2 },
+          markLine: eventMarkLine,
         },
         {
           name: "SPY",
@@ -755,9 +792,27 @@ export function indicatorChartOption(
         smooth: indicator.id === "buffett" ? false : 0.18,
         lineStyle: { color: primaryColor, width: 2.1 },
         areaStyle: { color: areaGradient(primaryColor, theme === "dark" ? 0.2 : 0.14) },
-        markLine: thresholdLines.length
-          ? { silent: true, symbol: "none", data: thresholdLines }
-          : undefined,
+        markLine: (() => {
+          const data: Array<Record<string, unknown>> = [
+            ...(eventMarkLine?.data ?? []),
+            ...thresholdLines,
+          ];
+          if (data.length === 0) return undefined;
+          return {
+            silent: true,
+            symbol: "none" as const,
+            label: {
+              show: true,
+              position: "insideEndTop" as const,
+              distance: 2,
+              color: palette.muted,
+              fontSize: 8,
+              fontFamily: "Inter, Segoe UI, sans-serif",
+            },
+            lineStyle: { color: palette.muted, type: "dashed" as const, width: 1, opacity: 0.7 },
+            data,
+          };
+        })(),
         emphasis: { focus: "series" },
       },
     ],
