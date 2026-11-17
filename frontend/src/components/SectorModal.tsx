@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { sectorChartOption } from "../charts";
-import { useSectorHistory } from "../hooks";
+import { useEtfHoldings, useSectorHistory } from "../hooks";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
-import type { ThemeMode } from "../types";
+import type { EtfHoldingsPayload, ThemeMode } from "../types";
 import { formatDate, formatNumber } from "../utils";
 import { Chart } from "./Chart";
 
@@ -35,6 +35,14 @@ const TEXT: Record<
     chartAria: string;
     noData: string;
     loadError: string;
+    holdingsTitle: string;
+    holdingsCount: (count: number) => string;
+    holdingsTotal: (total: number) => string;
+    holdingsSource: string;
+    holdingsLoading: string;
+    holdingsError: string;
+    holdingsNone: string;
+    noHoldingsFor: Record<string, string>;
   }
 > = {
   en: {
@@ -48,6 +56,17 @@ const TEXT: Record<
     chartAria: "price and RSI chart",
     noData: "No history available for this ETF yet.",
     loadError: "Could not load history.",
+    holdingsTitle: "Portfolio",
+    holdingsCount: (count) => `Top ${count} holdings · % of net assets`,
+    holdingsTotal: (total) => `Top ${formatNumber(total, 1)}% combined`,
+    holdingsSource: "Yahoo Finance (unofficial). Weights can drift between rebalances.",
+    holdingsLoading: "Loading holdings…",
+    holdingsError: "Could not load holdings.",
+    holdingsNone: "No holdings reported in the feed for this ETF.",
+    noHoldingsFor: {
+      GLD: "Holds physical gold bullion — no stock portfolio to list.",
+      TLT: "Holds long-term U.S. Treasury bonds — no stock portfolio to list.",
+    },
   },
   kr: {
     eyebrow: "부문 차트",
@@ -60,12 +79,86 @@ const TEXT: Record<
     chartAria: "가격 및 RSI 차트",
     noData: "이 ETF의 과거 데이터가 아직 없습니다.",
     loadError: "과거 데이터를 불러오지 못했습니다.",
+    holdingsTitle: "포트폴리오",
+    holdingsCount: (count) => `상위 ${count}개 종목 · 순자산 대비 비중`,
+    holdingsTotal: (total) => `상위 종목 합계 ${formatNumber(total, 1)}%`,
+    holdingsSource: "Yahoo Finance(비공식) 기준. 편입 비중은 리밸런싱 사이에 달라질 수 있습니다.",
+    holdingsLoading: "구성 종목을 불러오는 중…",
+    holdingsError: "구성 종목을 불러오지 못했습니다.",
+    holdingsNone: "피드에 구성 종목이 보고되지 않았습니다.",
+    noHoldingsFor: {
+      GLD: "실물 금을 보유하는 ETF입니다. 구성 종목이 없습니다.",
+      TLT: "미국 장기 국채를 보유하는 ETF입니다. 구성 종목이 없습니다.",
+    },
   },
 };
+
+function HoldingsSection({
+  symbol,
+  copy,
+  payload,
+  loading,
+  error,
+  locale,
+}: {
+  symbol: string;
+  copy: (typeof TEXT)[LocaleKey];
+  payload: EtfHoldingsPayload | null;
+  loading: boolean;
+  error: string | null;
+  locale: LocaleKey;
+}) {
+  const entry = payload?.etfs[symbol];
+  const holdings = entry?.holdings ?? [];
+  const maxWeight = holdings.reduce((acc, item) => Math.max(acc, item.weight), 0);
+  const total = holdings.reduce((acc, item) => acc + item.weight, 0);
+  const sourceDate = payload?.generated_at?.slice(0, 10) ?? null;
+
+  return (
+    <div className="sector-holdings">
+      <div className="sector-holdings-head">
+        <h3 className="sector-holdings-title">{copy.holdingsTitle}</h3>
+        {holdings.length > 0 && (
+          <span className="sector-holdings-meta">
+            {copy.holdingsCount(holdings.length)}
+            {sourceDate ? ` · ${formatDate(sourceDate, locale)}` : ""}
+          </span>
+        )}
+      </div>
+      {loading ? (
+        <p className="sector-holdings-note">{copy.holdingsLoading}</p>
+      ) : error ? (
+        <p className="sector-holdings-note">{copy.holdingsError} {error}</p>
+      ) : holdings.length > 0 ? (
+        <>
+          <ol className="sector-holdings-list">
+            {holdings.map((item) => (
+              <li key={item.symbol ?? item.name} className="sector-holdings-row">
+                <span className="sector-holdings-symbol">{item.symbol ?? "—"}</span>
+                <span className="sector-holdings-name" title={item.name}>{item.name}</span>
+                <span className="sector-holdings-bar" aria-hidden="true">
+                  <i style={{ width: maxWeight > 0 ? `${(item.weight / maxWeight) * 100}%` : "0%" }} />
+                </span>
+                <span className="sector-holdings-weight">{formatNumber(item.weight, 1)}%</span>
+              </li>
+            ))}
+          </ol>
+          <p className="sector-holdings-foot">
+            <span>{copy.holdingsTotal(total)}</span>
+            <span>{copy.holdingsSource}</span>
+          </p>
+        </>
+      ) : (
+        <p className="sector-holdings-note">{copy.noHoldingsFor[symbol] ?? copy.holdingsNone}</p>
+      )}
+    </div>
+  );
+}
 
 export function SectorModal({ symbol, displayName, theme, locale, onClose }: SectorModalProps) {
   const [range, setRange] = useState<string>("1y");
   const history = useSectorHistory(symbol);
+  const holdings = useEtfHoldings();
   const copy = TEXT[locale];
 
   useEffect(() => {
@@ -159,6 +252,15 @@ export function SectorModal({ symbol, displayName, theme, locale, onClose }: Sec
         ) : (
           <div className="chart-empty">{copy.noData}</div>
         )}
+
+        <HoldingsSection
+          symbol={symbol}
+          copy={copy}
+          payload={holdings.data}
+          loading={holdings.loading}
+          error={holdings.error}
+          locale={locale}
+        />
 
         <p className="sector-modal-note">{copy.note}</p>
       </div>

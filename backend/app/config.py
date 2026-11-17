@@ -196,6 +196,9 @@ class Settings(BaseSettings):
     # Daily NASDAQ-100 trailing P/E snapshots (date,value[,source]) written by
     # scripts/fetch_nasdaq_pe.py. Feeds the NASDAQ equity risk premium.
     nasdaq_pe_csv_url: str | None = None
+    # Top-10 ETF holdings JSON written by scripts/fetch_etf_holdings.py. Served at
+    # /api/etf-holdings and copied into the static export. Defaults to <repo>/data/etf_holdings.json.
+    etf_holdings_json_url: str | None = None
     allow_unofficial_price_feed: bool = True
     erp_method: str = "auto"
 

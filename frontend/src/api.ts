@@ -7,6 +7,7 @@ import type {
   RangeKey,
   SectorHistory,
   SectorsPayload,
+  EtfHoldingsPayload,
 } from "./types";
 
 const rawBase = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? "";
@@ -106,6 +107,13 @@ export function fetchPriceHistory(signal?: AbortSignal, index: IndexKey = "sp500
 
 export function fetchSectors(signal?: AbortSignal): Promise<SectorsPayload> {
   return getJson<SectorsPayload>(staticMode ? "/data/sectors.json" : dataPath("/sectors"), signal);
+}
+
+export function fetchEtfHoldings(signal?: AbortSignal): Promise<EtfHoldingsPayload> {
+  return getJson<EtfHoldingsPayload>(
+    staticMode ? "/data/etf-holdings.json" : dataPath("/etf-holdings"),
+    signal,
+  );
 }
 
 export function fetchSectorHistory(symbol: string, signal?: AbortSignal): Promise<SectorHistory> {

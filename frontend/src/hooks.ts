@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { fetchIndicatorHistory, fetchSectorHistory } from "./api";
+import { fetchIndicatorHistory, fetchSectorHistory, fetchEtfHoldings } from "./api";
 import type { IndexKey } from "./api";
-import type { IndicatorHistory, RangeKey, SectorHistory } from "./types";
+import type { IndicatorHistory, RangeKey, SectorHistory, EtfHoldingsPayload } from "./types";
 
 export interface AsyncState<T> {
   data: T | null;
@@ -42,6 +42,34 @@ export function useIndicatorHistory(
       });
     return () => controller.abort();
   }, [indicatorId, range, enabled, index]);
+
+  return state;
+}
+
+export function useEtfHoldings(): AsyncState<EtfHoldingsPayload> {
+  const [state, setState] = useState<AsyncState<EtfHoldingsPayload>>({
+    data: null,
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setState({ data: null, loading: true, error: null });
+    fetchEtfHoldings(controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted) setState({ data, loading: false, error: null });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setState({
+          data: null,
+          loading: false,
+          error: error instanceof Error ? error.message : "Could not load holdings",
+        });
+      });
+    return () => controller.abort();
+  }, []);
 
   return state;
 }

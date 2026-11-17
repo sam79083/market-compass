@@ -59,6 +59,14 @@ jobs:
         continue-on-error: true
         run: python scripts/fetch_nasdaq_pe.py --out data/nasdaq_pe.csv
 
+      - name: Fetch ETF top-10 holdings (unofficial Yahoo topHoldings)
+        # Best effort: a failure just skips this run's holdings refresh.
+        continue-on-error: true
+        run: |
+          pip install requests
+          python scripts/fetch_etf_holdings.py --out data/etf_holdings.json \
+            --static-out frontend/public/data/etf-holdings.json
+
       - name: Restore observation cache
         uses: actions/cache@v4
         with:
@@ -79,6 +87,7 @@ jobs:
           # A FORWARD_PE_CSV_URL secret, if set, overrides the file fetched above.
           FORWARD_PE_CSV_URL: ${{ secrets.FORWARD_PE_CSV_URL || format('file://{0}/data/forward_pe.csv', github.workspace) }}
           NASDAQ_PE_CSV_URL: ${{ format('file://{0}/data/nasdaq_pe.csv', github.workspace) }}
+          ETF_HOLDINGS_JSON_URL: ${{ format('file://{0}/data/etf_holdings.json', github.workspace) }}
           # A FEAR_GREED_CSV_URL secret, if set, overrides the file fetched above.
           FEAR_GREED_CSV_URL: ${{ secrets.FEAR_GREED_CSV_URL || format('file://{0}/data/fear_greed.csv', github.workspace) }}
         run: |
@@ -93,6 +102,7 @@ jobs:
           if [ -f data/forward_pe.csv ]; then git add data/forward_pe.csv; fi
           if [ -f data/fear_greed.csv ]; then git add data/fear_greed.csv; fi
           if [ -f data/nasdaq_pe.csv ]; then git add data/nasdaq_pe.csv; fi
+          if [ -f data/etf_holdings.json ]; then git add data/etf_holdings.json; fi
           if git diff --cached --quiet; then
             echo "No snapshot changes"
           else

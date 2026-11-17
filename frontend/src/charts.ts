@@ -12,10 +12,12 @@ import type {
 import type { LocaleKey } from "./i18n";
 import { LOCALE_TEXT } from "./i18n";
 import { chartPalettes } from "./theme";
+import { eventLabel, eventsInRange } from "./events";
 import {
   bandForScore,
   categoryColor,
   escapeHtml,
+  formatAxisMonth,
   formatCoverage,
   formatDate,
   formatNumber,
@@ -59,7 +61,7 @@ function areaGradient(color: string, alpha: number) {
   };
 }
 
-function dateAxis(dates: string[], palette: ReturnType<typeof paletteFor>, show = true) {
+function dateAxis(dates: string[], palette: ReturnType<typeof paletteFor>, show = true, locale: LocaleKey = "en") {
   return {
     type: "category" as const,
     data: dates,
@@ -70,7 +72,7 @@ function dateAxis(dates: string[], palette: ReturnType<typeof paletteFor>, show 
     axisLabel: {
       ...axisLabel(palette),
       hideOverlap: true,
-      formatter: (value: string) => value.slice(0, 4),
+      formatter: (value: string) => formatAxisMonth(value, locale),
     },
   };
 }
@@ -277,7 +279,7 @@ export function compositeChartOption(
         </div>`;
       },
     },
-    xAxis: dateAxis(dates, palette),
+    xAxis: dateAxis(dates, palette, true, locale),
     yAxis: valueAxis(palette, {
       min: 0,
       max: 100,
@@ -338,6 +340,25 @@ export function priceChartOption(
           new Date(`${dates[0]}T00:00:00Z`).getTime()) /
         86400000
       : 0;
+  const events = dates.length > 1 ? eventsInRange(dates[0], dates[dates.length - 1]) : [];
+  const eventMarkLine = events.length
+    ? {
+        silent: true,
+        symbol: "none" as const,
+        lineStyle: { color: palette.muted, type: "dashed" as const, width: 1, opacity: 0.7 },
+        data: events.map((event) => ({
+          xAxis: event.date,
+          label: {
+            show: true,
+            position: "insideEndTop" as const,
+            distance: 2,
+            color: palette.muted,
+            fontSize: 9,
+            formatter: eventLabel(event, locale),
+          },
+        })),
+      }
+    : undefined;
 
   return {
     animationDuration: 450,
@@ -360,11 +381,11 @@ export function priceChartOption(
       },
     },
     xAxis: {
-      ...dateAxis(dates, palette, true),
+      ...dateAxis(dates, palette, true, locale),
       axisLabel: {
         ...axisLabel(palette),
         hideOverlap: true,
-        formatter: (value: string) => (spanDays > 500 ? value.slice(2, 7) : value.slice(5)),
+        formatter: (value: string) => (spanDays > 500 ? formatAxisMonth(value, locale) : value.slice(5)),
       },
     },
     yAxis: valueAxis(palette, {
@@ -382,6 +403,7 @@ export function priceChartOption(
         smooth: 0.06,
         lineStyle: { color: lineColor, width: 2 },
         areaStyle: { color: areaGradient(lineColor, theme === "dark" ? 0.18 : 0.12) },
+        markLine: eventMarkLine,
         emphasis: { focus: "series" },
       },
       {
@@ -415,7 +437,7 @@ export function sectorChartOption(
   const rsis = points.map((point) => point.rsi);
   // Show each month once (on its first trading day) so labels never repeat.
   const monthLabel = (value: string, index: number) =>
-    index === 0 || dates[index - 1]?.slice(0, 7) !== value.slice(0, 7) ? value.slice(2, 7) : "";
+    index === 0 || dates[index - 1]?.slice(0, 7) !== value.slice(0, 7) ? formatAxisMonth(value, locale) : "";
 
   return {
     animationDuration: 450,
@@ -443,12 +465,12 @@ export function sectorChartOption(
     },
     xAxis: [
       {
-        ...dateAxis(dates, palette, true),
+        ...dateAxis(dates, palette, true, locale),
         gridIndex: 0,
         axisLabel: { show: false },
       },
       {
-        ...dateAxis(dates, palette, true),
+        ...dateAxis(dates, palette, true, locale),
         gridIndex: 1,
         axisLabel: { ...axisLabel(palette), hideOverlap: true, formatter: monthLabel },
       },
@@ -582,7 +604,7 @@ export function indicatorChartOption(
         </div>`;
       },
     },
-    xAxis: dateAxis(dates, palette),
+    xAxis: dateAxis(dates, palette, true, locale),
     yAxis: valueAxis(palette, {
       min: indicator.id === "rsi" || indicator.id === "fear_greed" || indicator.id === "breadth_200dma" ? 0 : undefined,
       max: indicator.id === "rsi" || indicator.id === "fear_greed" || indicator.id === "breadth_200dma" ? 100 : undefined,

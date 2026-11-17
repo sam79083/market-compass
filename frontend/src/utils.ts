@@ -104,6 +104,17 @@ const LOCALE_HELPER_TEXT = {
   },
 };
 
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2026-11-03" -> "Nov '26" (en) / "11월 '26" (kr). Used for x-axis month labels. */
+export function formatAxisMonth(value: string, locale: LocaleKey = "en"): string {
+  const month = Number.parseInt(value.slice(5, 7), 10);
+  const year = value.slice(2, 4);
+  if (!Number.isFinite(month) || month < 1 || month > 12) return value.slice(0, 7);
+  const name = locale === "kr" ? `${month}월` : MONTHS_EN[month - 1];
+  return `${name} '${year}`;
+}
+
 export function formatDate(
   value: string | null | undefined,
   locale: LocaleKey = "en",

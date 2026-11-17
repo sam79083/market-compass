@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.services.dashboard import build_dashboard
+from app.services.etf_holdings import load_etf_holdings
 from app.services.history import (
     get_composite_history,
     get_health,
@@ -87,6 +88,11 @@ def price_history(
 @router.get("/sectors")
 def sectors(session: SessionDep):
     return get_sector_snapshot(session)
+
+
+@router.get("/etf-holdings")
+def etf_holdings(settings: SettingsDep):
+    return load_etf_holdings(settings)
 
 
 @router.get("/sectors/{symbol}")

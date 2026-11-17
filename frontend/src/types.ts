@@ -263,6 +263,23 @@ export interface SectorsPayload {
   sectors: SectorEntry[];
 }
 
+export interface EtfHolding {
+  symbol: string | null;
+  name: string;
+  /** Weight in percent of net assets, 0-100. */
+  weight: number;
+}
+
+export interface EtfHoldingsEntry {
+  holdings: EtfHolding[];
+}
+
+export interface EtfHoldingsPayload {
+  generated_at: string | null;
+  source: string | null;
+  etfs: Record<string, EtfHoldingsEntry>;
+}
+
 export interface SectorPoint {
   date: string;
   close: number;

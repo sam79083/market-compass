@@ -8,8 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.indicators import INDICATORS, INDICATORS_NASDAQ
+from app.ingestion.sector import SECTOR_ETF
 from app.scoring.engine import INDEX_KEYS
 from app.services.dashboard import build_dashboard
+from app.services.etf_holdings import load_etf_holdings
 from app.services.history import (
     get_composite_history,
     get_indicator_history,
@@ -18,7 +20,6 @@ from app.services.history import (
     get_sector_history,
     get_sector_snapshot,
 )
-from app.ingestion.sector import SECTOR_ETF
 
 
 def _write_json(path: Path, payload: Any) -> int:
@@ -69,6 +70,13 @@ def export_static(session: Session, settings: Settings, out_dir: Path) -> dict[s
     )
     # Sector ETF snapshot for the bottom section; shared by both index views.
     files["sectors.json"] = _write_json(out / "sectors.json", get_sector_snapshot(session))
+    # Top-10 holdings per sector ETF for the ETF detail view. A missing source file
+    # must not clobber a good committed snapshot, so an empty payload is only
+    # written when no export exists yet.
+    holdings_path = out / "etf-holdings.json"
+    holdings_payload = load_etf_holdings(settings)
+    if holdings_payload["etfs"] or not holdings_path.exists():
+        files["etf-holdings.json"] = _write_json(holdings_path, holdings_payload)
     # Per-ETF history (close, 200-day average, RSI) for the sector chart modal.
     for definition in SECTOR_ETF:
         payload = get_sector_history(session, definition["symbol"])

@@ -72,7 +72,7 @@ const TEXT: Record<
     ma200_label: "200-day",
     group_empty: "None right now",
     group_nodata: "No data",
-    view_chart: "View chart ›",
+    view_chart: "Holdings & chart ›",
     hints: {
       under_low: "Below the 200-day, short-term bearish momentum — rebound potential",
       under_plain: "Below the 200-day, neutral short-term",
@@ -115,7 +115,7 @@ const TEXT: Record<
     ma200_label: "200일선",
     group_empty: "현재 해당 없음",
     group_nodata: "데이터 없음",
-    view_chart: "차트 보기 ›",
+    view_chart: "구성 종목 · 차트 ›",
     hints: {
       under_low: "200일선 아래 · 단기 약세 모멘텀 — 반등 탄력 가능성",
       under_plain: "200일선 아래 · 단기는 중립",

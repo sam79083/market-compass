@@ -2370,6 +2370,13 @@ button.dip-card:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.price-events-note {
+  margin: -2px 2px 2px;
+  color: var(--faint);
+  font-size: 10px;
+  letter-spacing: 0.01em;
+}
+
 .price-window {
   display: flex;
   align-items: baseline;
@@ -2755,6 +2762,118 @@ button.dip-card:focus-visible {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.5;
+}
+
+/* ---- ETF portfolio (top holdings) inside the sector modal ---- */
+
+.sector-holdings {
+  margin: 14px 0 0;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.sector-holdings-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.sector-holdings-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sector-holdings-meta {
+  color: var(--faint);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sector-holdings-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+
+.sector-holdings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sector-holdings-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(60px, 28%) 44px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sector-holdings-symbol {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sector-holdings-name {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sector-holdings-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
+  overflow: hidden;
+}
+
+.sector-holdings-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+.sector-holdings-weight {
+  text-align: right;
+  color: var(--text);
+}
+
+.sector-holdings-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 0;
+  color: var(--faint);
+  font-size: 10px;
+}
+
+@media (max-width: 560px) {
+  .sector-holdings-row {
+    grid-template-columns: 44px minmax(0, 1fr) 42px;
+  }
+
+  .sector-holdings-bar {
+    display: none;
+  }
 }
 
 .sector-price {
