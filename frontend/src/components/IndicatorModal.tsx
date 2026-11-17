@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { frequencyLabel, indicatorChartOption } from "../charts";
 import type { IndexKey } from "../api";
-import { useIndicatorHistory } from "../hooks";
+import { useFocusTrap, useIndicatorHistory, useMediaQuery } from "../hooks";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
 import type { Indicator, IndicatorHistory, RangeKey, ThemeMode } from "../types";
@@ -30,19 +30,16 @@ export function IndicatorModal({ indicator, theme, locale, index, onClose }: Ind
   const text = LOCALE_TEXT[locale];
   const localized = text.indicatorLocales[indicator.id];
   const accent = categoryColor(indicator.category);
+  const modalRef = useFocusTrap<HTMLDivElement>(onClose);
+  const isNarrow = useMediaQuery();
 
   useEffect(() => {
-    const handleKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   const filteredPoints = useMemo(() => {
     if (!history.data) return [];
@@ -75,7 +72,7 @@ export function IndicatorModal({ indicator, theme, locale, index, onClose }: Ind
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="modal indicator-modal" role="dialog" aria-modal="true" aria-labelledby="indicator-modal-title">
+      <div className="modal indicator-modal" role="dialog" aria-modal="true" aria-labelledby="indicator-modal-title" ref={modalRef} tabIndex={-1}>
         <header className="modal-head">
           <div>
             <div className="eyebrow" style={{ color: accent }}>
@@ -135,7 +132,7 @@ export function IndicatorModal({ indicator, theme, locale, index, onClose }: Ind
               ) : chartOption ? (
                 <Chart
                   option={chartOption}
-                  height={330}
+                  height={isNarrow ? 250 : 330}
                   ariaLabel={`${localized?.name ?? indicator.name} ${
                     locale === "kr" ? "과거 차트" : "historical chart"
                   }`}

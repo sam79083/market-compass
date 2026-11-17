@@ -2211,6 +2211,48 @@ button.dip-card:focus-visible {
   font-size: 11px;
 }
 
+.dip-spark {
+  margin: 6px 0 4px;
+  pointer-events: none;
+  width: 100%;
+}
+
+.dip-backtest {
+  margin: 6px 0 0;
+  color: var(--faint);
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+
+.dip-backtest strong {
+  color: var(--muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dip-backtest a {
+  margin-left: 6px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dip-backtest a:hover {
+  text-decoration: underline;
+}
+
+.dip-advisory {
+  margin: 8px 0 0;
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--text);
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+
 .dip-disclaimer {
   margin: 14px 0 0;
   color: var(--muted);
@@ -2440,6 +2482,18 @@ button.dip-card:focus-visible {
   font-size: 9.5px;
   line-height: 1.55;
   margin-top: 2px;
+}
+
+.chart-tip-event-source {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--accent);
+  font-size: 9px;
+  text-decoration: none;
+}
+
+.chart-tip-event-source:hover {
+  text-decoration: underline;
 }
 
 .price-window {
@@ -2910,6 +2964,21 @@ button.dip-card:focus-visible {
   font-weight: 600;
 }
 
+.sector-help-more {
+  margin: 0;
+  padding-left: 2px;
+}
+
+.sector-help-more a {
+  color: var(--accent);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.sector-help-more a:hover {
+  text-decoration: underline;
+}
+
 .sector-holdings {
   margin: 14px 0 0;
   border-top: 1px solid var(--border);
@@ -3183,5 +3252,46 @@ button.dip-card:focus-visible {
 @media (max-width: 520px) {
   .sector-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal {
+    padding: 16px;
+    border-radius: 12px;
+    max-height: calc(100vh - 20px);
+  }
+
+  .modal-head {
+    gap: 10px;
+  }
+
+  .modal-head h2 {
+    font-size: 20px;
+  }
+
+  .chart-toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chart-caption {
+    width: 100%;
+    text-align: left;
+    order: 3;
+  }
+
+  .chart-toolbar .range-buttons {
+    overflow-x: auto;
+    max-width: 100%;
+    scrollbar-width: none;
+  }
+
+  .chart-toolbar .range-buttons::-webkit-scrollbar {
+    display: none;
   }
 }

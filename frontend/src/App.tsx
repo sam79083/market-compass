@@ -156,7 +156,7 @@ export default function App() {
         ) : dashboard ? (
           <>
             <PriceChart index={index} theme={theme} locale={locale} />
-            <DipCheck dashboard={dashboard} index={index} locale={locale} onOpen={setSelected} />
+            <DipCheck dashboard={dashboard} index={index} locale={locale} theme={theme} onOpen={setSelected} />
             <SectorCheck locale={locale} theme={theme} />
             <AdSlot />
           </>

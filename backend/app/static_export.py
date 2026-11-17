@@ -29,6 +29,22 @@ def _write_json(path: Path, payload: Any) -> int:
     return len(text.encode("utf-8"))
 
 
+def _sparklines_payload(session: Session, settings: Settings, index_key: str) -> dict[str, Any]:
+    """Last ~63 daily/weekly points per indicator, for the tiny card sparklines."""
+    indicator_ids = INDICATORS_NASDAQ if index_key == "nasdaq" else INDICATORS
+    points_by_id: dict[str, list[dict[str, Any]]] = {}
+    for indicator_id in indicator_ids:
+        if index_key == "nasdaq":
+            payload = get_indicator_history(session, settings, indicator_id, "max", "nasdaq")
+        else:
+            payload = get_indicator_history(session, settings, indicator_id, "max")
+        rows = (payload or {}).get("points") or []
+        points_by_id[indicator_id] = [
+            {"date": row["date"], "value": row["value"]} for row in rows[-63:] if row.get("value") is not None
+        ]
+    return {"index": index_key, "points": points_by_id}
+
+
 def _validation_payload(settings: Settings) -> dict[str, Any] | None:
     path = Path(settings.validation_output_path)
     if not path.exists():
@@ -103,6 +119,15 @@ def export_static(session: Session, settings: Settings, out_dir: Path) -> dict[s
             payload,
         )
 
+    # Compact per-indicator series for the card sparklines (both index views).
+    files["sparklines.json"] = _write_json(
+        out / "sparklines.json",
+        _sparklines_payload(session, settings, "sp500"),
+    )
+    files["sparklines.nasdaq.json"] = _write_json(
+        out / "sparklines.nasdaq.json",
+        _sparklines_payload(session, settings, "nasdaq"),
+    )
     validation = _validation_payload(settings)
     if validation is not None:
         files["validation.json"] = _write_json(out / "validation.json", validation)

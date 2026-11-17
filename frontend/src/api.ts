@@ -8,6 +8,8 @@ import type {
   SectorHistory,
   SectorsPayload,
   EtfHoldingsPayload,
+  SparklinesPayload,
+  ValidationPayload,
 } from "./types";
 
 const rawBase = (import.meta.env.VITE_API_URL as string | undefined)?.trim() ?? "";
@@ -114,6 +116,19 @@ export function fetchEtfHoldings(signal?: AbortSignal): Promise<EtfHoldingsPaylo
     staticMode ? "/data/etf-holdings.json" : dataPath("/etf-holdings"),
     signal,
   );
+}
+
+export function fetchSparklines(
+  index: IndexKey,
+  signal?: AbortSignal,
+): Promise<SparklinesPayload> {
+  const path = index === "nasdaq" ? "/data/sparklines.nasdaq.json" : "/data/sparklines.json";
+  return getJson<SparklinesPayload>(path, signal);
+}
+
+export function fetchValidation(signal?: AbortSignal): Promise<ValidationPayload> {
+  // The file is a global artifact of the S&P 500 methodology; always the static path.
+  return getJson<ValidationPayload>("/data/validation.json", signal);
 }
 
 export function fetchSectorHistory(symbol: string, signal?: AbortSignal): Promise<SectorHistory> {

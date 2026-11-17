@@ -4,7 +4,6 @@ import type {
   CompositePoint,
   Indicator,
   IndicatorHistory,
-  IndicatorPoint,
   PricePoint,
   SectorPoint,
   ThemeMode,
@@ -45,6 +44,7 @@ function tooltipStyle(theme: ThemeMode) {
     padding: [10, 12],
     textStyle: { color: palette.text, fontSize: 12 },
     confine: true,
+    enterable: true,
     extraCssText: `box-shadow: 0 18px 40px ${palette.tooltipShadow}; border-radius: 10px; white-space: normal;`,
   };
 }
@@ -104,11 +104,14 @@ function nearestEventOn(events: MarketEvent[], toleranceDays: number, date: stri
 }
 
 function eventTooltipHtml(event: MarketEvent, locale: LocaleKey): string {
+  const sourceTag = locale === "kr" ? "출처" : "Source";
   return `<div class="chart-tip-event"><div class="chart-tip-event-tag">${escapeHtml(
     locale === "kr" ? "역사적인 사건" : "historical event",
   )}</div><div class="chart-tip-event-name">${escapeHtml(eventLabel(event, locale))}</div><div class="chart-tip-event-desc">${escapeHtml(
     eventDescription(event, locale),
-  )}</div></div>`;
+  )}</div><a class="chart-tip-event-source" href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(
+    sourceTag,
+  )}: ${escapeHtml(event.sourceLabel)}</a></div>`;
 }
 
 function areaGradient(color: string, alpha: number) {
@@ -247,7 +250,7 @@ export function gaugeOption(
 }
 
 export function sparklineOption(
-  points: IndicatorPoint[],
+  points: ReadonlyArray<{ date: string; value: number | null }>,
   indicator: Indicator,
   theme: ThemeMode,
 ): EChartsOption {

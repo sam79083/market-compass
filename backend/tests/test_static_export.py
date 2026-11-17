@@ -83,14 +83,17 @@ def test_export_static_writes_snapshots(tmp_path):
     # dashboard.json + dashboard.{sp500,nasdaq}.json, composite-history{,.nasdaq}.json,
     # price-history.{sp500,nasdaq}.json, sectors.json, etf-holdings.json,
     # methodology.json, validation.json,
+    # sparklines.json + sparklines.nasdaq.json,
     # and one history file per indicator per index.
     # plus one sectors/<SYMBOL>.json history file per sector ETF.
-    assert result["files"] == 2 * len(INDICATORS) + 11 + len(SECTOR_ETF)
+    assert result["files"] == 2 * len(INDICATORS) + 13 + len(SECTOR_ETF)
     assert (out / "dashboard.json").exists()
     assert (out / "composite-history.json").exists()
     assert (out / "price-history.nasdaq.json").exists()
     assert (out / "sectors.json").exists()
     assert (out / "etf-holdings.json").exists()
+    assert (out / "sparklines.json").exists()
+    assert (out / "sparklines.nasdaq.json").exists()
     assert len(list((out / "sectors").glob("*.json"))) == len(SECTOR_ETF)
     gld = json.loads((out / "sectors" / "GLD.json").read_text(encoding="utf-8"))
     assert gld["symbol"] == "GLD"

@@ -9,6 +9,9 @@ export interface MarketEvent {
   /** Short chip/label text, shown on the marker chip under the chart. */
   en: string;
   kr: string;
+  /** Attribution shown in the tooltip and on the methodology page. */
+  sourceLabel: string;
+  sourceUrl: string;
   /** One-to-two line explanation with the approximate date range and magnitude. */
   descriptionEn: string;
   descriptionKr: string;
@@ -29,6 +32,8 @@ export interface MarketEvent {
 export const MARKET_EVENTS: MarketEvent[] = [
   {
     date: "1998-09-23",
+    sourceLabel: "Wikipedia — Long-Term Capital Management",
+    sourceUrl: "https://en.wikipedia.org/wiki/Long-Term_Capital_Management",
     start: "1998-08-17",
     end: "1998-10-08",
     en: "LTCM '98",
@@ -40,6 +45,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2000-03-10",
+    sourceLabel: "Wikipedia — Dot-com bubble",
+    sourceUrl: "https://en.wikipedia.org/wiki/Dot-com_bubble",
     start: "2000-03-10",
     end: "2002-10-09",
     en: "Dot-com peak",
@@ -51,6 +58,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2001-09-17",
+    sourceLabel: "Wikipedia — September 11 attacks",
+    sourceUrl: "https://en.wikipedia.org/wiki/September_11_attacks",
     start: "2001-09-17",
     end: "2001-09-21",
     en: "9/11",
@@ -62,6 +71,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2008-09-15",
+    sourceLabel: "Wikipedia — 2007–2008 financial crisis",
+    sourceUrl: "https://en.wikipedia.org/wiki/2008_financial_crisis",
     start: "2008-09-15",
     end: "2009-03-09",
     en: "Lehman '08",
@@ -73,6 +84,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2010-05-06",
+    sourceLabel: "Wikipedia — 2010 flash crash",
+    sourceUrl: "https://en.wikipedia.org/wiki/2010_flash_crash",
     start: "2010-05-06",
     end: "2010-05-06",
     en: "Flash Crash",
@@ -84,6 +97,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2011-08-08",
+    sourceLabel: "Wikipedia — United States credit-rating downgrades",
+    sourceUrl: "https://en.wikipedia.org/wiki/United_States_federal_government_credit-rating_downgrades",
     start: "2011-07-29",
     end: "2011-10-04",
     en: "US downgrade",
@@ -95,6 +110,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2015-08-24",
+    sourceLabel: "Wikipedia — 2015–16 stock market selloff",
+    sourceUrl: "https://en.wikipedia.org/wiki/2015%E2%80%9316_stock_market_selloff",
     start: "2015-08-11",
     end: "2015-09-28",
     en: "China shock",
@@ -106,6 +123,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2020-03-23",
+    sourceLabel: "Wikipedia — 2020 stock market crash",
+    sourceUrl: "https://en.wikipedia.org/wiki/2020_stock_market_crash",
     start: "2020-02-19",
     end: "2020-03-23",
     en: "COVID crash",
@@ -117,6 +136,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2022-06-16",
+    sourceLabel: "Wikipedia — 2022 stock market decline",
+    sourceUrl: "https://en.wikipedia.org/wiki/2022_stock_market_decline",
     start: "2022-01-03",
     end: "2022-10-12",
     en: "Rate shock",
@@ -128,6 +149,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2023-03-10",
+    sourceLabel: "Wikipedia — 2023 United States banking crisis",
+    sourceUrl: "https://en.wikipedia.org/wiki/2023_United_States_banking_crisis",
     start: "2023-03-10",
     end: "2023-05-01",
     en: "SVB '23",
@@ -139,6 +162,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2024-08-05",
+    sourceLabel: "Wikipedia — List of stock market crashes and bear markets",
+    sourceUrl: "https://en.wikipedia.org/wiki/List_of_stock_market_crashes_and_bear_markets",
     start: "2024-07-31",
     end: "2024-08-14",
     en: "Yen carry",
@@ -150,6 +175,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2025-04-02",
+    sourceLabel: "Wikipedia — 2025 stock market crash",
+    sourceUrl: "https://en.wikipedia.org/wiki/2025_stock_market_crash",
     start: "2025-04-02",
     end: "2025-04-09",
     en: "Tariffs '25",

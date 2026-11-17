@@ -258,6 +258,11 @@ export interface SectorEntry {
   as_of: string | null;
 }
 
+export interface SparklinesPayload {
+  index: string;
+  points: Record<string, Array<{ date: string; value: number | null }>>;
+}
+
 export interface SectorsPayload {
   as_of: string | null;
   sectors: SectorEntry[];

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { sectorChartOption } from "../charts";
-import { useEtfHoldings, useSectorHistory } from "../hooks";
+import { useEtfHoldings, useFocusTrap, useMediaQuery, useSectorHistory } from "../hooks";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
 import type { EtfHoldingsPayload, SectorPoint, ThemeMode } from "../types";
@@ -55,6 +55,7 @@ const TEXT: Record<
     rsiOversold: string;
     rsiNeutral: string;
     readingVerdict: string;
+    helpMore: string;
   }
 > = {
   en: {
@@ -94,6 +95,7 @@ const TEXT: Record<
     rsiNeutral: "neutral",
     readingVerdict:
       "This chart only shows trend and short-term heat — it cannot tell you the right entry. Weigh valuation and your overall portfolio too, and don't invest on this chart alone. Not investment advice.",
+    helpMore: "See definitions and the full backtest on the methodology page",
   },
   kr: {
     eyebrow: "부문 차트",
@@ -132,6 +134,7 @@ const TEXT: Record<
     rsiNeutral: "중립 구간",
     readingVerdict:
       "이 차트는 추세와 단기 과열만 보여줍니다. 지금이 매수·매도 타이밍인지는 밸류에이션과 전체 포트폴리오를 함께 보고 판단해야 하며, 이 차트만으로 투자 결정을 내리기는 어렵습니다. 투자 조언이 아닙니다.",
+    helpMore: "방법론에서 정의와 백테스트 전체 보기",
   },
 };
 
@@ -177,6 +180,9 @@ function ReadGuideSection({
             <p className="sector-help-text">{copy.readingVerdict}</p>
           </div>
         )}
+        <p className="sector-help-more">
+          <a href="/methodology">{copy.helpMore} →</a>
+        </p>
       </div>
     </details>
   );
@@ -249,19 +255,16 @@ export function SectorModal({ symbol, displayName, theme, locale, onClose }: Sec
   const history = useSectorHistory(symbol);
   const holdings = useEtfHoldings();
   const copy = TEXT[locale];
+  const modalRef = useFocusTrap<HTMLDivElement>(onClose);
+  const isNarrow = useMediaQuery();
 
   useEffect(() => {
-    const handleKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   const allPoints = history.data?.points ?? [];
 
@@ -285,7 +288,7 @@ export function SectorModal({ symbol, displayName, theme, locale, onClose }: Sec
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="modal sector-modal" role="dialog" aria-modal="true" aria-labelledby="sector-modal-title">
+      <div className="modal sector-modal" role="dialog" aria-modal="true" aria-labelledby="sector-modal-title" ref={modalRef} tabIndex={-1}>
         <header className="modal-head">
           <div>
             <div className="eyebrow">{copy.eyebrow}</div>
@@ -337,7 +340,7 @@ export function SectorModal({ symbol, displayName, theme, locale, onClose }: Sec
             {copy.loadError} {history.error}
           </div>
         ) : option ? (
-          <Chart option={option} height={380} ariaLabel={`${symbol} ${copy.chartAria}`} />
+          <Chart option={option} height={isNarrow ? 260 : 380} ariaLabel={`${symbol} ${copy.chartAria}`} />
         ) : (
           <div className="chart-empty">{copy.noData}</div>
         )}

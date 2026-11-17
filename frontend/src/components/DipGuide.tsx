@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { GUIDE_TEXT } from "../dipCheck";
 import type { LocaleKey } from "../i18n";
+import { useFocusTrap } from "../hooks";
 
 interface DipGuideProps {
   locale: LocaleKey;
@@ -24,19 +25,15 @@ const ROWS: Record<LocaleKey, Array<{ name: string; bands: string }>> = {
 
 export function DipGuide({ locale, onClose }: DipGuideProps) {
   const text = GUIDE_TEXT[locale];
+  const modalRef = useFocusTrap<HTMLDivElement>(onClose);
 
   useEffect(() => {
-    const handleKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div
@@ -45,7 +42,7 @@ export function DipGuide({ locale, onClose }: DipGuideProps) {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="modal dip-guide" role="dialog" aria-modal="true" aria-labelledby="dip-guide-title">
+      <div className="modal dip-guide" role="dialog" aria-modal="true" aria-labelledby="dip-guide-title" ref={modalRef} tabIndex={-1}>
         <header className="modal-head">
           <div>
             <h2 id="dip-guide-title">{text.title}</h2>
