@@ -3,25 +3,31 @@ import type { LocaleKey } from "./i18n";
 export interface MarketEvent {
   /** YYYY-MM-DD of the trading day the event is tied to (crash bottom, shock day, ...). */
   date: string;
+  /** YYYY-MM-DD of the first and last trading day of the incident's acute phase; shaded when the chip is toggled. */
+  start: string;
+  end: string;
   /** Short chip/label text, shown on the marker chip under the chart. */
   en: string;
   kr: string;
-  /** One-line explanation shown in the detail line when the event is hovered or tapped. */
+  /** One-line explanation shown in the hover tooltip. */
   descriptionEn: string;
   descriptionKr: string;
 }
 
 /**
  * Major US equity market events, drawn as dashed vertical lines on the price chart.
- * Hovering/tapping a chip under the chart reveals the description. This list is
+ * The chips under the chart toggle a shaded region covering the incident's acute
+ * phase (start..end), so each event reads as a period, not a single day. This list is
  * curated by hand on purpose: unlike prices, "what counts as a major event" is an
- * editorial call. To add one, append an entry here (date + en/kr label + description).
- * A future entry with a date beyond the history range simply stays hidden until the
- * data reaches it.
+ * editorial call. To add one, append an entry here (date + start/end + en/kr labels +
+ * description). A future entry with a date beyond the history range simply stays
+ * hidden until the data reaches it.
  */
 export const MARKET_EVENTS: MarketEvent[] = [
   {
     date: "1998-09-23",
+    start: "1998-08-17",
+    end: "1998-10-08",
     en: "LTCM '98",
     kr: "LTCM '98",
     descriptionEn: "Long-Term Capital Management nearly collapses; the Fed orchestrates a private bailout to contain systemic risk.",
@@ -29,6 +35,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2000-03-10",
+    start: "2000-03-10",
+    end: "2002-10-09",
     en: "Dot-com peak",
     kr: "닷컴 정점",
     descriptionEn: "NASDAQ tops at 5,048 — the peak before a ~78% dot-com crash over the next two years.",
@@ -36,6 +44,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2001-09-17",
+    start: "2001-09-17",
+    end: "2001-09-21",
     en: "9/11",
     kr: "9·11",
     descriptionEn: "Markets reopen after the 9/11 attacks — the NYSE was closed from September 11 to 16, the longest halt since 1933.",
@@ -43,6 +53,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2008-09-15",
+    start: "2008-09-15",
+    end: "2009-03-09",
     en: "Lehman '08",
     kr: "리먼 '08",
     descriptionEn: "Lehman Brothers files for bankruptcy; the global financial crisis begins in earnest — S&P 500 falls ~57% peak-to-trough.",
@@ -50,6 +62,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2010-05-06",
+    start: "2010-05-06",
+    end: "2010-05-06",
     en: "Flash Crash",
     kr: "플래시 크래시",
     descriptionEn: "Stocks plunge ~9% in minutes and rebound — a feedback loop driven by high-frequency trading and liquidity withdrawal.",
@@ -57,6 +71,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2011-08-08",
+    start: "2011-08-08",
+    end: "2011-10-03",
     en: "US downgrade",
     kr: "미국 등급 강등",
     descriptionEn: "S&P strips the U.S. of its AAA rating on August 5; stocks open Monday down ~6–7%.",
@@ -64,6 +80,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2015-08-24",
+    start: "2015-08-11",
+    end: "2015-09-28",
     en: "China shock",
     kr: "차이나 쇼크",
     descriptionEn: "China's yuan devaluation triggers 'Black Monday' — the Dow drops 1,000+ points intraday.",
@@ -71,6 +89,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2020-03-23",
+    start: "2020-02-19",
+    end: "2020-03-23",
     en: "COVID crash",
     kr: "코로나 폭락",
     descriptionEn: "Pandemic bottom after ~-34% in 23 trading days; the Fed cuts rates to zero and launches unlimited QE.",
@@ -78,6 +98,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2022-06-16",
+    start: "2022-01-03",
+    end: "2022-10-12",
     en: "Rate shock",
     kr: "금리 쇼크",
     descriptionEn: "Fed hikes 75bp — its largest move since 1994 — as CPI hits 9.1%; the S&P 500 falls ~25% from its high.",
@@ -85,6 +107,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2023-03-10",
+    start: "2023-03-10",
+    end: "2023-05-01",
     en: "SVB '23",
     kr: "SVB '23",
     descriptionEn: "Silicon Valley Bank collapses — the largest U.S. bank failure since 2008 — sparking regional bank turmoil.",
@@ -92,6 +116,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2024-08-05",
+    start: "2024-07-31",
+    end: "2024-08-14",
     en: "Yen carry",
     kr: "엔캐리 '24",
     descriptionEn: "Yen carry trades unwind after the BoJ hikes — the Nikkei falls ~12% in a day and global volatility spikes.",
@@ -99,6 +125,8 @@ export const MARKET_EVENTS: MarketEvent[] = [
   },
   {
     date: "2025-04-02",
+    start: "2025-04-02",
+    end: "2025-04-09",
     en: "Tariffs '25",
     kr: "관세 '25",
     descriptionEn: "'Liberation Day' tariff package announced — equities drop ~10% in days and Treasury yields spike.",

@@ -322,7 +322,8 @@ export function priceChartOption(
   symbol: string,
   points: PricePoint[],
   theme: ThemeMode,
-  locale: LocaleKey = "en",
+  locale: LocaleKey,
+  activeRanges: ReadonlyArray<{ start: string; end: string }> = [],
 ): EChartsOption {
   const palette = paletteFor(theme);
   const labels = LOCALE_TEXT[locale].chart_labels;
@@ -341,8 +342,9 @@ export function priceChartOption(
         86400000
       : 0;
   const events = dates.length > 1 ? eventsInRange(dates[0], dates[dates.length - 1]) : [];
-  // Hover tolerance grows with the visible span: ~1 day in 1Y, ~30 days in Max.
-  const eventToleranceDays = Math.max(1, Math.round(spanDays / 400));
+  // Hover tolerance grows with the visible span: ~10 days in short ranges, ~150 in Max,
+  // which keeps the dashed line easy to hit at any zoom level.
+  const eventToleranceDays = Math.min(150, Math.max(10, Math.round(spanDays / 60)));
   // Dashed lines only; the event text shows inside the shared axis tooltip.
   const eventMarkLine = events.length
     ? {
@@ -365,6 +367,24 @@ export function priceChartOption(
     }
     return best !== undefined && bestDiff <= eventToleranceDays ? best : undefined;
   };
+  const firstDate = dates[0] ?? "";
+  const lastDate = dates[dates.length - 1] ?? "";
+  const areaRanges = activeRanges.filter(
+  ({ start, end }) => start <= lastDate && end >= firstDate && start <= end,
+  );
+  const eventMarkArea = areaRanges.length
+    ? {
+        silent: true,
+        itemStyle: {
+          color: hexToRgba(palette.accent, theme === "dark" ? 0.2 : 0.16),
+          borderColor: hexToRgba(palette.accent, 0.55),
+          borderWidth: 1,
+        },
+        data: areaRanges.map(
+          ({ start, end }) => [{ xAxis: start }, { xAxis: end }] as [{ xAxis: string }, { xAxis: string }],
+        ),
+      }
+    : undefined;
 
   return {
     animationDuration: 450,
@@ -386,7 +406,7 @@ export function priceChartOption(
           ? `<div class="chart-tip-event">
               <div class="chart-tip-event-tag">${escapeHtml(
                 locale === "kr" ? "역사적인 사건" : "historical event",
-              )} · ${escapeHtml(formatDate(event.date, locale))}</div>
+              )}</div>
               <div class="chart-tip-event-name">${escapeHtml(eventLabel(event, locale))}</div>
               <div class="chart-tip-event-desc">${escapeHtml(eventDescription(event, locale))}</div>
             </div>`
@@ -421,6 +441,7 @@ export function priceChartOption(
         lineStyle: { color: lineColor, width: 2 },
         areaStyle: { color: areaGradient(lineColor, theme === "dark" ? 0.18 : 0.12) },
         markLine: eventMarkLine,
+        markArea: eventMarkArea,
         emphasis: { focus: "series" },
       },
       {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchPriceHistory } from "../api";
 import type { IndexKey } from "../api";
 import { priceChartOption } from "../charts";
+import { eventLabel, eventsInRange } from "../events";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
 import type { PriceHistory, PricePoint, ThemeMode } from "../types";
@@ -14,18 +15,20 @@ interface PriceChartProps {
   locale: LocaleKey;
 }
 
-const TEXT: Record<LocaleKey, { eyebrow: string; asOf: string; note: string; zoomHint: string }> = {
+const TEXT: Record<LocaleKey, { eyebrow: string; asOf: string; note: string; zoomHint: string; eventsNote: string }> = {
   en: {
     eyebrow: "Market price",
     asOf: "As of",
     note: "Daily closing prices in USD. Price return, dividends not included.",
     zoomHint: "Drag to zoom · dashed lines mark historical events",
+    eventsNote: "Historical event periods · toggle to highlight",
   },
   kr: {
     eyebrow: "시장 가격",
     asOf: "기준",
     note: "미국 시장 종가 기준 (USD). 배당금 미반영, 가격수익률 기준.",
     zoomHint: "드래그로 확대 · 점선은 역사적인 사건",
+    eventsNote: "역사적인 사건 기간 · 버튼을 누르면 차트에 강조됩니다",
   },
 };
 
@@ -52,6 +55,7 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ left: number; width: number; i0: number; i1: number } | null>(null);
+  const [activeEventDates, setActiveEventDates] = useState<string[]>([]);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const downXRef = useRef<number | null>(null);
   const pointsRef = useRef<PricePoint[]>([]);
@@ -97,6 +101,17 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   windowStartRef.current = activeWindow.start;
 
   const latest = points.length > 0 ? points[points.length - 1] : null;
+  const visibleEvents = useMemo(
+    () => (points.length > 1 ? eventsInRange(points[0].date, points[points.length - 1].date) : []),
+    [points],
+  );
+  const activeRanges = useMemo(
+    () =>
+      visibleEvents
+        .filter((event) => activeEventDates.includes(event.date))
+        .map((event) => ({ start: event.start, end: event.end })),
+    [visibleEvents, activeEventDates],
+  );
   const windowFirst = points.length > 1 ? points[0] : null;
   const change = latest && windowFirst ? latest.close - windowFirst.close : null;
   const changePct = change !== null && windowFirst ? (change / windowFirst.close) * 100 : null;
@@ -113,8 +128,11 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const dayChangePct = dayChange !== null && dayPrev ? (dayChange / dayPrev.close) * 100 : null;
 
   const option = useMemo(
-    () => (available && points.length > 1 ? priceChartOption(available.symbol, points, theme, locale) : null),
-    [available, points, theme, locale],
+    () =>
+      available && points.length > 1
+        ? priceChartOption(available.symbol, points, theme, locale, activeRanges)
+        : null,
+    [available, points, theme, locale, activeRanges],
   );
 
   const hasOption = option !== null;
@@ -255,6 +273,33 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
         </div>
       ) : (
         <div className="chart-skeleton chart-skeleton-large" />
+      )}
+      {visibleEvents.length > 0 && (
+        <div className="price-events" role="group" aria-label={copy.eventsNote}>
+          {visibleEvents.map((event) => {
+            const active = activeEventDates.includes(event.date);
+            return (
+              <button
+                key={event.date}
+                type="button"
+                className={active ? "event-chip is-active" : "event-chip"}
+                aria-pressed={active}
+                title={
+                  locale === "kr"
+                    ? `${formatDate(event.start, locale)} – ${formatDate(event.end, locale)} · 클릭하면 기간이 토글됩니다`
+                    : `${formatDate(event.start, locale)} – ${formatDate(event.end, locale)} · click to toggle the shaded period`
+                }
+                onClick={() =>
+                  setActiveEventDates((current) =>
+                    active ? current.filter((date) => date !== event.date) : [...current, event.date],
+                  )
+                }
+              >
+                {eventLabel(event, locale)}
+              </button>
+            );
+          })}
+        </div>
       )}
       {available && points.length > 1 && (
         <p className="price-window">
