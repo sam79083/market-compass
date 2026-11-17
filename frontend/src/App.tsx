@@ -29,6 +29,14 @@ function runStatusColor(status: string): string {
   return statusColor("unknown");
 }
 
+const STATIC_LINKS = [
+  ["/about", "footer_links_about"],
+  ["/methodology", "footer_links_methodology"],
+  ["/faq", "footer_links_faq"],
+  ["/privacy", "footer_links_privacy"],
+  ["/terms", "footer_links_terms"],
+] as const;
+
 export default function App() {
   const [theme, setTheme] = useState<ThemeMode>(readTheme);
   const [locale, setLocale] = useState<LocaleKey>(() => {
@@ -165,12 +173,12 @@ export default function App() {
 
       <footer className="site-footer">
         <div>
-          <nav className="footer-links" aria-label="Site information">
-            <a href="/about">{t.footer_links_about}</a>
-            <a href="/methodology">{t.footer_links_methodology}</a>
-            <a href="/faq">{t.footer_links_faq}</a>
-            <a href="/privacy">{t.footer_links_privacy}</a>
-            <a href="/terms">{t.footer_links_terms}</a>
+          <nav className="footer-links" aria-label={locale === "kr" ? "사이트 정보" : "Site information"}>
+            {STATIC_LINKS.map(([path, label]) => (
+              <a key={path} href={locale === "kr" ? `/ko${path}` : path}>
+                {t[label]}
+              </a>
+            ))}
           </nav>
           <div>
             <strong>{t.footer}</strong>

@@ -201,7 +201,7 @@ export function DipCheck({ dashboard, index, locale, theme, onOpen }: DipCheckPr
                   현재와 같은 분류(<strong>{BUCKET_LABEL[bucket.classification]?.kr ?? bucket.classification}</strong>)였던 과거 {bucket.n}회: 1년 후 평균{" "}
                   <strong>{formatNumber((bucket.mean_price_return ?? 0) * 100, 1)}%</strong> · 상승 확률{" "}
                   <strong>{formatNumber((bucket.positive_rate ?? 0) * 100, 1)}%</strong>{" "}
-                  <a href="/methodology">S&amp;P 500 백테스트 · 방법론</a>
+                  <a href={locale === "kr" ? "/ko/methodology" : "/methodology"}>S&amp;P 500 백테스트 · 방법론</a>
                 </>
               ) : (
                 <>

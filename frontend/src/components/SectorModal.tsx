@@ -181,7 +181,7 @@ function ReadGuideSection({
           </div>
         )}
         <p className="sector-help-more">
-          <a href="/methodology">{copy.helpMore} →</a>
+          <a href={locale === "kr" ? "/ko/methodology" : "/methodology"}>{copy.helpMore} →</a>
         </p>
       </div>
     </details>

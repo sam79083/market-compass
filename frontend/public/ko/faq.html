@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Market Compass에 대한 짧은 답변들: 미국 주식시장을 쉽고 직관적인 말로 점검하는 도구입니다."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/pages.css" />
+    <link rel="canonical" href="https://market-compass.cloud8dashboard.workers.dev/ko/faq" />
+    <link rel="alternate" hreflang="en" href="https://market-compass.cloud8dashboard.workers.dev/faq" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="자주 묻는 질문 — Market Compass" />
+    <meta property="og:description" content="Market Compass에 대한 짧은 답변들: 미국 주식시장을 쉽고 직관적인 말로 점검하는 도구입니다." />
+    <meta property="og:url" content="https://market-compass.cloud8dashboard.workers.dev/ko/faq" />
+    <meta property="og:image" content="https://market-compass.cloud8dashboard.workers.dev/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>자주 묻는 질문 — Market Compass</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Market Compass는 무엇인가요?", "acceptedAnswer": { "@type": "Answer", "text": "S&P 500과 나스닥의 시장 불안도를 네 가지 공개 지표로 보여주는 무료 정적 페이지입니다: 공포 수준(VIX 또는 VXN), 과매도 점검(RSI), 200일 추세, CNN 공포·탐욕 지수." } },
+          { "@type": "Question", "name": "투자 조언인가요?", "acceptedAnswer": { "@type": "Answer", "text": "아닙니다. 정보 제공용 도구입니다. 목표, 기간, 세금, 위험 허용도를 알지 못하며, 특정 종목의 매수·매도를 권유하는 것도 아닙니다. 이용약관 및 면책을 참고하세요." } },
+          { "@type": "Question", "name": "언제 사야 하는지 알려주나요?", "acceptedAnswer": { "@type": "Answer", "text": "아닙니다. 현재 상태가 하락장스러운 정도를 보여줄 뿐입니다. 불안 지표는 첫 하락 이후에도 높은 상태를 유지하거나 더 나빠질 수 있으며, 어떤 지표도 바닥을 찾아내지 못합니다. 많은 투자자는 한 번에 사지 않고 분할로 매수합니다." } },
+          { "@type": "Question", "name": "점 표시기는 무엇을 의미하나요?", "acceptedAnswer": { "@type": "Answer", "text": "한 칸은 약함, 두 칸은 뚜렷함, 세 칸은 극단적을 뜻합니다. 점이 없으면 하락장스러운 구간이 아니라는 뜻입니다. 점은 지표의 상태를 나타낼 뿐 예측이 아닙니다." } },
+          { "@type": "Question", "name": "왜 네 지표가 자주 같은 말을 하나요?", "acceptedAnswer": { "@type": "Answer", "text": "공포, 과매도, 지수 하락은 대개 함께 나타나며, 공포·탐욕 지수 자체도 변동성과 모멘텀을 입력으로 포함합니다. 네 개가 동시에 나와도 네 개의 독립적인 확인이 아니라, 하나의 강한 메시지로 받아들이세요." } },
+          { "@type": "Question", "name": "왜 200일선을 포함하나요?", "acceptedAnswer": { "@type": "Answer", "text": "정상적인 조정과 깊은 하락을 구분하는 데 도움이 됩니다. 2006년 이후의 일별 종가로 측정하면 두 지수 모두 약 5일 중 1일은 200일선 아래에 있었습니다. 200일선보다 2~10% 낮은 조정은 흔하지만, 10% 이상은 약세장 유형의 하락입니다." } },
+          { "@type": "Question", "name": "데이터는 얼마나 자주 갱신되나요?", "acceptedAnswer": { "@type": "Answer", "text": "평일 저녁(미국 장 마감 후)에 실행되는 GitHub Actions 워크플로가 새 정적 JSON 스냅샷을 배포합니다. 각 카드에는 최신 값의 날짜가 표시됩니다." } },
+          { "@type": "Question", "name": "데이터는 어디서 오나요?", "acceptedAnswer": { "@type": "Answer", "text": "Cboe(VIX), Cboe via Yahoo Finance(VXN), RSI와 200일선 계산에 쓰는 지수 종가를 위한 Yahoo Finance 공개 차트 인터페이스, 그리고 CNN의 공포·탐욕 지수입니다. 일부 피드는 비공식이며 지연될 수 있습니다." } },
+          { "@type": "Question", "name": "어떤 지표가 가끔 비어 있는 이유는?", "acceptedAnswer": { "@type": "Answer", "text": "피드가 실패하면 그 카드는 ‘데이터 없음’으로 표시됩니다. 다른 지표로 대체하지 않습니다." } }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-head">
+      <a class="brand" href="/">Market Compass</a>
+      <nav aria-label="사이트">
+        <a href="/ko/about">소개</a>
+        <a href="/ko/methodology">방법론</a>
+        <a href="/ko/faq" aria-current="page">자주 묻는 질문</a>
+        <a href="/ko/privacy">개인정보</a>
+        <a href="/ko/terms">이용약관</a>
+        <a href="/faq" lang="en" hreflang="en">English</a>
+      </nav>
+    </header>
+
+    <main>
+      <span class="badge">자주 묻는 질문</span>
+      <h1>눌림목 점검에 대한 질문들.</h1>
+      <p class="lede">
+        독자분들이 가장 자주 묻는 것들에 대한 짧은 답변입니다. 기준선은
+        <a href="/ko/methodology">방법론</a> 페이지에 있습니다.
+      </p>
+
+      <h2>Market Compass는 무엇인가요?</h2>
+      <p>
+        S&amp;P 500과 나스닥의 시장 불안도를 네 가지 공개 지표로 보여주는 무료 정적 페이지입니다:
+        공포 수준(VIX 또는 VXN), 과매도 점검(RSI), 200일 추세, CNN 공포·탐욕 지수. 각 지표는 쉬운
+        말로 설명됩니다.
+      </p>
+
+      <h2>투자 조언인가요?</h2>
+      <p>
+        아닙니다. 정보 제공용 도구입니다. 목표, 기간, 세금, 위험 허용도를 알지 못하며, 특정 종목의
+        매수·매도를 권유하는 것도 아닙니다. <a href="/ko/terms">이용약관 및 면책</a>을 참고하세요.
+      </p>
+
+      <h2>언제 사야 하는지 알려주나요?</h2>
+      <p>
+        아닙니다. 현재 상태가 하락장스러운 정도를 보여줄 뿐입니다. 불안 지표는 첫 하락 이후에도
+        높은 상태를 유지하거나 더 나빠질 수 있으며, 어떤 지표도 바닥을 찾아내지 못합니다. 많은
+        투자자는 한 번에 사지 않고 분할로 매수합니다.
+      </p>
+
+      <h2>점 표시기는 무엇을 의미하나요?</h2>
+      <p>
+        한 칸은 약함, 두 칸은 뚜렷함, 세 칸은 극단적을 뜻합니다. 점이 없으면 하락장스러운 구간이
+        아니라는 뜻입니다. 점은 지표의 상태를 나타낼 뿐, 예측이 아닙니다.
+      </p>
+
+      <h2>왜 네 지표가 자주 같은 말을 하나요?</h2>
+      <p>
+        공포, 과매도, 지수 하락은 대개 함께 나타나며, 공포·탐욕 지수 자체도 변동성과 모멘텀을
+        입력으로 포함합니다. 네 개가 동시에 나와도 네 개의 독립적인 확인이 아니라, 하나의 강한
+        메시지로 받아들이세요.
+      </p>
+
+      <h2>왜 200일선을 포함하나요?</h2>
+      <p>
+        정상적인 조정과 깊은 하락을 구분하는 데 도움이 됩니다. 2006년 이후의 일별 종가로 측정하면
+        두 지수 모두 약 5일 중 1일은 200일선 아래에 있었습니다. 200일선보다 2~10% 낮은 조정은
+        흔하지만, 10% 이상은 약세장 유형의 하락입니다.
+      </p>
+
+      <h2>데이터는 얼마나 자주 갱신되나요?</h2>
+      <p>
+        평일 저녁(미국 장 마감 후)에 실행되는 GitHub Actions 워크플로가 새 정적 JSON 스냅샷을
+        배포합니다. 각 카드에는 최신 값의 날짜가 표시됩니다.
+      </p>
+
+      <h2>데이터는 어디서 오나요?</h2>
+      <p>
+        Cboe(VIX), Cboe via Yahoo Finance(VXN), RSI와 200일선 계산에 쓰는 지수 종가를 위한 Yahoo
+        Finance 공개 차트 인터페이스, 그리고 CNN의 공포·탐욕 지수입니다. 일부 피드는 비공식이며
+        지연될 수 있습니다.
+      </p>
+
+      <h2>어떤 지표가 가끔 비어 있는 이유는?</h2>
+      <p>
+        피드가 실패하면 그 카드는 ‘데이터 없음’으로 표시됩니다. 다른 지표로 대체하지 않습니다.
+      </p>
+    </main>
+
+    <footer class="site-foot">
+      <nav aria-label="사이트">
+        <a href="/">대시보드</a>
+        <a href="/ko/about">소개</a>
+        <a href="/ko/methodology">방법론</a>
+        <a href="/ko/faq">자주 묻는 질문</a>
+        <a href="/ko/privacy">개인정보</a>
+        <a href="/ko/terms">이용약관</a>
+      </nav>
+      <p>
+        Market Compass는 정보 제공용 리서치 도구이며 투자 조언이 아닙니다. 데이터는 지연되거나
+        불완전하거나 추정값일 수 있으며, 과거 성과가 미래를 보장하지 않습니다.
+      </p>
+      <p>© 2026 Market Compass. 공개 데이터로 만들어졌습니다.</p>
+    </footer>
+  </body>
+</html>
