@@ -12,7 +12,7 @@ import type {
 import type { LocaleKey } from "./i18n";
 import { LOCALE_TEXT } from "./i18n";
 import { chartPalettes } from "./theme";
-import { eventsInRange } from "./events";
+import { eventDescription, eventLabel, eventsInRange } from "./events";
 import {
   bandForScore,
   categoryColor,
@@ -341,8 +341,9 @@ export function priceChartOption(
         86400000
       : 0;
   const events = dates.length > 1 ? eventsInRange(dates[0], dates[dates.length - 1]) : [];
-  // Dashed lines only; the labels/descriptions live in the interactive chip row
-  // under the chart (hard to read as canvas text).
+  // Hover tolerance grows with the visible span: ~1 day in 1Y, ~30 days in Max.
+  const eventToleranceDays = Math.max(1, Math.round(spanDays / 400));
+  // Dashed lines only; the event text shows inside the shared axis tooltip.
   const eventMarkLine = events.length
     ? {
         silent: true,
@@ -351,6 +352,19 @@ export function priceChartOption(
         data: events.map((event) => ({ xAxis: event.date })),
       }
     : undefined;
+  const nearestEventOn = (date: string) => {
+    const target = new Date(`${date}T00:00:00Z`).getTime();
+    let best: (typeof events)[number] | undefined;
+    let bestDiff = Infinity;
+    for (const event of events) {
+      const diff = Math.abs(new Date(`${event.date}T00:00:00Z`).getTime() - target) / 86400000;
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        best = event;
+      }
+    }
+    return best !== undefined && bestDiff <= eventToleranceDays ? best : undefined;
+  };
 
   return {
     animationDuration: 450,
@@ -367,8 +381,19 @@ export function priceChartOption(
           <span>${escapeHtml(symbol)}</span>
           <strong>${escapeHtml(formatNumber(point.close, 2))}</strong>
         </div>`;
+        const event = nearestEventOn(point.date);
+        const eventBlock = event
+          ? `<div class="chart-tip-event">
+              <div class="chart-tip-event-tag">${escapeHtml(
+                locale === "kr" ? "역사적인 사건" : "historical event",
+              )} · ${escapeHtml(formatDate(event.date, locale))}</div>
+              <div class="chart-tip-event-name">${escapeHtml(eventLabel(event, locale))}</div>
+              <div class="chart-tip-event-desc">${escapeHtml(eventDescription(event, locale))}</div>
+            </div>`
+          : "";
         return `<div class="chart-tip">${headers}
           <div class="chart-tip-sub">${escapeHtml(labels.price_close)} · ${escapeHtml(formatDate(point.date, locale))}</div>
+          ${eventBlock}
         </div>`;
       },
     },

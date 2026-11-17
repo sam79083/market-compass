@@ -2370,67 +2370,35 @@ button.dip-card:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-.price-events {
-  margin: -2px 2px 2px;
+.chart-tip-event {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-radius: 0 6px 6px 0;
+  max-width: 300px;
 }
 
-.price-events-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 4px;
+.chart-tip-event-tag {
+  color: var(--accent);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
 }
 
-.event-chip {
-  appearance: none;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 10.5px;
-  font-variant-numeric: tabular-nums;
-  padding: 2px 9px;
-  border-radius: 999px;
-  cursor: pointer;
-  line-height: 1.5;
-}
-
-.event-chip:hover,
-.event-chip:focus-visible,
-.event-chip.is-active {
+.chart-tip-event-name {
   color: var(--text);
-  border-color: var(--accent);
-}
-
-.event-chip:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
-}
-
-.price-event-detail {
-  margin: 2px 0 0;
-  color: var(--muted);
   font-size: 11px;
+  font-weight: 600;
+}
+
+.chart-tip-event-desc {
+  color: var(--muted);
+  font-size: 9.5px;
   line-height: 1.55;
-  max-width: 72ch;
-}
-
-.price-event-detail strong {
-  color: var(--text);
-  margin-right: 6px;
-}
-
-.price-event-date {
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-  margin-right: 6px;
-}
-
-.price-events-hint {
-  margin: 2px 0 0;
-  color: var(--faint);
-  font-size: 10px;
-  letter-spacing: 0.01em;
+  margin-top: 2px;
 }
 
 .price-window {
