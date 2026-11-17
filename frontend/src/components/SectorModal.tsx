@@ -3,7 +3,7 @@ import { sectorChartOption } from "../charts";
 import { useEtfHoldings, useSectorHistory } from "../hooks";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
-import type { EtfHoldingsPayload, ThemeMode } from "../types";
+import type { EtfHoldingsPayload, SectorPoint, ThemeMode } from "../types";
 import { formatDate, formatNumber } from "../utils";
 import { Chart } from "./Chart";
 
@@ -43,6 +43,18 @@ const TEXT: Record<
     holdingsError: string;
     holdingsNone: string;
     noHoldingsFor: Record<string, string>;
+    helpTitle: string;
+    maTitle: string;
+    maBody: string;
+    rsiTitle: string;
+    rsiBody: string;
+    readingTitle: string;
+    devAbove: (dev: number) => string;
+    devBelow: (dev: number) => string;
+    rsiOverbought: string;
+    rsiOversold: string;
+    rsiNeutral: string;
+    readingVerdict: string;
   }
 > = {
   en: {
@@ -67,6 +79,21 @@ const TEXT: Record<
       GLD: "Holds physical gold bullion — no stock portfolio to list.",
       TLT: "Holds long-term U.S. Treasury bonds — no stock portfolio to list.",
     },
+    helpTitle: "How to read this chart",
+    maTitle: "Top panel · price & the 200-day line",
+    maBody:
+      "The 200-day line is the average close over the last 200 trading days. Price above it = stronger long-term trend; below it = weaker. It smooths out the noise — treat it as “which side of the trend are we on”, not as a buy/sell switch.",
+    rsiTitle: "Bottom panel · RSI(14)",
+    rsiBody:
+      "RSI measures up/down momentum over the last 14 days on a 0–100 scale. Below 30 = oversold (sell-off may be overdone) · above 70 = overbought (due for a breather) · 30–70 = neutral. In a weak downtrend it can sit below 30 for weeks — never act on it alone.",
+    readingTitle: "Read right now",
+    devAbove: (dev) => `Price is ${formatNumber(dev, 1)}% above its 200-day line`,
+    devBelow: (dev) => `Price is ${formatNumber(Math.abs(dev), 1)}% below its 200-day line`,
+    rsiOverbought: "overbought",
+    rsiOversold: "oversold",
+    rsiNeutral: "neutral",
+    readingVerdict:
+      "This chart only shows trend and short-term heat — it cannot tell you the right entry. Weigh valuation and your overall portfolio too, and don't invest on this chart alone. Not investment advice.",
   },
   kr: {
     eyebrow: "부문 차트",
@@ -90,8 +117,70 @@ const TEXT: Record<
       GLD: "실물 금을 보유하는 ETF입니다. 구성 종목이 없습니다.",
       TLT: "미국 장기 국채를 보유하는 ETF입니다. 구성 종목이 없습니다.",
     },
+    helpTitle: "이 차트 읽는 법",
+    maTitle: "위 패널 · 가격과 200일선",
+    maBody:
+      "200일 이동평균선은 최근 200거래일 종가의 평균입니다. 현재가가 위에 있으면 장기 추세가 강한 편, 아래에 있으면 약한 편입니다. 소음을 걸러낸 참고선일 뿐이며, 위/아래 위치만으로 매수·매도를 결정할 수는 없습니다.",
+    rsiTitle: "아래 패널 · RSI(14)",
+    rsiBody:
+      "RSI(상대강도지수)는 최근 14일 상승/하락 강도를 0~100으로 나타낸 모멘텀 지표입니다. 30 이하는 과매도(단기 반등 가능성), 70 이상은 과매수(단기 조정 가능성), 30~70은 중립입니다. 약한 하락 추세에서는 30 밑에 오래 머물 수 있으니 지표 하나만으로 판단하면 안 됩니다.",
+    readingTitle: "지금 읽으면",
+    devAbove: (dev) => `현재가는 200일선보다 ${formatNumber(dev, 1)}% 위에 있고`,
+    devBelow: (dev) => `현재가는 200일선보다 ${formatNumber(Math.abs(dev), 1)}% 아래에 있고`,
+    rsiOverbought: "과매수 구간",
+    rsiOversold: "과매도 구간",
+    rsiNeutral: "중립 구간",
+    readingVerdict:
+      "이 차트는 추세와 단기 과열만 보여줍니다. 지금이 매수·매도 타이밍인지는 밸류에이션과 전체 포트폴리오를 함께 보고 판단해야 하며, 이 차트만으로 투자 결정을 내리기는 어렵습니다. 투자 조언이 아닙니다.",
   },
 };
+
+function ReadGuideSection({
+  copy,
+  latest,
+  locale,
+}: {
+  copy: (typeof TEXT)[LocaleKey];
+  latest: SectorPoint | null;
+  locale: LocaleKey;
+}) {
+  const dev =
+    latest && latest.ma200 !== null && latest.ma200 > 0
+      ? ((latest.close - latest.ma200) / latest.ma200) * 100
+      : null;
+  const rsiTag = latest ? (latest.rsi > 70 ? copy.rsiOverbought : latest.rsi < 30 ? copy.rsiOversold : copy.rsiNeutral) : null;
+  const devText = dev === null ? "" : dev >= 0 ? copy.devAbove(dev) : copy.devBelow(dev);
+  const readLine = !latest
+    ? ""
+    : locale === "kr"
+      ? `${devText ? `${devText}, ` : ""}RSI(14)는 ${formatNumber(latest.rsi, 1)}로 ${rsiTag}입니다.`
+      : `${devText ? `${devText} and ` : ""}RSI(14) reads ${formatNumber(latest.rsi, 1)} — ${rsiTag}.`;
+
+  return (
+    <details className="sector-help" open>
+      <summary className="sector-help-summary">{copy.helpTitle}</summary>
+      <div className="sector-help-body">
+        <div className="sector-help-block">
+          <div className="sector-help-title">{copy.maTitle}</div>
+          <p className="sector-help-text">{copy.maBody}</p>
+        </div>
+        <div className="sector-help-block">
+          <div className="sector-help-title">{copy.rsiTitle}</div>
+          <p className="sector-help-text">{copy.rsiBody}</p>
+        </div>
+        {latest && (
+          <div className="sector-help-block sector-help-block-live">
+            <div className="sector-help-title">{copy.readingTitle}</div>
+            <p className="sector-help-text">
+              <strong className="sector-help-reading">{readLine}</strong>
+            </p>
+            <p className="sector-help-text">{copy.readingVerdict}</p>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
 
 function HoldingsSection({
   symbol,
@@ -252,6 +341,8 @@ export function SectorModal({ symbol, displayName, theme, locale, onClose }: Sec
         ) : (
           <div className="chart-empty">{copy.noData}</div>
         )}
+
+        <ReadGuideSection copy={copy} latest={latest} locale={locale} />
 
         <HoldingsSection
           symbol={symbol}
