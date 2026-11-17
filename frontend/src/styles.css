@@ -1755,6 +1755,8 @@ main {
 
 .chart-tip {
   min-width: 220px;
+  max-width: 290px;
+  overflow-wrap: anywhere;
 }
 
 .chart-tip-head {
@@ -2416,7 +2418,6 @@ button.dip-card:focus-visible {
   border-left: 2px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 7%, transparent);
   border-radius: 0 6px 6px 0;
-  max-width: 300px;
 }
 
 .chart-tip-event-tag {

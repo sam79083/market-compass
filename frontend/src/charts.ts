@@ -44,7 +44,8 @@ function tooltipStyle(theme: ThemeMode) {
     borderWidth: 1,
     padding: [10, 12],
     textStyle: { color: palette.text, fontSize: 12 },
-    extraCssText: `box-shadow: 0 18px 40px ${palette.tooltipShadow}; border-radius: 10px;`,
+    confine: true,
+    extraCssText: `box-shadow: 0 18px 40px ${palette.tooltipShadow}; border-radius: 10px; white-space: normal;`,
   };
 }
 
