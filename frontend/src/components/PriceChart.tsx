@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchPriceHistory } from "../api";
 import type { IndexKey } from "../api";
 import { priceChartOption } from "../charts";
-import { eventsInRange } from "../events";
+import { eventDescription, eventLabel, eventsInRange } from "../events";
 import { LOCALE_TEXT } from "../i18n";
 import type { LocaleKey } from "../i18n";
 import type { PriceHistory, PricePoint, ThemeMode } from "../types";
@@ -20,13 +20,13 @@ const TEXT: Record<LocaleKey, { eyebrow: string; asOf: string; note: string; eve
     eyebrow: "Market price",
     asOf: "As of",
     note: "Daily closing prices in USD. Price return, dividends not included.",
-    eventsNote: "Dashed lines mark major market events.",
+    eventsNote: "Historical events · hover or tap for details",
   },
   kr: {
     eyebrow: "시장 가격",
     asOf: "기준",
     note: "미국 시장 종가 기준 (USD). 배당금 미반영, 가격수익률 기준.",
-    eventsNote: "점선은 굵직한 시장 이벤트입니다.",
+    eventsNote: "역사적인 사건 · 마우스를 올리거나 눌러 보세요",
   },
 };
 
@@ -53,6 +53,8 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ left: number; width: number; i0: number; i1: number } | null>(null);
+  const [pinnedEvent, setPinnedEvent] = useState<string | null>(null);
+  const [hoveredEvent, setHoveredEvent] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const downXRef = useRef<number | null>(null);
   const pointsRef = useRef<PricePoint[]>([]);
@@ -98,7 +100,12 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
   windowStartRef.current = activeWindow.start;
 
   const latest = points.length > 0 ? points[points.length - 1] : null;
-  const eventsVisible = points.length > 1 ? eventsInRange(points[0].date, points[points.length - 1].date).length : 0;
+  const visibleEvents = useMemo(
+    () => (points.length > 1 ? eventsInRange(points[0].date, points[points.length - 1].date) : []),
+    [points],
+  );
+  const activeEventDate = hoveredEvent ?? pinnedEvent;
+  const displayedEvent = visibleEvents.find((event) => event.date === activeEventDate) ?? null;
   const windowFirst = points.length > 1 ? points[0] : null;
   const change = latest && windowFirst ? latest.close - windowFirst.close : null;
   const changePct = change !== null && windowFirst ? (change / windowFirst.close) * 100 : null;
@@ -258,7 +265,39 @@ export function PriceChart({ index, theme, locale }: PriceChartProps) {
       ) : (
         <div className="chart-skeleton chart-skeleton-large" />
       )}
-      {eventsVisible > 0 && <p className="price-events-note">{copy.eventsNote}</p>}
+      {visibleEvents.length > 0 && (
+        <div className="price-events">
+          <div className="price-events-chips" role="group" aria-label={copy.eventsNote}>
+            {visibleEvents.map((event) => {
+              const active = displayedEvent?.date === event.date;
+              return (
+                <button
+                  key={event.date}
+                  type="button"
+                  className={active ? "event-chip is-active" : "event-chip"}
+                  aria-pressed={pinnedEvent === event.date}
+                  onClick={() => setPinnedEvent(pinnedEvent === event.date ? null : event.date)}
+                  onMouseEnter={() => setHoveredEvent(event.date)}
+                  onMouseLeave={() => setHoveredEvent(null)}
+                  onFocus={() => setHoveredEvent(event.date)}
+                  onBlur={() => setHoveredEvent(null)}
+                >
+                  {eventLabel(event, locale)}
+                </button>
+              );
+            })}
+          </div>
+          {displayedEvent ? (
+            <p className="price-event-detail" aria-live="polite">
+              <strong>{eventLabel(displayedEvent, locale)}</strong>
+              <time className="price-event-date">{formatDate(displayedEvent.date, locale)}</time>
+              {eventDescription(displayedEvent, locale)}
+            </p>
+          ) : (
+            <p className="price-events-hint">{copy.eventsNote}</p>
+          )}
+        </div>
+      )}
       {available && points.length > 1 && (
         <p className="price-window">
           <span>

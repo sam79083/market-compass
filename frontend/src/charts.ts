@@ -12,7 +12,7 @@ import type {
 import type { LocaleKey } from "./i18n";
 import { LOCALE_TEXT } from "./i18n";
 import { chartPalettes } from "./theme";
-import { eventLabel, eventsInRange } from "./events";
+import { eventsInRange } from "./events";
 import {
   bandForScore,
   categoryColor,
@@ -341,22 +341,14 @@ export function priceChartOption(
         86400000
       : 0;
   const events = dates.length > 1 ? eventsInRange(dates[0], dates[dates.length - 1]) : [];
+  // Dashed lines only; the labels/descriptions live in the interactive chip row
+  // under the chart (hard to read as canvas text).
   const eventMarkLine = events.length
     ? {
         silent: true,
         symbol: "none" as const,
-        lineStyle: { color: palette.muted, type: "dashed" as const, width: 1, opacity: 0.7 },
-        data: events.map((event) => ({
-          xAxis: event.date,
-          label: {
-            show: true,
-            position: "insideEndTop" as const,
-            distance: 2,
-            color: palette.muted,
-            fontSize: 9,
-            formatter: eventLabel(event, locale),
-          },
-        })),
+        lineStyle: { color: palette.muted, type: "dashed" as const, width: 1, opacity: 0.6 },
+        data: events.map((event) => ({ xAxis: event.date })),
       }
     : undefined;
 
