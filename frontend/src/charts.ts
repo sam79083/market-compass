@@ -350,8 +350,19 @@ export function priceChartOption(
     ? {
         silent: true,
         symbol: "none" as const,
+        label: {
+          show: true,
+          position: "insideEndTop" as const,
+          distance: 2,
+          color: palette.muted,
+          fontSize: 8,
+          fontFamily: "Inter, Segoe UI, sans-serif",
+        },
         lineStyle: { color: palette.muted, type: "dashed" as const, width: 1, opacity: 0.6 },
-        data: events.map((event) => ({ xAxis: event.date })),
+        data: events.map((event) => ({
+          xAxis: event.date,
+          label: { formatter: formatAxisMonth(event.date, locale) },
+        })),
       }
     : undefined;
   const nearestEventOn = (date: string) => {
