@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-17T05:12:22+00:00",
+ "generated_at": "2026-11-25T05:00:00+00:00",
  "source": "Yahoo Finance topHoldings (unofficial)",
  "etfs": {
   "XLE": {
@@ -877,6 +877,11 @@
      "symbol": "NXE.TO",
      "name": "NexGen Energy Ltd",
      "weight": 6.38
+    },
+    {
+     "symbol": "KAP",
+     "name": "National Atomic Co Kazatomprom JSC GDR - Regulation S",
+     "weight": 4.95
     },
     {
      "symbol": "OKLO",
